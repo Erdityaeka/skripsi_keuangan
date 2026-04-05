@@ -153,45 +153,35 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
               children: [
                 Text('Januari', style: whiteBold),
                 const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: Bank,
-                        hint: Text('SEMUA', style: whiteReguler),
-                        isDense: true,
-                        dropdownColor: red,
-                        icon: Icon(
-                          Icons.arrow_drop_down,
-                          color: white,
-                          size: 18,
-                        ),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            Bank = newValue;
-                          });
-                        },
-                        items:
-                            <String>[
-                              'SEMUA',
-                              'Bank BCA',
-                              'Bank Mandiri',
-                              'Bank BNI',
-                              'Bank BTN',
-                            ].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: whiteReguler,
-                                ), // hanya teks, tanpa ikon
-                              );
-                            }).toList(),
-                      ),
-                    ),
-                  ],
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: Bank,
+                    hint: Text('SEMUA', style: whiteReguler),
+                    isDense: true,
+                    dropdownColor: red,
+                    icon: Icon(Icons.arrow_drop_down, color: white, size: 18),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        Bank = newValue;
+                      });
+                    },
+                    items:
+                        <String>[
+                          'SEMUA',
+                          'Bank BCA',
+                          'Bank Mandiri',
+                          'Bank BNI',
+                          'Bank BTN',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(
+                              value,
+                              style: whiteReguler,
+                            ), // hanya teks, tanpa ikon
+                          );
+                        }).toList(),
+                  ),
                 ),
               ],
             ),
