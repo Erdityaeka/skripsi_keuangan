@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skripsi_keuangan/Screens/ai_screen.dart';
 import 'package:skripsi_keuangan/Screens/home_screens.dart';
+import 'package:skripsi_keuangan/Screens/transaksi_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 
 class TombolNav extends StatefulWidget {
@@ -25,7 +26,7 @@ class _TombolNavState extends State<TombolNav> {
     // Daftar halaman untuk setiap tab
     final List<Widget> listPage = <Widget>[
       const HomeScreens(),
-      Container(),
+      const TransaksiScreens(showBackButton: false),
       Container(),
       Container(),
       Container(),

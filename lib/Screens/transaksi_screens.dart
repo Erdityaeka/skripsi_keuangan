@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:skripsi_keuangan/Screens/transaksi_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 
-class HomeScreens extends StatefulWidget {
-  const HomeScreens({super.key});
+class TransaksiScreens extends StatefulWidget {
+  //memebriukan opsi button pada appbar
+  final bool showBackButton;
+  const TransaksiScreens({super.key, required this.showBackButton});
 
   @override
-  State<HomeScreens> createState() => _HomeScreensState();
+  State<TransaksiScreens> createState() => _TransaksiScreensState();
 }
 
-class _HomeScreensState extends State<HomeScreens> {
+class _TransaksiScreensState extends State<TransaksiScreens> {
   bool _isPasswordVisible = false;
   String? Bank;
 
@@ -27,10 +28,14 @@ class _HomeScreensState extends State<HomeScreens> {
               cardBank(),
               const SizedBox(height: 50),
               listTransaksi(),
+              SizedBox(height: 80), // beri jarak bawah untuk tombol
             ],
           ),
         ),
       ),
+      floatingActionButton: _buildFloatingActionButton(),
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.endFloat, // posisi tombol di kanan bawah
     );
   }
 
@@ -38,23 +43,10 @@ class _HomeScreensState extends State<HomeScreens> {
   PreferredSizeWidget _buildAppbar(context) {
     return AppBar(
       backgroundColor: whiteBold.color,
-      automaticallyImplyLeading: false,
-      title: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text('Hi,', style: redBold15),
-                const SizedBox(width: 5),
-                Text('Erditya', style: redBold15),
-              ],
-            ),
-            Text('Selamat datang kembali...', style: redReguler15),
-          ],
-        ),
-      ),
+      automaticallyImplyLeading: widget.showBackButton,
+      title: Text('Transaksi', style: redBold20),
+      centerTitle: true,
+
       flexibleSpace: Container(
         decoration: BoxDecoration(color: whiteBold.color),
       ),
@@ -144,37 +136,55 @@ class _HomeScreensState extends State<HomeScreens> {
   Widget cardBank() {
     return Container(
       width: double.infinity,
-      height: 50,
       decoration: BoxDecoration(
         color: red,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: Bank,
-            dropdownColor: red,
-            icon: Icon(Icons.arrow_drop_down, color: white),
-            onChanged: (String? newValue) {
-              setState(() {
-                Bank = newValue;
-              });
-            },
-            items:
-                <String>[
-                  'SEMUA',
-                  'Bank BCA',
-                  'Bank Mandiri',
-                  'Bank BNI',
-                  'Bank BTN',
-                ].map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value, style: whiteReguler),
-                  );
-                }).toList(),
-          ),
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(Icons.arrow_left_outlined, color: white),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text('Januari', style: whiteBold),
+                const SizedBox(height: 4), // jarak kecil
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: Bank,
+                    hint: Text('SEMUA', style: whiteReguler),
+                    isDense: true, // bikin dropdown lebih rapat
+                    dropdownColor: red,
+                    icon: Icon(Icons.arrow_drop_down, color: white),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        Bank = newValue;
+                      });
+                    },
+                    items:
+                        <String>[
+                          'SEMUA',
+                          'Bank BCA',
+                          'Bank Mandiri',
+                          'Bank BNI',
+                          'Bank BTN',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value, style: whiteReguler),
+                          );
+                        }).toList(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 10),
+            Icon(Icons.arrow_right_outlined, color: white),
+          ],
         ),
       ),
     );
@@ -186,22 +196,6 @@ class _HomeScreensState extends State<HomeScreens> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Transaksi Terbaru', style: redReguler15),
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TransaksiScreens(showBackButton: true)),
-                );
-              },
-              child: Text('Lihat Semua', style: blueReguler12),
-            ),
-          ],
-        ),
-        SizedBox(height: 20),
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -333,6 +327,16 @@ class _HomeScreensState extends State<HomeScreens> {
           ),
         ),
       ],
+    );
+  }
+
+  FloatingActionButton _buildFloatingActionButton() {
+    return FloatingActionButton(
+      onPressed: () {
+        // Aksi ketika tombol ditekan
+      },
+      backgroundColor: red,
+      child: Icon(Icons.add, color: white),
     );
   }
 }
