@@ -77,7 +77,7 @@ class _LoginScreensState extends State<LoginScreens> {
           ),
         ),
         const SizedBox(height: 20),
-        Text('Password', style: blackReguler),
+        Text('Passwor', style: blackReguler),
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
