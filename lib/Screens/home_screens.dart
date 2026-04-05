@@ -47,7 +47,7 @@ class _HomeScreensState extends State<HomeScreens> {
               children: [
                 Text('Hi,', style: redBold15),
                 const SizedBox(width: 5),
-                Text('User', style: redBold15),
+                Text('Erditya', style: redBold15),
               ],
             ),
             Text('Selamat datang kembali...', style: redReguler15),
@@ -145,7 +145,7 @@ class _HomeScreensState extends State<HomeScreens> {
       width: double.infinity,
       height: 50,
       decoration: BoxDecoration(
-        color: redblack,
+        color: red,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
@@ -153,7 +153,7 @@ class _HomeScreensState extends State<HomeScreens> {
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: Bank,
-            dropdownColor: redblack,
+            dropdownColor: red,
             icon: Icon(Icons.arrow_drop_down, color: white),
             onChanged: (String? newValue) {
               setState(() {
@@ -188,7 +188,7 @@ class _HomeScreensState extends State<HomeScreens> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Transaksi Terakhir', style: redReguler15),
+            Text('Transaksi Terbaru', style: redReguler15),
             Text('Lihat Semua', style: blueReguler12),
           ],
         ),
