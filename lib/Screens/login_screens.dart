@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Screens/Sigin_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
-import 'package:skripsi_keuangan/navigation/bottom_navigationbar.dart';
+import 'package:skripsi_keuangan/navigation/bottom_navigation.dart';
 
 class LoginScreens extends StatefulWidget {
   const LoginScreens({super.key});
