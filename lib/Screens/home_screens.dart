@@ -155,6 +155,7 @@ class _HomeScreensState extends State<HomeScreens> {
           child: DropdownButton<String>(
             value: Bank,
             dropdownColor: red,
+            hint: Text('SEMUA', style: whiteReguler),
             icon: Icon(Icons.arrow_drop_down, color: white),
             onChanged: (String? newValue) {
               setState(() {
@@ -194,7 +195,10 @@ class _HomeScreensState extends State<HomeScreens> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => TransaksiScreens(showBackButton: true)),
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        TransaksiScreens(showBackButton: true),
+                  ),
                 );
               },
               child: Text('Lihat Semua', style: blueReguler12),
