@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:skripsi_keuangan/Screens/transaksi_screens.dart';
+import 'package:skripsi_keuangan/Screens/transaksi/transaksi_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 
 class HomeScreens extends StatefulWidget {
