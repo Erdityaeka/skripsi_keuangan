@@ -128,7 +128,7 @@ class _SiginScreensState extends State<SiginScreens> {
                   Icons.lock_outline_rounded,
                   color: greyReguler.color,
                 ),
-                hintText: 'Masukan Password',
+                hintText: 'Masukan Passwor',
                 hintStyle: greyReguler,
                 suffixIcon: InkWell(
                   onTap: () {
