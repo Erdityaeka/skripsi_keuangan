@@ -299,7 +299,7 @@ class _HomeScreensState extends State<HomeScreens> {
                       ],
                     ),
                     Spacer(),
-                    Text('Rp. 1.000.000', style: yellowBold12),
+                    Text('Rp. 1.000.00', style: yellowBold12),
                   ],
                 ),
               ),
