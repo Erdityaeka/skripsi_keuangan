@@ -67,10 +67,10 @@ class _SiginScreensState extends State<SiginScreens> {
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
-          height: 50,
+          height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: redBold20.color!, width: 2),
-            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14.0),
@@ -89,10 +89,10 @@ class _SiginScreensState extends State<SiginScreens> {
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
-          height: 50,
+          height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: redBold20.color!, width: 2),
-            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14.0),
@@ -114,10 +114,10 @@ class _SiginScreensState extends State<SiginScreens> {
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
-          height: 50,
+          height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: redBold20.color!, width: 2),
-            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14.0),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Screens/Sigin_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
-import 'package:skripsi_keuangan/navigation/navbar.dart';
+import 'package:skripsi_keuangan/navigation/bottom_navigationbar.dart';
 
 class LoginScreens extends StatefulWidget {
   const LoginScreens({super.key});
@@ -59,19 +59,16 @@ class _LoginScreensState extends State<LoginScreens> {
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
-          height: 50,
+          height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: redBold20.color!, width: 2),
-            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: TextField(
               decoration: InputDecoration(
-                icon: Icon(
-                  Icons.mark_email_unread_rounded,
-                  color: greyReguler.color,
-                ),
+                icon: Icon(Icons.mark_email_unread_rounded, color: grey),
                 hintText: 'Masukan Email',
                 hintStyle: greyReguler,
                 border: InputBorder.none,
@@ -84,20 +81,17 @@ class _LoginScreensState extends State<LoginScreens> {
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
-          height: 50,
+          height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: redBold20.color!, width: 2),
-            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: TextField(
               obscureText: !_isPasswordVisible,
               decoration: InputDecoration(
-                icon: Icon(
-                  Icons.lock_outline_rounded,
-                  color: greyReguler.color,
-                ),
+                icon: Icon(Icons.lock_outline_rounded, color: grey),
                 hintText: 'Masukan Password',
                 hintStyle: greyReguler,
                 suffixIcon: InkWell(
@@ -110,7 +104,7 @@ class _LoginScreensState extends State<LoginScreens> {
                     _isPasswordVisible
                         ? Icons.visibility_outlined
                         : Icons.visibility_off_outlined,
-                    color: blackReguler.color,
+                    color: black,
                   ),
                 ),
                 border: InputBorder.none,
