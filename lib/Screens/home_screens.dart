@@ -79,7 +79,11 @@ class _HomeScreensState extends State<HomeScreens> {
               children: [
                 Text('Pemasukan', style: greenBold15),
                 const SizedBox(height: 5),
-                Text('Rp. 1.000.000', style: whiteReguler),
+                Text(
+                  'Rp. 1.000.000',
+                  style: whiteReguler,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
             Padding(
@@ -89,7 +93,11 @@ class _HomeScreensState extends State<HomeScreens> {
                 children: [
                   Text('Pemasukan', style: yellowBold15),
                   const SizedBox(height: 5),
-                  Text('Rp. 1.000.000', style: whiteReguler),
+                  Text(
+                    'Rp. 1.000.000',
+                    style: whiteReguler,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
@@ -120,6 +128,7 @@ class _HomeScreensState extends State<HomeScreens> {
                   Text(
                     _isPasswordVisible ? 'Rp. 1.000.000' : '••••••••',
                     style: whiteReguler,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -253,7 +262,11 @@ class _HomeScreensState extends State<HomeScreens> {
                       ],
                     ),
                     Spacer(),
-                    Text('Rp. 1.000.000', style: greenBold12),
+                    Text(
+                      'Rp. 1.000.000',
+                      style: greenBold12,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
@@ -299,7 +312,11 @@ class _HomeScreensState extends State<HomeScreens> {
                       ],
                     ),
                     Spacer(),
-                    Text('Rp. 1.000.00', style: yellowBold12),
+                    Text(
+                      'Rp. 1.000.000',
+                      style: yellowBold12,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
