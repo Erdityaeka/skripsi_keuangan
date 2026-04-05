@@ -148,7 +148,7 @@ class _LoginScreensState extends State<LoginScreens> {
                   MaterialPageRoute(builder: (context) => SiginScreens()),
                 );
               },
-              child: Text('Dafta', style: redReguler15),
+              child: Text('Daftar', style: redReguler15),
             ),
           ],
         ),
