@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 
-class TambahTransaksi extends StatefulWidget {
-  const TambahTransaksi({super.key});
+class EditTransaksi extends StatefulWidget {
+  const EditTransaksi({super.key});
 
   @override
-  State<TambahTransaksi> createState() => _TambahTransaksiState();
+  State<EditTransaksi> createState() => _EditTransaksiState();
 }
 
-class _TambahTransaksiState extends State<TambahTransaksi> {
+class _EditTransaksiState extends State<EditTransaksi> {
   String? Transaksi;
   String? Kategori;
   String? Bank;
@@ -48,8 +48,16 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
         },
         icon: Icon(Icons.arrow_back, color: red),
       ),
-      title: Text('Tambah Transaksi', style: redBold20),
+      title: Text('Edit Transaksi', style: redBold20),
       centerTitle: true,
+      actions: [
+        IconButton(
+          onPressed: () {
+            // Aksi untuk tombol hapus
+          },
+          icon: Icon(Icons.delete, color: red),
+        ),
+      ],
       flexibleSpace: Container(decoration: BoxDecoration(color: white)),
     );
   }

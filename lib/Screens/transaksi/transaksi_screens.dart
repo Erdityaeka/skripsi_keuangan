@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:skripsi_keuangan/Screens/transaksi/edit_transaksi.dart';
+import 'package:skripsi_keuangan/Screens/transaksi/tambah_transaksi.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 
 class TransaksiScreens extends StatefulWidget {
@@ -28,7 +30,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
               cardBank(),
               const SizedBox(height: 50),
               listTransaksi(),
-              SizedBox(height: 80), // beri jarak bawah untuk tombol
+              SizedBox(height: 80),
             ],
           ),
         ),
@@ -43,13 +45,19 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
   PreferredSizeWidget _buildAppbar(context) {
     return AppBar(
       backgroundColor: whiteBold.color,
-      automaticallyImplyLeading: widget.showBackButton,
+      automaticallyImplyLeading: false, // matikan otomatis
+      leading: widget.showBackButton
+          ? IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: Icon(Icons.arrow_back, color: red),
+            )
+          : null,
       title: Text('Transaksi', style: redBold20),
       centerTitle: true,
 
-      flexibleSpace: Container(
-        decoration: BoxDecoration(color: whiteBold.color),
-      ),
+      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
     );
   }
 
@@ -228,102 +236,126 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
               ),
               Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 40, // lebar lingkaran
-                      height: 40, // tinggi lingkaran
-                      decoration: BoxDecoration(
-                        color: green,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.call_made, color: white, size: 24),
-                    ),
-                    SizedBox(width: 15),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EditTransaksi()),
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          'Ayam Goreng',
-                          style: redBold15,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        Container(
+                          width: 40, // lebar lingkaran
+                          height: 40, // tinggi lingkaran
+                          decoration: BoxDecoration(
+                            color: green,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.call_made, color: white, size: 24),
                         ),
-                        SizedBox(height: 5),
-                        Text(
-                          'Makanan',
-                          style: redReguler12,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        SizedBox(width: 15),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Ayam Goreng',
+                              style: redBold15,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'Makanan',
+                              style: redReguler12,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'Bank BCA',
+                              style: redReguler12,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        SizedBox(height: 5),
+                        Spacer(),
                         Text(
-                          'Bank BCA',
-                          style: redReguler12,
-                          maxLines: 2,
+                          'Rp. 1.000.000',
+                          style: greenBold12,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
-                    Spacer(),
-                    Text(
-                      'Rp. 1.000.000',
-                      style: greenBold12,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                  ),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 40, // lebar lingkaran
-                      height: 40, // tinggi lingkaran
-                      decoration: BoxDecoration(
-                        color: yellow,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.call_made, color: white, size: 24),
-                    ),
-                    SizedBox(width: 15),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EditTransaksi()),
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          'Ikan Goreng',
-                          style: redBold15,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        Container(
+                          width: 40, // lebar lingkaran
+                          height: 40, // tinggi lingkaran
+                          decoration: BoxDecoration(
+                            color: yellow,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.call_made, color: white, size: 24),
                         ),
-                        SizedBox(height: 5),
-                        Text(
-                          'Makanan',
-                          style: redReguler12,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        SizedBox(width: 15),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Ikan Goreng',
+                              style: redBold15,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'Makanan',
+                              style: redReguler12,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'Bank BCA',
+                              style: redReguler12,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        SizedBox(height: 5),
+                        Spacer(),
                         Text(
-                          'Bank BCA',
-                          style: redReguler12,
-                          maxLines: 2,
+                          'Rp. 1.000.000',
+                          style: yellowBold12,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
-                    Spacer(),
-                    Text(
-                      'Rp. 1.000.000',
-                      style: yellowBold12,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -336,7 +368,10 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
   FloatingActionButton _buildFloatingActionButton() {
     return FloatingActionButton(
       onPressed: () {
-        // Aksi ketika tombol ditekan
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TambahTransaksi()),
+        );
       },
       backgroundColor: red,
       child: Icon(Icons.add, color: white),

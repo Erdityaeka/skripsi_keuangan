@@ -21,6 +21,11 @@ TextStyle blackReguler = GoogleFonts.poppins(
   fontSize: 15,
   fontWeight: FontWeight.w400,
 );
+TextStyle blackReguler12 = GoogleFonts.poppins(
+  color: black,
+  fontSize: 12,
+  fontWeight: FontWeight.w400,
+);
 // Warna putih
 TextStyle whiteBold = GoogleFonts.poppins(
   color: white,
