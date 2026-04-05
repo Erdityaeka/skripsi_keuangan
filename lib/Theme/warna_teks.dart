@@ -7,7 +7,7 @@ Color grey = Color(0xFF999999);
 Color red = Color(0xFF800020);
 Color redblack = Color(0xFF5F0018);
 Color green = Color(0xFF1BE400);
-Color yellow = Color(0xFFFFC50);
+Color yellow = Color(0xFFFFC506);
 Color blue = Color(0xFF3718E6);
 
 // Warna hitam
