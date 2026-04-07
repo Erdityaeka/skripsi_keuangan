@@ -35,6 +35,8 @@ class _LoginScreensState extends State<LoginScreens> {
                 ),
                 SizedBox(height: 35),
                 button(),
+                SizedBox(height: 120),
+                Center(child: Text('V.1.0.0', style: greyReguler)),
               ],
             ),
           ),
