@@ -52,10 +52,10 @@ class _SiginScreensState extends State<SiginScreens> {
   }
 
   Widget image() {
-    return const Image(
-      image: AssetImage('images/Icon.png'),
-      width: 250,
-      height: 250,
+    return CircleAvatar(
+      radius: 50,
+      backgroundColor: red,
+      child: Icon(Icons.camera_alt_outlined, size: 50, color: white),
     );
   }
 
@@ -65,6 +65,8 @@ class _SiginScreensState extends State<SiginScreens> {
       children: [
         Text('Username', style: blackReguler),
         const SizedBox(height: 10),
+
+        // Input untuk username
         Container(
           width: double.infinity,
           height: 55,
@@ -87,6 +89,8 @@ class _SiginScreensState extends State<SiginScreens> {
         const SizedBox(height: 20),
         Text('Email Address', style: blackReguler),
         const SizedBox(height: 10),
+
+        // Input untuk email
         Container(
           width: double.infinity,
           height: 55,
@@ -112,6 +116,8 @@ class _SiginScreensState extends State<SiginScreens> {
         const SizedBox(height: 20),
         Text('Password', style: blackReguler),
         const SizedBox(height: 10),
+
+        // Input untuk password
         Container(
           width: double.infinity,
           height: 55,
