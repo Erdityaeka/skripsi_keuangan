@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 
 class ProfileScreens extends StatefulWidget {
@@ -13,21 +15,23 @@ class _ProfileScreensState extends State<ProfileScreens> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 30,
-            bottom: 20,
-          ),
-          child: Column(
-            children: [
-              profileimage(),
-              SizedBox(height: 30),
-              buttonBody(),
-              Spacer(),
-              butonLogout(),
-            ],
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 30,
+              bottom: 20,
+            ),
+            child: Column(
+              children: [
+                profileimage(),
+                SizedBox(height: 30),
+                buttonBody(),
+                SizedBox(height: 100),
+                butonLogout(),
+              ],
+            ),
           ),
         ),
       ),
@@ -67,45 +71,63 @@ class _ProfileScreensState extends State<ProfileScreens> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         //Button Bank
-        Container(
-          width: double.infinity,
-          height: 50,
-          decoration: BoxDecoration(
-            color: white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(Icons.account_balance, size: 20, color: black),
-              const SizedBox(width: 20),
-              Text('Tambah Bank', style: blackReguler),
-              Spacer(),
-              Icon(Icons.arrow_right_rounded, size: 20, color: black),
-            ],
+        InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => BankScreens()),
+            );
+          },
+
+          child: Container(
+            width: double.infinity,
+            height: 50,
+            decoration: BoxDecoration(
+              color: white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Icons.account_balance, size: 20, color: black),
+                const SizedBox(width: 20),
+                Text('Tambah Bank', style: blackReguler),
+                Spacer(),
+                Icon(Icons.arrow_right_rounded, size: 20, color: black),
+              ],
+            ),
           ),
         ),
         SizedBox(height: 30),
 
         //Button Kategori
-        Container(
-          width: double.infinity,
-          height: 50,
-          decoration: BoxDecoration(
-            color: white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(Icons.table_chart, size: 20, color: black),
-              const SizedBox(width: 20),
-              Text('Tambah Kategori', style: blackReguler),
-              Spacer(),
-              Icon(Icons.arrow_right_rounded, size: 20, color: black),
-            ],
+        InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => KategoriScreens()),
+            );
+          },
+
+          child: Container(
+            width: double.infinity,
+            height: 50,
+            decoration: BoxDecoration(
+              color: white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Icons.table_chart, size: 20, color: black),
+                const SizedBox(width: 20),
+                Text('Tambah Kategori', style: blackReguler),
+                Spacer(),
+                Icon(Icons.arrow_right_rounded, size: 20, color: black),
+              ],
+            ),
           ),
         ),
         SizedBox(height: 30),

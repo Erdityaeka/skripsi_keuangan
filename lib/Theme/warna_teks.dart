@@ -16,6 +16,11 @@ TextStyle blackBold = GoogleFonts.poppins(
   fontSize: 20,
   fontWeight: FontWeight.bold,
 );
+TextStyle blackBold15 = GoogleFonts.poppins(
+  color: black,
+  fontSize: 15,
+  fontWeight: FontWeight.bold,
+);
 TextStyle blackReguler = GoogleFonts.poppins(
   color: black,
   fontSize: 15,
