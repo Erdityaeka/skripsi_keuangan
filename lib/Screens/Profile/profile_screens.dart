@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
+import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:skripsi_keuangan/services/auth_services.dart';
 
 class ProfileScreens extends StatefulWidget {
   const ProfileScreens({super.key});
@@ -201,21 +203,32 @@ class _ProfileScreensState extends State<ProfileScreens> {
   }
 
   Widget butonLogout() {
-    return Container(
-      width: double.infinity,
-      height: 50,
-      decoration: BoxDecoration(
-        color: red,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(Icons.logout, size: 20, color: white),
-          const SizedBox(width: 10),
-          Text('Logout', style: whiteBold),
-        ],
+    return GestureDetector(
+      onTap: () async {
+        await AuthService().signOut();
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreens()),
+          (Route<dynamic> route) => false,
+        );
+      },
+
+      child: Container(
+        width: double.infinity,
+        height: 50,
+        decoration: BoxDecoration(
+          color: red,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(Icons.logout, size: 20, color: white),
+            const SizedBox(width: 10),
+            Text('Logout', style: whiteBold),
+          ],
+        ),
       ),
     );
   }
