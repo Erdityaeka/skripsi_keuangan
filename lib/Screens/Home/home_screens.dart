@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Screens/transaksi/transaksi_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
@@ -10,13 +11,24 @@ class HomeScreens extends StatefulWidget {
 }
 
 class _HomeScreensState extends State<HomeScreens> {
+  User? user = FirebaseAuth.instance.currentUser;
   bool _isPasswordVisible = false;
   String? Bank;
+  String capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
 
   @override
   Widget build(BuildContext context) {
+    String displayNama = user?.displayName ?? 'User';
+    // Ambil nama dari user, jika null gunakan 'User'
+    List<String> parts = displayNama.split(
+      '|',
+    ); // Pisahkan nama berdasarkan spasi
+    String nama = parts.isNotEmpty ? parts[0] : "User";
     return Scaffold(
-      appBar: _buildAppbar(context),
+      appBar: _buildAppbar(context, nama),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
@@ -35,7 +47,7 @@ class _HomeScreensState extends State<HomeScreens> {
   }
 
   // ui appbar
-  PreferredSizeWidget _buildAppbar(context) {
+  PreferredSizeWidget _buildAppbar(context, String nama) {
     return AppBar(
       backgroundColor: whiteBold.color,
       automaticallyImplyLeading: false,
@@ -48,7 +60,7 @@ class _HomeScreensState extends State<HomeScreens> {
               children: [
                 Text('Hi,', style: redBold15),
                 const SizedBox(width: 5),
-                Text('Erditya', style: redBold15),
+                Text(capitalize(nama), style: redBold15),
               ],
             ),
             Text('Selamat datang kembali...', style: redReguler15),
