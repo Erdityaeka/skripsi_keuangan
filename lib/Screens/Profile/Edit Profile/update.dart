@@ -18,6 +18,7 @@ class _UpdatescreenState extends State<Updatescreen> {
   final namaC = TextEditingController();
   final emailC = TextEditingController();
   final passwordC = TextEditingController();
+  bool pickingImage = false; // 🔒 penahan
 
   bool loading = false;
 
@@ -68,8 +69,22 @@ class _UpdatescreenState extends State<Updatescreen> {
 
   // ================= PILIH FOTO =================
   Future<void> pilihFoto() async {
-    final img = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (img != null) setState(() => fotoBaru = img);
+    // 🔥 cegah double klik
+    if (pickingImage) return;
+
+    pickingImage = true;
+
+    try {
+      final img = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+      if (img != null && mounted) {
+        setState(() => fotoBaru = img);
+      }
+    } catch (e) {
+      print("Error picker: $e");
+    } finally {
+      pickingImage = false; // 🔓 buka lagi
+    }
   }
 
   // ================= SIMPAN =================

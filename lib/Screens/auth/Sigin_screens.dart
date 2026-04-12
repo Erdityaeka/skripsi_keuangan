@@ -1,10 +1,6 @@
 import 'dart:io';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
@@ -18,8 +14,7 @@ class SiginScreens extends StatefulWidget {
 
 class _SiginScreensState extends State<SiginScreens> {
   bool _isPasswordVisible = false;
-
-  // ✅ TAMBAHAN (WAJIB ADA)
+  bool _isPicking = false;
   final TextEditingController _emailController = TextEditingController();
 
   final TextEditingController _passwordController = TextEditingController();
@@ -48,10 +43,23 @@ class _SiginScreensState extends State<SiginScreens> {
 
   // Fungsi untuk memilih gambar
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() => _pickedImage = image);
+    // 🚫 kalau sedang proses → jangan jalan lagi
+    if (_isPicking) return;
+
+    _isPicking = true;
+
+    try {
+      final picker = ImagePicker();
+
+      final image = await picker.pickImage(source: ImageSource.gallery);
+
+      if (image != null && mounted) {
+        setState(() => _pickedImage = image);
+      }
+    } catch (e) {
+      print("ImagePicker error: $e");
+    } finally {
+      _isPicking = false; // 🔓 buka lock
     }
   }
 
@@ -86,7 +94,6 @@ class _SiginScreensState extends State<SiginScreens> {
     setState(() => _isLoading = false);
 
     if (error == null) {
-
       _showSnack("Akun berhasil dibuat!", success: true);
 
       Future.delayed(const Duration(seconds: 1), () {
