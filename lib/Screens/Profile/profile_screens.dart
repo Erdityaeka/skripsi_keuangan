@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Edit%20Profile/update.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
@@ -287,29 +288,37 @@ class _ProfileScreensState extends State<ProfileScreens> {
 
   // Widget Gambar
   Widget profileimage(BuildContext context, String nama) {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 50,
-          backgroundColor: red,
-          backgroundImage: fotoImageFile != null
-              ? FileImage(fotoImageFile!)
-              : null,
-          child: fotoImageFile == null
-              ? Icon(Icons.person, size: 50, color: white)
-              : null,
-        ),
-        const SizedBox(width: 20),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(capitalize(nama), style: blackBold),
-            Text(user?.email ?? 'email', style: blackReguler12),
-          ],
-        ),
-        const Spacer(),
-        Icon(Icons.edit_outlined, size: 20, color: black),
-      ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => Updatescreen()),
+        );
+      },
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: red,
+            backgroundImage: fotoImageFile != null
+                ? FileImage(fotoImageFile!)
+                : null,
+            child: fotoImageFile == null
+                ? Icon(Icons.person, size: 50, color: white)
+                : null,
+          ),
+          const SizedBox(width: 20),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(capitalize(nama), style: blackBold),
+              Text(user?.email ?? 'email', style: blackReguler12),
+            ],
+          ),
+          const Spacer(),
+          Icon(Icons.edit_outlined, size: 20, color: black),
+        ],
+      ),
     );
   }
 

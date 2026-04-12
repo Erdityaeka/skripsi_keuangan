@@ -73,6 +73,8 @@ class AuthService {
   Future<String?> updateProfile({
     required String newName,
     String? newfotoFileName,
+    String? newEmail,
+    String? currentPassword, // ✅ FIX DI SINI
   }) async {
     try {
       if (newName.trim().isEmpty) {
@@ -82,20 +84,42 @@ class AuthService {
       User? user = _auth.currentUser;
       if (user == null) return "User tidak ditemukan";
 
-      // Update nama di Firebase Auth
+      // Update nama + gender
       await user.updateDisplayName(newName);
 
-      // ================= UPDATE FIRESTORE =================
-      final Map<String, dynamic> data = {'nama': newName};
+      // ================= UPDATE EMAIL =================
+      if (newEmail != null &&
+          newEmail.trim().isNotEmpty &&
+          newEmail != user.email) {
+        if (currentPassword == null || currentPassword.isEmpty) {
+          return "Masukkan password untuk mengganti email";
+        }
 
-      if (newfotoFileName != null && newfotoFileName.isNotEmpty) {
-        data['foto'] = newfotoFileName;
+        try {
+          // ✅ RE-AUTH
+          AuthCredential credential = EmailAuthProvider.credential(
+            email: user.email!,
+            password: currentPassword,
+          );
+
+          await user.reauthenticateWithCredential(credential);
+
+          // ✅ UPDATE EMAIL (WAJIB VERIFIKASI)
+          await user.verifyBeforeUpdateEmail(newEmail);
+
+          return "Cek email baru untuk konfirmasi perubahan";
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'wrong-password') {
+            return "Password salah";
+          }
+          return e.message;
+        }
       }
 
-      await _db
-          .collection('user')
-          .doc(user.uid)
-          .set(data, SetOptions(merge: true));
+      // ================= UPDATE FIRESTORE =================
+      await _db.collection('users').doc(user.uid).set({
+        if (newfotoFileName != null) 'profileImage': newfotoFileName,
+      }, SetOptions(merge: true));
 
       await user.reload();
 
