@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:skripsi_keuangan/Screens/login_screens.dart';
+import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 
 class SiginScreens extends StatefulWidget {

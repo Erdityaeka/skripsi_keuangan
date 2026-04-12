@@ -1,0 +1,32 @@
+[33m86b1e0f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{0}: commit (amend): mengintergrasi kan fungsi login
+[33m37951b9[m[33m ([m[1;31morigin/main[m[33m)[m HEAD@{1}: commit: betulkan internet notifikasi
+[33md9f1ab4[m HEAD@{2}: commit: betulkan model dan services
+[33m0a41887[m HEAD@{3}: commit: konfigurasi firebase
+[33m82d34d9[m HEAD@{4}: commit: betulkan posisi halaman ai
+[33m46453e6[m HEAD@{5}: commit: membuat folder dan betulkan navigation
+[33mdb0de08[m HEAD@{6}: commit: Menambah text versi app
+[33mabd754b[m HEAD@{7}: commit: Menambah text versi app
+[33m973112e[m HEAD@{8}: commit: Menbah text versi app
+[33md3eb687[m HEAD@{9}: commit: membuat halaman profile dan navigation
+[33m7d33176[m HEAD@{10}: commit: menambah fitur foto
+[33m189537f[m HEAD@{11}: commit: Betulkan fitur navigation
+[33m2635f1a[m HEAD@{12}: commit: Betulkan fitur navigation
+[33m1d43ad1[m HEAD@{13}: commit: Betulkan jarak dropdown
+[33md8cc5f3[m HEAD@{14}: commit: Betulkan dropdown
+[33m1d97f34[m HEAD@{15}: commit: Menambah fitu navigation
+[33m43ed28a[m HEAD@{16}: commit: Menambah fitur navigation
+[33m52e4b5c[m HEAD@{17}: commit: membuat halaman home
+[33mb38c676[m HEAD@{18}: commit: membuat halaman home
+[33mb9ab258[m HEAD@{19}: commit: membuat halaman home
+[33m781ab7c[m HEAD@{20}: commit: betulkan halaman register
+[33m43471d0[m HEAD@{21}: commit: betulkan halaman register
+[33m91dce71[m HEAD@{22}: commit: menambah warna merah hitam
+[33m907fc8c[m HEAD@{23}: commit: menambah warna merah hitam
+[33m1c2959a[m HEAD@{24}: commit: betulkan halaman login
+[33m0b953cb[m HEAD@{25}: commit: betulkan halaman login
+[33mcb83177[m HEAD@{26}: commit: betulkan halaman bottom navbar
+[33m092c685[m HEAD@{27}: commit: betulkan halaman login
+[33m6a9be60[m HEAD@{28}: commit: betulkan halaman login
+[33ma80fd9c[m HEAD@{29}: commit: betulkan halaman logoin,bottom,home dan warna
+[33mda1f19e[m HEAD@{30}: Branch: renamed refs/heads/master to refs/heads/main
+[33mda1f19e[m HEAD@{32}: commit (initial): first commit

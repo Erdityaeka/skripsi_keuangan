@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:skripsi_keuangan/Screens/SplashScreen/splash_screen.dart';
-import 'package:skripsi_keuangan/Screens/login_screens.dart';
+import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Screens/home_screens.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
 import '../main.dart'; // supaya bisa akses splashActive
