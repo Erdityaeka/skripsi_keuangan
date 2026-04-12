@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+<!-- Permission internet untuk produksi -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="skripsi_keuangan"
         android:name="${applicationName}"

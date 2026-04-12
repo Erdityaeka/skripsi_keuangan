@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "515165052280",
+    "firebase_url": "https://keuangan-ce1d6-default-rtdb.firebaseio.com",
+    "project_id": "keuangan-ce1d6",
+    "storage_bucket": "keuangan-ce1d6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:515165052280:android:1fcf74d9ae91558471fc8d",
+        "android_client_info": {
+          "package_name": "com.example.skripsi_keuangan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTldKdPefI1Sfs2K9NzCpXGh-oaQ23ueY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
