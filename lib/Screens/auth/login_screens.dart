@@ -28,8 +28,8 @@ class _LoginScreensState extends State<LoginScreens> {
   void _showSnack(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg, textAlign: TextAlign.center),
-        backgroundColor: success ? greenblack : red,
+        content: Text(msg, textAlign: TextAlign.center, style: whiteBold),
+        backgroundColor: success ? greenblack : rednotfif,
       ),
     );
   }
