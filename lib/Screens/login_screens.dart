@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Screens/Sigin_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/navigation/bottom_navigation.dart';
+import 'package:skripsi_keuangan/services/auth_services.dart';
 
 class LoginScreens extends StatefulWidget {
   const LoginScreens({super.key});
@@ -11,8 +12,129 @@ class LoginScreens extends StatefulWidget {
 }
 
 class _LoginScreensState extends State<LoginScreens> {
-  bool _isPasswordVisible = false; // perbaiki penulisan
+  bool _isPasswordVisible = false;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  //snackbar no
+  void _showSnack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Center(child: Text(msg)),
+        backgroundColor: red,
+      ),
+    );
+  }
+
+  //fungsi login
+  void _handleLogin() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      _showSnack("Email dan Password tidak boleh kosong");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    String? error = await AuthService().signIn(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (error == null) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const TombolNav()),
+        (route) => false,
+      );
+      return;
+    }
+
+    // EMAIL / PASSWORD SALAH
+    final err = error.toLowerCase();
+
+    if (err.contains("invalid-email")) {
+      _showSnack("Format email tidak valid (harus ada @)");
+    } else {
+      _showSnack("Email atau Password salah");
+    }
+  }
+
+  //Fungsi  Lupa  Password
+  void _showForgotPasswordDialog() {
+    final resetEmailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Text("Reset Password"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Masukkan email Anda. Kami akan mengirimkan link untuk mengatur ulang password.",
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 15),
+            TextField(
+              controller: resetEmailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: "Email",
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (resetEmailController.text.isNotEmpty) {
+                String? error = await AuthService().resetPassword(
+                  resetEmailController.text.trim(),
+                );
+                if (!mounted) return;
+                Navigator.pop(context);
+
+                if (error == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "Email reset dikirim! Silakan cek Inbox/Spam.",
+                      ),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  _showSnack(error);
+                }
+              }
+            },
+            child: const Text("Kirim"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  //UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,7 +152,10 @@ class _LoginScreensState extends State<LoginScreens> {
                 Row(
                   children: [
                     Spacer(),
-                    Text('Lupa Password?', style: redReguler15),
+                    InkWell(
+                      onTap: _showForgotPasswordDialog,
+                      child: Text('Lupa Password?', style: redReguler15),
+                    ),
                   ],
                 ),
                 SizedBox(height: 35),
@@ -69,6 +194,8 @@ class _LoginScreensState extends State<LoginScreens> {
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: TextField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
                 icon: Icon(Icons.mark_email_unread_rounded, color: grey),
                 hintText: 'Masukan Email',
@@ -91,6 +218,7 @@ class _LoginScreensState extends State<LoginScreens> {
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: TextField(
+              controller: _passwordController,
               obscureText: !_isPasswordVisible,
               decoration: InputDecoration(
                 icon: Icon(Icons.lock_outline_rounded, color: grey),
@@ -122,12 +250,7 @@ class _LoginScreensState extends State<LoginScreens> {
     return Column(
       children: [
         GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => TombolNav()),
-            );
-          },
+          onTap: _handleLogin,
           child: Container(
             width: double.infinity,
             height: 50,
@@ -135,9 +258,16 @@ class _LoginScreensState extends State<LoginScreens> {
               color: redBold20.color,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Center(child: Text('Login', style: whiteBold)),
+            child: Center(
+              child: _isLoading
+                  ? const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    )
+                  : Text('Login', style: whiteBold),
+            ),
           ),
         ),
+
         SizedBox(height: 30),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
