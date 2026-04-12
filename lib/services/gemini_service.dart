@@ -1,5 +1,5 @@
 import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:skripsi_keuangan/keys/api_keys.dart';
+import 'package:skripsi_keuangan/models/api_keys.dart';
 
 class GeminiService {
   static Future<void> initialize() async {

@@ -9,12 +9,12 @@ import 'firebase_options.dart';
 final GlobalKey<ScaffoldMessengerState> messengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
+// flag global untuk splash
+bool splashActive = true;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // await GeminiService.initialize();
-
   runApp(const RootApp());
 }
 
@@ -28,7 +28,7 @@ class RootApp extends StatefulWidget {
 class _RootAppState extends State<RootApp> {
   late StreamSubscription<List<ConnectivityResult>> subscription;
   bool isConnected = true;
-  bool _snackActive = false; // flag untuk mencegah spam
+  bool _snackActive = false;
 
   @override
   void initState() {
@@ -61,8 +61,9 @@ class _RootAppState extends State<RootApp> {
 
   void _showSnackBar(String message, Color color) {
     if (!mounted || _snackActive) return;
-    _snackActive = true;
+    if (splashActive) return; // jangan tampilkan snackbar saat splash
 
+    _snackActive = true;
     messengerKey.currentState?.showSnackBar(
       SnackBar(
         content: Text(message),
@@ -71,7 +72,6 @@ class _RootAppState extends State<RootApp> {
       ),
     );
 
-    // reset flag setelah snackbar selesai
     Future.delayed(const Duration(seconds: 3), () {
       _snackActive = false;
     });
@@ -89,7 +89,7 @@ class _RootAppState extends State<RootApp> {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: messengerKey,
       theme: ThemeData(scaffoldBackgroundColor: Colors.white),
-      home:  AppScreen(),
+      home: const AppScreen(),
     );
   }
 }
