@@ -1,6 +1,13 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:skripsi_keuangan/services/auth_services.dart';
 
 class SiginScreens extends StatefulWidget {
   const SiginScreens({super.key});
@@ -11,6 +18,104 @@ class SiginScreens extends StatefulWidget {
 
 class _SiginScreensState extends State<SiginScreens> {
   bool _isPasswordVisible = false;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _namaController = TextEditingController();
+  bool _isLoading = false;
+  XFile? _pickedImage;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _namaController.dispose();
+    super.dispose();
+  }
+
+  //Notfikasi
+  void _showSnack(String msg, {bool success = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, textAlign: TextAlign.center),
+        backgroundColor: success ? green : red,
+      ),
+    );
+  }
+
+  // Fungsi untuk memilih gambar
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() => _pickedImage = image);
+    }
+  }
+
+  //Fungsi Registrasi Akun
+  void _handleRegister() async {
+    // validasi input
+    if (_namaController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      _showSnack("Semua field harus diisi!");
+      return;
+    }
+
+    // validasi email & password
+    if (!_emailController.text.contains("@")) {
+      _showSnack("Format email tidak valid!");
+      return;
+    }
+    if (_passwordController.text.length < 6) {
+      _showSnack("Password minimal 6 karakter!");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    // proses registrasi ke Firebase Auth
+    String? error = await AuthService().register(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      nama: _namaController.text.trim(),
+    );
+
+    setState(() => _isLoading = false);
+
+    if (error == null) {
+      // ✅ Tambahkan kode Firestore di sini
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        final data = {
+          'nama': _namaController.text.trim(),
+          'email': _emailController.text.trim(),
+        };
+
+        if (_pickedImage != null) {
+          final appDir = await getApplicationDocumentsDirectory();
+          final savedImage = await File(
+            _pickedImage!.path,
+          ).copy('${appDir.path}/${_pickedImage!.name}');
+          data['profileImage'] = _pickedImage!.name;
+          data['profileImagePath'] = savedImage.path;
+        }
+
+        await FirebaseFirestore.instance
+            .collection('user')
+            .doc(uid)
+            .set(data, SetOptions(merge: true));
+      }
+
+      _showSnack("Akun berhasil dibuat!", success: true);
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.pop(context);
+      });
+    } else {
+      _showSnack("Gagal mendaftar: $error");
+    }
+  }
+
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,10 +157,18 @@ class _SiginScreensState extends State<SiginScreens> {
   }
 
   Widget image() {
-    return CircleAvatar(
-      radius: 50,
-      backgroundColor: red,
-      child: Icon(Icons.camera_alt_outlined, size: 50, color: white),
+    return GestureDetector(
+      onTap: _isLoading ? null : _pickImage,
+      child: CircleAvatar(
+        radius: 50,
+        backgroundColor: red,
+        backgroundImage: _pickedImage != null
+            ? FileImage(File(_pickedImage!.path))
+            : null,
+        child: _pickedImage == null
+            ? Icon(Icons.camera_alt_outlined, size: 50, color: white)
+            : null,
+      ),
     );
   }
 
@@ -65,7 +178,6 @@ class _SiginScreensState extends State<SiginScreens> {
       children: [
         Text('Username', style: blackReguler),
         const SizedBox(height: 10),
-
         // Input untuk username
         Container(
           width: double.infinity,
@@ -77,6 +189,8 @@ class _SiginScreensState extends State<SiginScreens> {
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: TextField(
+              controller: _namaController,
+              enabled: !_isLoading,
               decoration: InputDecoration(
                 icon: Icon(Icons.person_outline, color: greyReguler.color),
                 hintText: 'Masukan Username',
@@ -87,6 +201,8 @@ class _SiginScreensState extends State<SiginScreens> {
           ),
         ),
         const SizedBox(height: 20),
+
+        // email
         Text('Email Address', style: blackReguler),
         const SizedBox(height: 10),
 
@@ -101,6 +217,9 @@ class _SiginScreensState extends State<SiginScreens> {
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: TextField(
+              controller: _emailController,
+              enabled: !_isLoading,
+              keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
                 icon: Icon(
                   Icons.mark_email_unread_rounded,
@@ -114,6 +233,8 @@ class _SiginScreensState extends State<SiginScreens> {
           ),
         ),
         const SizedBox(height: 20),
+
+        // password
         Text('Password', style: blackReguler),
         const SizedBox(height: 10),
 
@@ -128,6 +249,8 @@ class _SiginScreensState extends State<SiginScreens> {
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: TextField(
+              controller: _passwordController,
+              enabled: !_isLoading,
               obscureText: !_isPasswordVisible,
               decoration: InputDecoration(
                 icon: Icon(
@@ -161,15 +284,22 @@ class _SiginScreensState extends State<SiginScreens> {
   Widget button() {
     return Column(
       children: [
-        Container(
-          width: double.infinity,
-          height: 50,
-          decoration: BoxDecoration(
-            color: redBold20.color,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Center(child: Text('Daftar', style: whiteBold)),
-        ),
+        _isLoading
+            ? const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              )
+            : GestureDetector(
+                onTap: _handleRegister,
+                child: Container(
+                  width: double.infinity,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: redBold20.color,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(child: Text('Daftar', style: whiteBold)),
+                ),
+              ),
       ],
     );
   }
