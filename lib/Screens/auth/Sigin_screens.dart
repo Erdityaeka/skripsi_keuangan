@@ -18,17 +18,23 @@ class SiginScreens extends StatefulWidget {
 
 class _SiginScreensState extends State<SiginScreens> {
   bool _isPasswordVisible = false;
+
+  // ✅ TAMBAHAN (WAJIB ADA)
   final TextEditingController _emailController = TextEditingController();
+
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+
   bool _isLoading = false;
   XFile? _pickedImage;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _emailController.dispose(); // ✅ FIX
     _passwordController.dispose();
     _namaController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -51,9 +57,8 @@ class _SiginScreensState extends State<SiginScreens> {
     }
   }
 
-  // Fungsi Registrasi Akun
+  // ================= REGISTER =================
   void _handleRegister() async {
-    // validasi input
     if (_namaController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty) {
@@ -65,6 +70,7 @@ class _SiginScreensState extends State<SiginScreens> {
       _showSnack("Format email tidak valid!");
       return;
     }
+
     if (_passwordController.text.length < 6) {
       _showSnack("Password minimal 6 karakter!");
       return;
@@ -72,41 +78,21 @@ class _SiginScreensState extends State<SiginScreens> {
 
     setState(() => _isLoading = true);
 
-    // proses registrasi ke Firebase Auth + Firestore
     String? error = await AuthService().register(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
       nama: _namaController.text.trim(),
-      fotoFileName: _pickedImage?.name, //
+      username: _usernameController.text.trim(),
+      fotoFileName: _pickedImage?.name,
     );
 
     setState(() => _isLoading = false);
 
     if (error == null) {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid != null) {
-        final data = {
-          'nama': _namaController.text.trim(),
-          'email': _emailController.text.trim(),
-          'createdAt': FieldValue.serverTimestamp(),
-        };
-
-        if (_pickedImage != null) {
-          final appDir = await getApplicationDocumentsDirectory();
-          final savedImage = await File(
-            _pickedImage!.path,
-          ).copy('${appDir.path}/${_pickedImage!.name}');
-          data['foto'] = _pickedImage!.name;
-          data['fotoPath'] = savedImage.path;
-        }
-
-        await FirebaseFirestore.instance
-            .collection('user')
-            .doc(uid)
-            .set(data, SetOptions(merge: true));
-      }
+      // ❌ TIDAK ADA LAGI SIMPAN EMAIL / FIRESTORE DI SINI
 
       _showSnack("Akun berhasil dibuat!", success: true);
+
       Future.delayed(const Duration(seconds: 1), () {
         Navigator.pop(context);
       });
@@ -176,7 +162,7 @@ class _SiginScreensState extends State<SiginScreens> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Username', style: blackReguler),
+        Text('Nama', style: blackReguler),
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
@@ -189,6 +175,30 @@ class _SiginScreensState extends State<SiginScreens> {
             padding: const EdgeInsets.all(14.0),
             child: TextField(
               controller: _namaController,
+              enabled: !_isLoading,
+              decoration: InputDecoration(
+                icon: Icon(Icons.person_outline, color: greyReguler.color),
+                hintText: 'Masukan Nama',
+                hintStyle: greyReguler,
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text('Username', style: blackReguler),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14.0),
+            child: TextField(
+              controller: _usernameController,
               enabled: !_isLoading,
               decoration: InputDecoration(
                 icon: Icon(Icons.person_outline, color: greyReguler.color),
@@ -212,7 +222,7 @@ class _SiginScreensState extends State<SiginScreens> {
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: TextField(
-              controller: _emailController,
+              controller: _emailController, // ✅ FIX
               enabled: !_isLoading,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(

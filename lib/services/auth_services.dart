@@ -10,6 +10,7 @@ class AuthService {
     required String email,
     required String password,
     required String nama,
+    required String username,
     String? fotoFileName,
   }) async {
     try {
@@ -20,9 +21,12 @@ class AuthService {
 
       final uid = userCredential.user?.uid;
       if (uid != null) {
-        final data = {'nama': nama, 'email': email};
+        final data = {'nama': nama};
 
-        // hanya tambahkan field foto kalau ada nilainya
+        if (username.isNotEmpty) {
+          data['username'] = username;
+        }
+
         if (fotoFileName != null && fotoFileName.isNotEmpty) {
           data['foto'] = fotoFileName;
         }
@@ -73,10 +77,8 @@ class AuthService {
   // ================= UPDATE PROFIL =================
   Future<String?> updateProfile({
     required String newName,
-    required String newGender,
+    String? newUsername,
     String? newfotoFileName,
-    String? newEmail,
-    String? currentPassword, // ✅ FIX DI SINI
   }) async {
     try {
       if (newName.trim().isEmpty) {
@@ -86,45 +88,24 @@ class AuthService {
       User? user = _auth.currentUser;
       if (user == null) return "User tidak ditemukan";
 
-      // Update nama + gender
-      await user.updateDisplayName("$newName|$newGender");
-
-      // ================= UPDATE EMAIL =================
-      if (newEmail != null &&
-          newEmail.trim().isNotEmpty &&
-          newEmail != user.email) {
-        if (currentPassword == null || currentPassword.isEmpty) {
-          return "Masukkan password untuk mengganti email";
-        }
-
-        try {
-          // ✅ RE-AUTH
-          AuthCredential credential = EmailAuthProvider.credential(
-            email: user.email!,
-            password: currentPassword,
-          );
-
-          await user.reauthenticateWithCredential(credential);
-
-          // ✅ UPDATE EMAIL (WAJIB VERIFIKASI)
-          await user.verifyBeforeUpdateEmail(newEmail);
-
-          return "Cek email baru untuk konfirmasi perubahan";
-        } on FirebaseAuthException catch (e) {
-          if (e.code == 'wrong-password') {
-            return "Password salah";
-          }
-          return e.message;
-        }
-      }
+      // Update nama di Firebase Auth
+      await user.updateDisplayName(newName);
 
       // ================= UPDATE FIRESTORE =================
-      await _db.collection('user').doc(user.uid).set({
-        'nama': newName,
-        'gender': newGender,
-        'foto': newfotoFileName,
-        'email': newEmail,
-      }, SetOptions(merge: true));
+      final Map<String, dynamic> data = {'nama': newName};
+
+      if (newUsername != null && newUsername.trim().isNotEmpty) {
+        data['username'] = newUsername;
+      }
+
+      if (newfotoFileName != null && newfotoFileName.isNotEmpty) {
+        data['foto'] = newfotoFileName;
+      }
+
+      await _db
+          .collection('user')
+          .doc(user.uid)
+          .set(data, SetOptions(merge: true));
 
       await user.reload();
 
