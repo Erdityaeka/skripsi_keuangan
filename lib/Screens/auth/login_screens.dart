@@ -25,12 +25,11 @@ class _LoginScreensState extends State<LoginScreens> {
   }
 
   //snackbar no
-  void _showSnack(String msg) {
-    if (!mounted) return;
+  void _showSnack(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Center(child: Text(msg)),
-        backgroundColor: red,
+        content: Text(msg, textAlign: TextAlign.center),
+        backgroundColor: success ? green : red,
       ),
     );
   }
@@ -53,6 +52,7 @@ class _LoginScreensState extends State<LoginScreens> {
     setState(() => _isLoading = false);
 
     if (error == null) {
+      _showSnack("Login berhasil!", success: true);
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const TombolNav()),

@@ -77,7 +77,7 @@ class _SiginScreensState extends State<SiginScreens> {
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
       nama: _namaController.text.trim(),
-      fotoFileName: _pickedImage?.name, // ✅ kirim nama file ke AuthService
+      fotoFileName: _pickedImage?.name, //
     );
 
     setState(() => _isLoading = false);
@@ -97,7 +97,7 @@ class _SiginScreensState extends State<SiginScreens> {
             _pickedImage!.path,
           ).copy('${appDir.path}/${_pickedImage!.name}');
           data['foto'] = _pickedImage!.name;
-          data['fotoPath'] = savedImage.path; 
+          data['fotoPath'] = savedImage.path;
         }
 
         await FirebaseFirestore.instance
@@ -275,22 +275,24 @@ class _SiginScreensState extends State<SiginScreens> {
   Widget button() {
     return Column(
       children: [
-        _isLoading
-            ? const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              )
-            : GestureDetector(
-                onTap: _handleRegister,
-                child: Container(
-                  width: double.infinity,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: redBold20.color,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Center(child: Text('Daftar', style: whiteBold)),
-                ),
-              ),
+        GestureDetector(
+          onTap: _handleRegister,
+          child: Container(
+            width: double.infinity,
+            height: 50,
+            decoration: BoxDecoration(
+              color: redBold20.color,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: _isLoading
+                  ? const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    )
+                  : Text('Daftar', style: whiteBold),
+            ),
+          ),
+        ),
       ],
     );
   }
