@@ -5,6 +5,7 @@ Color black = Color(0xFF000000);
 Color white = Color(0xFFFFFFFF);
 Color grey = Color(0xFF999999);
 Color red = Color(0xFF800020);
+Color rednotfif = Color(0xFFBB0003);
 Color redblack = Color(0xFF5F0018);
 Color green = Color(0xFF1BE400);
 Color greenblack = Color(0xFF0B5F00);
