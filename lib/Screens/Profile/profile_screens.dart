@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -167,9 +169,14 @@ class _ProfileScreensState extends State<ProfileScreens> {
     if (confirm == true) {
       // kalau password kosong
       if (passwordController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Password wajib diisi")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: rednotfif,
+            content: Center(
+              child: Text("Password wajib diisi", style: whiteBold),
+            ),
+          ),
+        );
         return;
       }
 
@@ -197,7 +204,12 @@ class _ProfileScreensState extends State<ProfileScreens> {
           if (!mounted) return;
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Akun berhasil dihapus")),
+            SnackBar(
+              backgroundColor: greenblack,
+              content: Center(
+                child: Text("Akun berhasil dihapus", style: whiteBold),
+              ),
+            ),
           );
 
           // kembali ke login
@@ -207,9 +219,12 @@ class _ProfileScreensState extends State<ProfileScreens> {
           );
         }
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Gagal hapus akun")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: rednotfif,
+            content: Center(child: Text("Gagal hapus akun", style: whiteBold)),
+          ),
+        );
       }
     }
   }
@@ -270,8 +285,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
-  // ================= UI (TIDAK DIUBAH) =================
-
+  // Widget Gambar
   Widget profileimage(BuildContext context, String nama) {
     return Row(
       children: [

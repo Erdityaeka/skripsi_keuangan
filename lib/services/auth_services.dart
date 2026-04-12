@@ -10,7 +10,6 @@ class AuthService {
     required String email,
     required String password,
     required String nama,
-    required String username,
     String? fotoFileName,
   }) async {
     try {
@@ -22,10 +21,6 @@ class AuthService {
       final uid = userCredential.user?.uid;
       if (uid != null) {
         final data = {'nama': nama};
-
-        if (username.isNotEmpty) {
-          data['username'] = username;
-        }
 
         if (fotoFileName != null && fotoFileName.isNotEmpty) {
           data['foto'] = fotoFileName;
@@ -77,7 +72,6 @@ class AuthService {
   // ================= UPDATE PROFIL =================
   Future<String?> updateProfile({
     required String newName,
-    String? newUsername,
     String? newfotoFileName,
   }) async {
     try {
@@ -93,10 +87,6 @@ class AuthService {
 
       // ================= UPDATE FIRESTORE =================
       final Map<String, dynamic> data = {'nama': newName};
-
-      if (newUsername != null && newUsername.trim().isNotEmpty) {
-        data['username'] = newUsername;
-      }
 
       if (newfotoFileName != null && newfotoFileName.isNotEmpty) {
         data['foto'] = newfotoFileName;

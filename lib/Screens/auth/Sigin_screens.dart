@@ -24,17 +24,15 @@ class _SiginScreensState extends State<SiginScreens> {
 
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _namaController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
 
   bool _isLoading = false;
   XFile? _pickedImage;
 
   @override
   void dispose() {
-    _emailController.dispose(); // ✅ FIX
+    _emailController.dispose();
     _passwordController.dispose();
     _namaController.dispose();
-    _usernameController.dispose();
     super.dispose();
   }
 
@@ -82,14 +80,12 @@ class _SiginScreensState extends State<SiginScreens> {
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
       nama: _namaController.text.trim(),
-      username: _usernameController.text.trim(),
       fotoFileName: _pickedImage?.name,
     );
 
     setState(() => _isLoading = false);
 
     if (error == null) {
-      // ❌ TIDAK ADA LAGI SIMPAN EMAIL / FIRESTORE DI SINI
 
       _showSnack("Akun berhasil dibuat!", success: true);
 
@@ -179,30 +175,6 @@ class _SiginScreensState extends State<SiginScreens> {
               decoration: InputDecoration(
                 icon: Icon(Icons.person_outline, color: greyReguler.color),
                 hintText: 'Masukan Nama',
-                hintStyle: greyReguler,
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        Text('Username', style: blackReguler),
-        const SizedBox(height: 10),
-        Container(
-          width: double.infinity,
-          height: 55,
-          decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: TextField(
-              controller: _usernameController,
-              enabled: !_isLoading,
-              decoration: InputDecoration(
-                icon: Icon(Icons.person_outline, color: greyReguler.color),
-                hintText: 'Masukan Username',
                 hintStyle: greyReguler,
                 border: InputBorder.none,
               ),
