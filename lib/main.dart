@@ -1,19 +1,95 @@
 import 'package:flutter/material.dart';
-import 'package:skripsi_keuangan/Screens/splash_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:skripsi_keuangan/app.dart';
+import 'dart:async';
 
-void main() {
-  runApp(const MyApp());
+import 'firebase_options.dart';
+
+final GlobalKey<ScaffoldMessengerState> messengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // await GeminiService.initialize();
+
+  runApp(const RootApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class RootApp extends StatefulWidget {
+  const RootApp({super.key});
+
+  @override
+  State<RootApp> createState() => _RootAppState();
+}
+
+class _RootAppState extends State<RootApp> {
+  late StreamSubscription<List<ConnectivityResult>> subscription;
+  bool isConnected = true;
+  bool _snackActive = false; // flag untuk mencegah spam
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final results = await Connectivity().checkConnectivity();
+      bool nowConnected = !results.contains(ConnectivityResult.none);
+      setState(() => isConnected = nowConnected);
+
+      _showSnackBar(
+        nowConnected ? "Internet terhubung" : "Tidak ada koneksi internet",
+        nowConnected ? Colors.green : Colors.red,
+      );
+    });
+
+    subscription = Connectivity().onConnectivityChanged.listen((results) {
+      bool nowConnected = !results.contains(ConnectivityResult.none);
+
+      if (nowConnected != isConnected) {
+        setState(() => isConnected = nowConnected);
+
+        _showSnackBar(
+          nowConnected ? "Internet terhubung" : "Tidak ada koneksi internet",
+          nowConnected ? Colors.green : Colors.red,
+        );
+      }
+    });
+  }
+
+  void _showSnackBar(String message, Color color) {
+    if (!mounted || _snackActive) return;
+    _snackActive = true;
+
+    messengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+
+    // reset flag setelah snackbar selesai
+    Future.delayed(const Duration(seconds: 3), () {
+      _snackActive = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    subscription.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: messengerKey,
       theme: ThemeData(scaffoldBackgroundColor: Colors.white),
-      home: const Splasscreen(),
+      home:  AppScreen(),
     );
   }
 }

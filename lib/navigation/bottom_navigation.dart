@@ -6,14 +6,14 @@ import 'package:skripsi_keuangan/Screens/home_screens.dart';
 import 'package:skripsi_keuangan/Screens/transaksi/transaksi_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 
-class TombolNav extends StatefulWidget {
-  const TombolNav({super.key});
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
 
   @override
-  State<TombolNav> createState() => _TombolNavState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _TombolNavState extends State<TombolNav> {
+class _SplashScreenState extends State<SplashScreen> {
   int _selectedTabIndex = 0;
 
   void _onNavBarTapped(int index) {
