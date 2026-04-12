@@ -134,7 +134,7 @@ class _LoginScreensState extends State<LoginScreens> {
     );
   }
 
-  //UI
+  //Wisget UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -171,10 +171,16 @@ class _LoginScreensState extends State<LoginScreens> {
   }
 
   Widget image() {
-    return const Image(
-      image: AssetImage('images/Icon.png'),
-      width: 250,
-      height: 250,
+    return Column(
+      children: [
+        const Image(
+          image: AssetImage('images/Icon.png'),
+          width: 150,
+          height: 150,
+        ),
+        Text('Selamat Datang', style: blackBold),
+        Text('Masuk untuk mengelola keuanganmu', style: blackReguler),
+      ],
     );
   }
 
