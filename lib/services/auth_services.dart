@@ -20,11 +20,17 @@ class AuthService {
 
       final uid = userCredential.user?.uid;
       if (uid != null) {
-        await _db.collection('users').doc(uid).set({
-          'nama': nama,
-          'email': email,
-          'profileImage': fotoFileName,
-        }, SetOptions(merge: true));
+        final data = {'nama': nama, 'email': email};
+
+        // hanya tambahkan field foto kalau ada nilainya
+        if (fotoFileName != null && fotoFileName.isNotEmpty) {
+          data['foto'] = fotoFileName;
+        }
+
+        await _db
+            .collection('user')
+            .doc(uid)
+            .set(data, SetOptions(merge: true));
       }
 
       return null;
@@ -39,7 +45,8 @@ class AuthService {
         default:
           return e.message;
       }
-    } catch (_) {
+    } catch (e) {
+      print("Register error: $e");
       return "Terjadi kesalahan sistem";
     }
   }
@@ -112,10 +119,10 @@ class AuthService {
       }
 
       // ================= UPDATE FIRESTORE =================
-      await _db.collection('users').doc(user.uid).set({
+      await _db.collection('user').doc(user.uid).set({
         'nama': newName,
         'gender': newGender,
-        'profileImage': newfotoFileName,
+        'foto': newfotoFileName,
         'email': newEmail,
       }, SetOptions(merge: true));
 

@@ -32,7 +32,7 @@ class _SiginScreensState extends State<SiginScreens> {
     super.dispose();
   }
 
-  //Notfikasi
+  // Notifikasi
   void _showSnack(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -51,7 +51,7 @@ class _SiginScreensState extends State<SiginScreens> {
     }
   }
 
-  //Fungsi Registrasi Akun
+  // Fungsi Registrasi Akun
   void _handleRegister() async {
     // validasi input
     if (_namaController.text.isEmpty ||
@@ -61,7 +61,6 @@ class _SiginScreensState extends State<SiginScreens> {
       return;
     }
 
-    // validasi email & password
     if (!_emailController.text.contains("@")) {
       _showSnack("Format email tidak valid!");
       return;
@@ -73,22 +72,23 @@ class _SiginScreensState extends State<SiginScreens> {
 
     setState(() => _isLoading = true);
 
-    // proses registrasi ke Firebase Auth
+    // proses registrasi ke Firebase Auth + Firestore
     String? error = await AuthService().register(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
       nama: _namaController.text.trim(),
+      fotoFileName: _pickedImage?.name, // ✅ kirim nama file ke AuthService
     );
 
     setState(() => _isLoading = false);
 
     if (error == null) {
-      // ✅ Tambahkan kode Firestore di sini
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) {
         final data = {
           'nama': _namaController.text.trim(),
           'email': _emailController.text.trim(),
+          'createdAt': FieldValue.serverTimestamp(),
         };
 
         if (_pickedImage != null) {
@@ -96,8 +96,8 @@ class _SiginScreensState extends State<SiginScreens> {
           final savedImage = await File(
             _pickedImage!.path,
           ).copy('${appDir.path}/${_pickedImage!.name}');
-          data['profileImage'] = _pickedImage!.name;
-          data['profileImagePath'] = savedImage.path;
+          data['foto'] = _pickedImage!.name;
+          data['fotoPath'] = savedImage.path; 
         }
 
         await FirebaseFirestore.instance
@@ -132,13 +132,13 @@ class _SiginScreensState extends State<SiginScreens> {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    Spacer(),
+                    const Spacer(),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => LoginScreens(),
+                            builder: (context) => const LoginScreens(),
                           ),
                         );
                       },
@@ -146,7 +146,7 @@ class _SiginScreensState extends State<SiginScreens> {
                     ),
                   ],
                 ),
-                SizedBox(height: 35),
+                const SizedBox(height: 35),
                 button(),
               ],
             ),
@@ -178,7 +178,6 @@ class _SiginScreensState extends State<SiginScreens> {
       children: [
         Text('Username', style: blackReguler),
         const SizedBox(height: 10),
-        // Input untuk username
         Container(
           width: double.infinity,
           height: 55,
@@ -201,12 +200,8 @@ class _SiginScreensState extends State<SiginScreens> {
           ),
         ),
         const SizedBox(height: 20),
-
-        // email
         Text('Email Address', style: blackReguler),
         const SizedBox(height: 10),
-
-        // Input untuk email
         Container(
           width: double.infinity,
           height: 55,
@@ -233,12 +228,8 @@ class _SiginScreensState extends State<SiginScreens> {
           ),
         ),
         const SizedBox(height: 20),
-
-        // password
         Text('Password', style: blackReguler),
         const SizedBox(height: 10),
-
-        // Input untuk password
         Container(
           width: double.infinity,
           height: 55,
