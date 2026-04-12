@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
+import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -28,12 +29,21 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [Image.asset('images/Icon.png', width: 360, height: 360)],
-        ),
+      body: Column(
+        children: [
+          // 🔥 BAGIAN ATAS (biar dorong ke tengah)
+          Expanded(
+            child: Center(
+              child: Image.asset('images/Icon.png', width: 360, height: 360),
+            ),
+          ),
+
+          // 🔥 TEXT DI BAWAH
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Text('V.1.0.0', style: greyReguler),
+          ),
+        ],
       ),
     );
   }
