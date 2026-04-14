@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
+import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
 
 class Updatescreen extends StatefulWidget {
@@ -197,7 +198,10 @@ class _UpdatescreenState extends State<Updatescreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Edit Profil")),
+      appBar: AppBar(
+        title: Text("Edit Profil"),
+        flexibleSpace: Container(color: white),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -254,10 +258,11 @@ class _UpdatescreenState extends State<Updatescreen> {
               onPressed: loading ? null : simpan,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
+                backgroundColor: greenblack,
               ),
               child: loading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text("SIMPAN PERUBAHAN"),
+                  : Text("SIMPAN PERUBAHAN", style: whiteBold),
             ),
 
             const SizedBox(height: 10),
@@ -265,10 +270,10 @@ class _UpdatescreenState extends State<Updatescreen> {
             ElevatedButton(
               onPressed: hapusFoto,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: red,
                 minimumSize: const Size(double.infinity, 50),
               ),
-              child: const Text("HAPUS FOTO PROFIL"),
+              child: Text("HAPUS FOTO PROFIL", style: whiteBold),
             ),
           ],
         ),
