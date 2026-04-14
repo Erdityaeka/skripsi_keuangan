@@ -58,11 +58,11 @@ class _SiginScreensState extends State<SiginScreens> {
     } catch (e) {
       print("ImagePicker error: $e");
     } finally {
-      _isPicking = false; // 🔓 buka lock
+      _isPicking = false; 
     }
   }
 
-  // ================= REGISTER =================
+  //REGISTER 
   void _handleRegister() async {
     if (_namaController.text.isEmpty ||
         _emailController.text.isEmpty ||
@@ -107,7 +107,7 @@ class _SiginScreensState extends State<SiginScreens> {
     }
   }
 
-  // UI
+  //wIDGET UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -204,7 +204,7 @@ class _SiginScreensState extends State<SiginScreens> {
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: TextField(
-              controller: _emailController, // ✅ FIX
+              controller: _emailController,
               enabled: !_isLoading,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(

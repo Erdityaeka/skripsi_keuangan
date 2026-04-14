@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/app.dart';
 import 'dart:async';
 
@@ -34,6 +35,7 @@ class _RootAppState extends State<RootApp> {
   void initState() {
     super.initState();
 
+    // mMengecek status sekali
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final results = await Connectivity().checkConnectivity();
       bool nowConnected = !results.contains(ConnectivityResult.none);
@@ -41,10 +43,11 @@ class _RootAppState extends State<RootApp> {
 
       _showSnackBar(
         nowConnected ? "Internet terhubung" : "Tidak ada koneksi internet",
-        nowConnected ? Colors.green : Colors.red,
+        nowConnected ? greenblack : redblack,
       );
     });
 
+    // Mengecek status berulang kali
     subscription = Connectivity().onConnectivityChanged.listen((results) {
       bool nowConnected = !results.contains(ConnectivityResult.none);
 
@@ -53,7 +56,7 @@ class _RootAppState extends State<RootApp> {
 
         _showSnackBar(
           nowConnected ? "Internet terhubung" : "Tidak ada koneksi internet",
-          nowConnected ? Colors.green : Colors.red,
+          nowConnected ? greenblack : redblack,
         );
       }
     });
@@ -61,12 +64,13 @@ class _RootAppState extends State<RootApp> {
 
   void _showSnackBar(String message, Color color) {
     if (!mounted || _snackActive) return;
-    if (splashActive) return; // jangan tampilkan snackbar saat splash
+    if (splashActive) return; 
 
+    // snackbar aktif
     _snackActive = true;
     messengerKey.currentState?.showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Center(child: Text(message, style: whiteBold)),
         backgroundColor: color,
         duration: const Duration(seconds: 3),
       ),

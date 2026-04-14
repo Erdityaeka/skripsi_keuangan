@@ -15,7 +15,7 @@ class GeminiService {
     String context = "",
   }) async {
     try {
-      // PAKAI .prompt() - Ini jalur resmi masa depan agar warning hilang total
+      // PAKAI .prompt() 
       final response = await Gemini.instance.prompt(
         parts: [
           Part.text("KONTEKS KEUANGAN: $context"),

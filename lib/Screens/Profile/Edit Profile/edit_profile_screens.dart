@@ -42,13 +42,13 @@ class _UpdatescreenState extends State<Updatescreen> {
     loadFoto();
   }
 
-  // ================= LOAD FOTO =================
+  // LOAD FOTO 
   Future<void> loadFoto() async {
     try {
       if (user == null) return;
 
       final doc = await FirebaseFirestore.instance
-          .collection('user') // ✅ FIX DI SINI
+          .collection('user') 
           .doc(user!.uid)
           .get();
 
@@ -69,9 +69,9 @@ class _UpdatescreenState extends State<Updatescreen> {
     }
   }
 
-  // ================= PILIH FOTO =================
+  // PILIH FOTO 
   Future<void> pilihFoto() async {
-    // 🔥 cegah double klik
+    // MENCEGAH 2X KLIK
     if (pickingImage) return;
 
     pickingImage = true;
@@ -85,11 +85,11 @@ class _UpdatescreenState extends State<Updatescreen> {
     } catch (e) {
       print("Error picker: $e");
     } finally {
-      pickingImage = false; // 🔓 buka lagi
+      pickingImage = false; 
     }
   }
 
-  // ================= SIMPAN =================
+  // SIMPAN 
   Future<void> simpan() async {
     if (namaC.text.trim().isEmpty) {
       notif("Nama harus diisi");
@@ -106,7 +106,7 @@ class _UpdatescreenState extends State<Updatescreen> {
     String? namaFile;
 
     try {
-      // ================= SIMPAN FOTO =================
+      // SIMPAN FOTO 
       if (fotoBaru != null) {
         final dir = await getApplicationDocumentsDirectory();
         final pathBaru = '${dir.path}/${fotoBaru!.name}';
@@ -118,13 +118,13 @@ class _UpdatescreenState extends State<Updatescreen> {
           namaFile = fotoBaru!.name;
 
           await FirebaseFirestore.instance
-              .collection('user') // ✅ FIX
+              .collection('user') 
               .doc(user!.uid)
               .set({'foto': namaFile}, SetOptions(merge: true));
         }
       }
 
-      // ================= UPDATE AUTH =================
+      // UPDATE AUTH 
       final res = await AuthService().updateProfile(
         newName: namaC.text.trim(),
         newfotoFileName: namaFile,
@@ -134,7 +134,7 @@ class _UpdatescreenState extends State<Updatescreen> {
 
       setState(() => loading = false);
 
-      // ================= JIKA EMAIL BERUBAH =================
+      // JIKA EMAIL BERUBAH 
       if (emailC.text.trim() != user?.email) {
         notif("Cek email baru untuk verifikasi");
 
@@ -150,7 +150,7 @@ class _UpdatescreenState extends State<Updatescreen> {
         return;
       }
 
-      // ================= NORMAL =================
+      // NORMAL 
       if (res == null) {
         notif("Profile berhasil diperbarui", success: true);
         // ignore: use_build_context_synchronously
@@ -164,7 +164,7 @@ class _UpdatescreenState extends State<Updatescreen> {
     }
   }
 
-  // ================= HAPUS FOTO =================
+  // HAPUS FOTO 
   Future<void> hapusFoto() async {
     try {
       await FirebaseFirestore.instance.collection('user').doc(user!.uid).set({
@@ -186,7 +186,7 @@ class _UpdatescreenState extends State<Updatescreen> {
     }
   }
 
-  // ================= NOTIF =================
+  // NOTIF 
   void notif(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -196,7 +196,7 @@ class _UpdatescreenState extends State<Updatescreen> {
     );
   }
 
-  // ================= UI =================
+  // WIDGET UI 
   @override
   Widget build(BuildContext context) {
     return Scaffold(

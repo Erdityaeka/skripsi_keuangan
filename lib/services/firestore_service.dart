@@ -13,7 +13,7 @@ class FirestoreService {
   // Lebih aman pakai getter seperti:
   String get uid => FirebaseAuth.instance.currentUser!.uid;
 
-  // --- KELOLA TRANSAKSI ---
+  //KELOLA TRANSAKSI
 
   Future<void> addTransaction(TransaksiModel tx) async {
     await _db
@@ -74,7 +74,7 @@ class FirestoreService {
         .delete();
   }
 
-  // --- KELOLA KATEGORI ---
+  // KELOLA KATEGORI
 
   Future<void> addCategory(String kategoriName) async {
     await _db.collection('user').doc(uid).collection('kategori').add({
@@ -108,24 +108,19 @@ class FirestoreService {
         .collection('kategori')
         .where('nama', isEqualTo: kategoriName)
         .get();
-    // TIDAK SALAH tapi tidak efisien
-    // lebih baik gunakan doc(kategoriName)
+    // Gunakan doc(kategoriName)
 
     for (var doc in snapshot.docs) {
       await doc.reference.delete();
     }
   }
 
-  // --- KELOLA BANK ---
-
+  //  KELOLA BANK
   Future<void> addBank(String bankName) async {
     await _db.collection('user').doc(uid).collection('bank').add({
       'nama': bankName,
       'createdAt': FieldValue.serverTimestamp(),
     });
-    // SARAN
-    // biasanya koleksi pakai plural:
-    // banks bukan bank
   }
 
   Stream<List<String>> getBank() {
@@ -155,7 +150,7 @@ class FirestoreService {
       await doc.reference.delete();
     }
   }
-  // ================= KOMENTAR =================
+  //KOMENTAR
 
   Future<void> addComment(String deskripsi) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -176,16 +171,17 @@ class FirestoreService {
 
       print("Komentar berhasil dikirim");
     } catch (e) {
-      print("ERROR FIRESTORE: $e"); // 🔥 DEBUG
+      print("ERROR FIRESTORE: $e");
       rethrow;
     }
   }
 
+  // Komentar
   Stream<List<KomentarModel>> getKomentar() {
     return _db
         .collection('komentar')
         .orderBy('tanggal', descending: true)
-        .limit(20) // 🔥 biar ringan
+        .limit(20)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs

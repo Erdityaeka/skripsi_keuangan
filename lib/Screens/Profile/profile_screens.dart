@@ -25,13 +25,13 @@ class _ProfileScreensState extends State<ProfileScreens> {
   String? fotoImageName;
   File? fotoImageFile;
 
-  // 🔹 huruf depan jadi besar
+  // huruf depan jadi besar
   String capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  // 🔹 logout paksa kalau user hilang
+  //logout paksa kalau user hilang
   void _forceLogout() {
     FirebaseAuth.instance.signOut();
 
@@ -45,7 +45,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
     ).showSnackBar(const SnackBar(content: Text("Sesi habis, login ulang")));
   }
 
-  // ================= AMBIL DATA =================
+  // AMBIL DATA
   Future<void> _refreshData() async {
     try {
       await user?.reload();
@@ -79,7 +79,8 @@ class _ProfileScreensState extends State<ProfileScreens> {
         }
       }
 
-      setState(() {}); // 🔥 paksa refresh UI
+      // PAKSA REFRESH UI
+      setState(() {});
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-token-expired') {
         _forceLogout();
@@ -91,7 +92,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
     }
   }
 
-  // ================= HAPUS AKUN =================
+  // HAPUS AKUN
   Future<void> _deleteAccount() async {
     final passwordController = TextEditingController();
 
@@ -260,17 +261,16 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
-  // ================= PROFILE =================
+  // PROFILE
   Widget profileimage(BuildContext context, String nama) {
     return GestureDetector(
       onTap: () async {
-        // 🔥 tunggu halaman edit selesai
         await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => Updatescreen()),
         );
 
-        // 🔥 langsung refresh setelah balik
+        //REFRESH LANGSUNG DATA
         await _refreshData();
       },
       child: Row(
@@ -300,7 +300,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
-  // ================= BUTTON =================
+  // BUTTON
   Widget buttonBody() {
     return Column(
       children: [
@@ -358,7 +358,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
-  // ================= LOGOUT =================
+  // LOGOUT
   Widget butonLogout() {
     return GestureDetector(
       onTap: () async {

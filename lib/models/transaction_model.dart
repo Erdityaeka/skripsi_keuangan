@@ -1,17 +1,17 @@
 class TransaksiModel {
   String id;
   String judul;
-  String kategori; // Field kategori
-  String bank; // Field bank
+  String kategori; 
+  String bank; 
   double nominal;
   DateTime tanggal;
-  String tipe; // "income" atau "expense"
+  String tipe; 
 
   TransaksiModel({
     required this.id,
     required this.judul,
-    required this.kategori, // Tambahkan di constructor
-    required this.bank, // Tambahkan field bank
+    required this.kategori, 
+    required this.bank, 
     required this.nominal,
     required this.tanggal,
     required this.tipe,
@@ -20,8 +20,8 @@ class TransaksiModel {
   Map<String, dynamic> toMap() {
     return {
       'judul': judul,
-      'kategori': kategori, // Simpan ke Firestore
-      'bank': bank, // Tambahkan field bank
+      'kategori': kategori, 
+      'bank': bank, 
       'nominal': nominal,
       'tanggal': tanggal.toIso8601String(),
       'tipe': tipe,
@@ -33,8 +33,8 @@ class TransaksiModel {
       id: id,
       judul: map['judul'] ?? '',
       kategori:
-          map['kategori'] ?? 'Umum', // Ambil dari Firestore (default 'Umum')
-      bank: map['bank'] ?? 'Tidak Diketahui', // Ambil dari Firestore
+          map['kategori'] ?? 'Umum', 
+      bank: map['bank'] ?? 'Tidak Diketahui', 
       nominal: (map['nominal'] as num).toDouble(),
       tanggal: DateTime.parse(map['tanggal']),
       tipe: map['tipe'] ?? 'income',

@@ -5,7 +5,7 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // ================= REGISTER =================
+  //  REGISTER 
   Future<String?> register({
     required String email,
     required String password,
@@ -50,7 +50,7 @@ class AuthService {
     }
   }
 
-  // ================= LOGIN =================
+  //  LOGIN 
   Future<String?> signIn(String email, String password) async {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
@@ -69,12 +69,12 @@ class AuthService {
     }
   }
 
-  // ================= UPDATE PROFIL =================
+  //  UPDATE PROFIL 
   Future<String?> updateProfile({
     required String newName,
     String? newfotoFileName,
     String? newEmail,
-    String? currentPassword, // ✅ FIX DI SINI
+    String? currentPassword, 
   }) async {
     try {
       if (newName.trim().isEmpty) {
@@ -87,7 +87,7 @@ class AuthService {
       // Update nama + gender
       await user.updateDisplayName(newName);
 
-      // ================= UPDATE EMAIL =================
+      //  UPDATE EMAIL 
       if (newEmail != null &&
           newEmail.trim().isNotEmpty &&
           newEmail != user.email) {
@@ -114,7 +114,7 @@ class AuthService {
         }
       }
 
-      // ================= UPDATE FIRESTORE =================
+      //  UPDATE FIRESTORE 
       await _db.collection('user').doc(user.uid).set({
         if (newfotoFileName != null) 'profileImage': newfotoFileName,
       }, SetOptions(merge: true));
@@ -138,10 +138,10 @@ class AuthService {
     }
   }
 
-  // ================= LOGOUT =================
+  //  LOGOUT 
   Future<void> signOut() async => await _auth.signOut();
 
-  // ================= RESET PASSWORD =================
+  //  RESET PASSWORD 
   Future<String?> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
@@ -160,6 +160,6 @@ class AuthService {
     }
   }
 
-  // ================= STREAM USER =================
+  //  STREAM USER 
   Stream<User?> get userChanges => _auth.authStateChanges();
 }
