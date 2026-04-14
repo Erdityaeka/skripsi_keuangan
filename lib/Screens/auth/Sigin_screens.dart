@@ -43,7 +43,6 @@ class _SiginScreensState extends State<SiginScreens> {
 
   // Fungsi untuk memilih gambar
   Future<void> _pickImage() async {
-    // 🚫 kalau sedang proses → jangan jalan lagi
     if (_isPicking) return;
 
     _isPicking = true;
@@ -97,7 +96,11 @@ class _SiginScreensState extends State<SiginScreens> {
       _showSnack("Akun berhasil dibuat!", success: true);
 
       Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pop(context);
+        Navigator.push(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreens()),
+        );
       });
     } else {
       _showSnack("Gagal mendaftar: $error");

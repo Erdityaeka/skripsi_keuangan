@@ -19,7 +19,8 @@ class _UpdatescreenState extends State<Updatescreen> {
   final namaC = TextEditingController();
   final emailC = TextEditingController();
   final passwordC = TextEditingController();
-  bool pickingImage = false; // 🔒 penahan
+  bool pickingImage = false;
+  bool _isPasswordVisible = false;
 
   bool loading = false;
 
@@ -151,14 +152,15 @@ class _UpdatescreenState extends State<Updatescreen> {
 
       // ================= NORMAL =================
       if (res == null) {
-        notif("Profil berhasil diperbarui", success: true);
+        notif("Profile berhasil diperbarui", success: true);
+        // ignore: use_build_context_synchronously
         Navigator.pop(context);
       } else {
         notif(res);
       }
     } catch (e) {
       setState(() => loading = false);
-      notif("Terjadi kesalahan");
+      notif("Terjadi kesalahan Update");
     }
   }
 
@@ -188,8 +190,8 @@ class _UpdatescreenState extends State<Updatescreen> {
   void notif(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg),
-        backgroundColor: success ? Colors.green : Colors.red,
+        content: Center(child: Text(msg, style: whiteBold)),
+        backgroundColor: success ? greenblack : redblack,
       ),
     );
   }
@@ -199,74 +201,135 @@ class _UpdatescreenState extends State<Updatescreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Edit Profil"),
-        flexibleSpace: Container(color: white),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(Icons.arrow_back, color: red),
+        ),
+        title: Text('Edit Profile', style: redBold20),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             GestureDetector(
               onTap: pilihFoto,
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage: fotoBaru != null
-                    ? FileImage(File(fotoBaru!.path))
-                    : (fotoLama != null ? FileImage(fotoLama!) : null),
-                child: (fotoBaru == null && fotoLama == null)
-                    ? const Icon(Icons.person, size: 50)
-                    : null,
+              child: Center(
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: red,
+                  backgroundImage: fotoBaru != null
+                      ? FileImage(File(fotoBaru!.path))
+                      : (fotoLama != null ? FileImage(fotoLama!) : null),
+                  child: (fotoBaru == null && fotoLama == null)
+                      ? Icon(Icons.person, size: 50, color: white)
+                      : null,
+                ),
               ),
             ),
 
             const SizedBox(height: 20),
+            Text('Nama', style: blackReguler),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                border: Border.all(color: red, width: 1.5),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: TextField(
+                  controller: namaC,
 
-            TextField(
-              controller: namaC,
-              decoration: const InputDecoration(
-                labelText: "Nama Lengkap",
-                border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    icon: Icon(Icons.person_outline, color: greyReguler.color),
+                    hintText: 'Masukan Nama',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                ),
               ),
             ),
 
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: emailC,
-              decoration: const InputDecoration(
-                labelText: "Email",
-                border: OutlineInputBorder(),
+            const SizedBox(height: 20),
+            Text('Email Address', style: blackReguler),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                border: Border.all(color: red, width: 1.5),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: TextField(
+                  controller: emailC,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    icon: Icon(
+                      Icons.mark_email_unread_rounded,
+                      color: greyReguler.color,
+                    ),
+                    hintText: 'Masukan Email',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                ),
               ),
             ),
-
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: passwordC,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Password (untuk ubah email)",
-                border: OutlineInputBorder(),
+            const SizedBox(height: 20),
+            Text('Password', style: blackReguler),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                border: Border.all(color: red, width: 1.5),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: TextField(
+                  controller: passwordC,
+                  obscureText: !_isPasswordVisible,
+                  decoration: InputDecoration(
+                    icon: Icon(
+                      Icons.lock_outline_rounded,
+                      color: greyReguler.color,
+                    ),
+                    hintText: 'Masukan Password',
+                    hintStyle: greyReguler,
+                    suffixIcon: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                      child: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: blackReguler.color,
+                      ),
+                    ),
+                    border: InputBorder.none,
+                  ),
+                ),
               ),
             ),
 
             const SizedBox(height: 15),
 
             const SizedBox(height: 25),
-
-            ElevatedButton(
-              onPressed: loading ? null : simpan,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: greenblack,
-              ),
-              child: loading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text("SIMPAN PERUBAHAN", style: whiteBold),
-            ),
-
-            const SizedBox(height: 10),
-
             ElevatedButton(
               onPressed: hapusFoto,
               style: ElevatedButton.styleFrom(
@@ -275,6 +338,19 @@ class _UpdatescreenState extends State<Updatescreen> {
               ),
               child: Text("HAPUS FOTO PROFIL", style: whiteBold),
             ),
+            const SizedBox(height: 25),
+            ElevatedButton(
+              onPressed: loading ? null : simpan,
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                backgroundColor: greenblack,
+              ),
+              child: loading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Text("SIMPAN", style: whiteBold),
+            ),
+
+            const SizedBox(height: 10),
           ],
         ),
       ),

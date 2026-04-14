@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
-import 'package:skripsi_keuangan/Screens/Profile/Edit%20Profile/update.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Edit%20Profile/edit_profile_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
@@ -20,96 +20,74 @@ class ProfileScreens extends StatefulWidget {
 }
 
 class _ProfileScreensState extends State<ProfileScreens> {
-  // ambil user yang sedang login
   User? user = FirebaseAuth.instance.currentUser;
 
-  // nama file foto
   String? fotoImageName;
-
-  // file foto di HP
   File? fotoImageFile;
 
-  // fungsi buat huruf pertama jadi besar
+  // 🔹 huruf depan jadi besar
   String capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  // ================= LOGOUT PAKSA =================
+  // 🔹 logout paksa kalau user hilang
   void _forceLogout() {
-    FirebaseAuth.instance.signOut(); // logout user
+    FirebaseAuth.instance.signOut();
 
-    // pindah ke halaman login dan hapus semua halaman sebelumnya
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const LoginScreens()),
       (route) => false,
     );
 
-    // tampilkan pesan
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Sesi habis, silakan login ulang")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Sesi habis, login ulang")));
   }
 
-  // ================= AMBIL DATA USER =================
+  // ================= AMBIL DATA =================
   Future<void> _refreshData() async {
     try {
-      // ambil ulang data user dari Firebase Auth
       await user?.reload();
-
-      // update user terbaru
       user = FirebaseAuth.instance.currentUser;
 
-      // kalau user tidak ada → paksa logout
       if (user == null) {
         throw FirebaseAuthException(code: 'user-token-expired');
       }
 
-      // ambil data dari Firestore
       final doc = await FirebaseFirestore.instance
           .collection('user')
           .doc(user!.uid)
           .get();
 
-      // kalau widget sudah tidak ada → hentikan
       if (!mounted) return;
 
-      // kalau data ada
       if (doc.exists) {
-        // ambil nama file foto
         fotoImageName = doc.data()?['foto'];
 
         if (fotoImageName != null) {
-          // ambil folder aplikasi
-          final appDir = await getApplicationDocumentsDirectory();
+          final dir = await getApplicationDocumentsDirectory();
+          final file = File('${dir.path}/$fotoImageName');
 
-          // buat path file
-          final file = File('${appDir.path}/$fotoImageName');
-
-          // cek file ada atau tidak
           if (await file.exists()) {
-            if (mounted) setState(() => fotoImageFile = file);
+            setState(() => fotoImageFile = file);
           } else {
-            if (mounted) setState(() => fotoImageFile = null);
+            setState(() => fotoImageFile = null);
           }
         } else {
-          if (mounted) setState(() => fotoImageFile = null);
+          setState(() => fotoImageFile = null);
         }
       }
 
-      // refresh tampilan
-      if (mounted) setState(() {});
+      setState(() {}); // 🔥 paksa refresh UI
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-token-expired') {
         _forceLogout();
       }
     } catch (e) {
-      // kalau error tampilkan pesan
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Gagal memuat data")));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Gagal memuat data")));
     }
   }
 
@@ -122,7 +100,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: red,
-        title: Text("Konfirmasi Hapus Akun", style: whiteBold),
+        title: Text("Konfirmasi Hapus Akun?", style: whiteBold),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -161,7 +139,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text("HAPUS", style: greenBold12),
+            child: Text("IYA", style: greenBold12),
           ),
         ],
       ),
@@ -234,15 +212,14 @@ class _ProfileScreensState extends State<ProfileScreens> {
   void initState() {
     super.initState();
 
-    // cek user login atau tidak
-    if (FirebaseAuth.instance.currentUser == null) {
+    if (user == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const LoginScreens()),
         );
       });
     } else {
-      _refreshData(); // ambil data saat pertama buka
+      _refreshData();
     }
   }
 
@@ -250,7 +227,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
   Widget build(BuildContext context) {
     String displayNama = user?.displayName ?? 'User';
 
-    // ambil nama sebelum tanda |
     String nama = displayNama.contains('|')
         ? displayNama.split('|')[0]
         : displayNama;
@@ -258,9 +234,9 @@ class _ProfileScreensState extends State<ProfileScreens> {
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _refreshData, // tarik ke bawah → refresh
+          onRefresh: _refreshData,
           child: SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(), // wajib untuk refresh
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
               padding: const EdgeInsets.only(
                 left: 20,
@@ -274,8 +250,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
                   const SizedBox(height: 30),
                   buttonBody(),
                   const SizedBox(height: 80),
-                  butonHapusAkun(),
-                  const SizedBox(height: 30),
                   butonLogout(),
                 ],
               ),
@@ -286,14 +260,18 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
-  // Widget Gambar
+  // ================= PROFILE =================
   Widget profileimage(BuildContext context, String nama) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        // 🔥 tunggu halaman edit selesai
+        await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => Updatescreen()),
         );
+
+        // 🔥 langsung refresh setelah balik
+        await _refreshData();
       },
       child: Row(
         children: [
@@ -322,6 +300,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
+  // ================= BUTTON =================
   Widget buttonBody() {
     return Column(
       children: [
@@ -350,6 +329,11 @@ class _ProfileScreensState extends State<ProfileScreens> {
         _buildButton(Icons.perm_device_info, 'Tentang Aplikasi'),
         const SizedBox(height: 30),
         _buildButton(Icons.help_outline, 'Bantuan dan Masukan'),
+        const SizedBox(height: 30),
+        InkWell(
+          onTap: _deleteAccount,
+          child: _buildButton(Icons.delete, 'Hapus Akun'),
+        ),
       ],
     );
   }
@@ -374,6 +358,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
+  // ================= LOGOUT =================
   Widget butonLogout() {
     return GestureDetector(
       onTap: () async {
@@ -397,28 +382,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
             Icon(Icons.logout, size: 20, color: white),
             const SizedBox(width: 10),
             Text('Logout', style: whiteBold),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget butonHapusAkun() {
-    return GestureDetector(
-      onTap: _deleteAccount,
-      child: Container(
-        width: double.infinity,
-        height: 50,
-        decoration: BoxDecoration(
-          color: red,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.delete, size: 20, color: white),
-            const SizedBox(width: 10),
-            Text('Hapus Akun', style: whiteBold),
           ],
         ),
       ),

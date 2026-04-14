@@ -96,7 +96,6 @@ class AuthService {
         }
 
         try {
-          // ✅ RE-AUTH
           AuthCredential credential = EmailAuthProvider.credential(
             email: user.email!,
             password: currentPassword,
@@ -104,7 +103,6 @@ class AuthService {
 
           await user.reauthenticateWithCredential(credential);
 
-          // ✅ UPDATE EMAIL (WAJIB VERIFIKASI)
           await user.verifyBeforeUpdateEmail(newEmail);
 
           return "Cek email baru untuk konfirmasi perubahan";
@@ -117,7 +115,7 @@ class AuthService {
       }
 
       // ================= UPDATE FIRESTORE =================
-      await _db.collection('users').doc(user.uid).set({
+      await _db.collection('user').doc(user.uid).set({
         if (newfotoFileName != null) 'profileImage': newfotoFileName,
       }, SetOptions(merge: true));
 
