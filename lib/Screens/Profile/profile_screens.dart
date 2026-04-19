@@ -328,7 +328,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
         const SizedBox(height: 30),
         _buildButton(Icons.perm_device_info, 'Tentang Aplikasi'),
         const SizedBox(height: 30),
-        _buildButton(Icons.help_outline, 'Bantuan dan Masukan'),
+        _buildButton(Icons.help_outline, 'Komentar'),
         const SizedBox(height: 30),
         InkWell(
           onTap: _deleteAccount,
