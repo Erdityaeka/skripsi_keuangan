@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:skripsi_keuangan/services/firestore_service.dart';
 
 class KategoriScreens extends StatefulWidget {
   const KategoriScreens({super.key});
@@ -9,12 +10,127 @@ class KategoriScreens extends StatefulWidget {
 }
 
 class _KategoriScreensState extends State<KategoriScreens> {
+  final FirestoreService _firestore = FirestoreService();
+
+  final List<String> _categories = [
+    "Makananan",
+    "Minuman",
+    "Transportasi",
+    "Gaji",
+    "Kesehatan",
+    "Belanja",
+    "Tagihan",
+    "Hiburan",
+  ];
+
+  String? _selected;
+
+  // ================= TAMBAH =================
+  Future<void> _add() async {
+    if (_selected == null) {
+      _showMsg("Pilih kategori dulu");
+      return;
+    }
+
+    try {
+      await _firestore.addCategory(_selected!);
+      _showMsg("Berhasil ditambahkan");
+    } catch (e) {
+      _showMsg("Gagal menambahkan");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppbar(context),
-      body: Column(children: [buttonAddBank(), listBank()]),
+      body: Column(
+        children: [
+          buttonAddBank(),
+          Expanded(child: listBank()), // ✅ WAJIB
+        ],
+      ),
     );
+  }
+
+  // ================= EDIT =================
+  void _editDialog(String oldnama) {
+    final controller = TextEditingController(text: oldnama);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Edit Kategori"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: "Nama baru"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newnama = controller.text.trim();
+
+              if (newnama.isEmpty) {
+                _showMsg("Tidak boleh kosong");
+                return;
+              }
+
+              try {
+                await _firestore.deleteCategory(oldnama);
+                await _firestore.addCategory(newnama);
+
+                if (!mounted) return;
+                Navigator.pop(context);
+                _showMsg("Berhasil diupdate");
+              } catch (e) {
+                _showMsg("Gagal update");
+              }
+            },
+            child: const Text("Simpan"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= HAPUS =================
+  void _delete(String nama) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Hapus"),
+        content: Text("Hapus '$nama'?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                await _firestore.deleteCategory(nama);
+                if (!mounted) return;
+                Navigator.pop(context);
+                _showMsg("Berhasil dihapus");
+              } catch (e) {
+                _showMsg("Gagal hapus");
+              }
+            },
+            child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= SNACKBAR =================
+  void _showMsg(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   PreferredSizeWidget _buildAppbar(BuildContext context) {
@@ -22,12 +138,10 @@ class _KategoriScreensState extends State<KategoriScreens> {
       backgroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
-        onPressed: () {
-          Navigator.pop(context);
-        },
+        onPressed: () => Navigator.pop(context),
         icon: Icon(Icons.arrow_back, color: red),
       ),
-      title: Text('Bank', style: redBold20),
+      title: Text('Kategori', style: redBold20),
       centerTitle: true,
     );
   }
@@ -40,43 +154,46 @@ class _KategoriScreensState extends State<KategoriScreens> {
         color: white,
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 0,
             blurRadius: 2,
             offset: const Offset(0, 3),
           ),
         ],
-        border: Border(bottom: BorderSide(color: grey, width: 1)),
+        border: Border(bottom: BorderSide(color: grey)),
       ),
       child: Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 30),
+        padding: const EdgeInsets.fromLTRB(20, 30, 20, 0),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Judul Kategori', style: redReguler15),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
+
+                  // ✅ FIX (hapus Expanded)
                   Container(
                     height: 55,
                     decoration: BoxDecoration(
                       border: Border.all(color: red, width: 1.5),
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hint: Text(
-                            'Masukan nama kategori',
-                            style: greyReguler,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                          border: InputBorder.none,
+                    child: DropdownButtonFormField<String>(
+                      value: _selected,
+                      hint: const Text("Pilih kategori"),
+                      items: _categories
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => _selected = v),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
                         ),
                       ),
                     ),
@@ -84,15 +201,18 @@ class _KategoriScreensState extends State<KategoriScreens> {
                 ],
               ),
             ),
-            SizedBox(width: 10), // jarak antara input dan tombol
-            Container(
-              width: 90,
-              height: 55,
-              decoration: BoxDecoration(
-                color: red,
-                borderRadius: BorderRadius.circular(15),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: _add,
+              child: Container(
+                width: 90,
+                height: 55,
+                decoration: BoxDecoration(
+                  color: red,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(Icons.add, color: Colors.white),
               ),
-              child: Center(child: Icon(Icons.add, color: Colors.white)),
             ),
           ],
         ),
@@ -102,27 +222,46 @@ class _KategoriScreensState extends State<KategoriScreens> {
 
   Widget listBank() {
     return Padding(
-      padding: EdgeInsets.only(left: 20, right: 20, top: 30),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          border: Border.all(color: red, width: 2),
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(Icons.table_chart, size: 20, color: black),
-              const SizedBox(width: 20),
-              Text('Makanan', style: blackBold15),
-              Spacer(),
-              Icon(Icons.delete, size: 20, color: red),
-            ],
-          ),
-        ),
+      padding: const EdgeInsets.all(20),
+      child: StreamBuilder<List<String>>(
+        stream: _firestore.getCategories(),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final data = snap.data ?? [];
+
+          if (data.isEmpty) {
+            return const Center(child: Text("Belum ada kategori"));
+          }
+
+          return ListView.builder(
+            itemCount: data.length,
+            itemBuilder: (context, i) {
+              final nama = data[i];
+
+              return GestureDetector(
+                onTap: () => _editDialog(nama),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: red, width: 2),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: ListTile(
+                    leading: Icon(Icons.table_chart, color: black),
+                    title: Text(nama, style: blackBold15), // ✅ FIX
+                    trailing: GestureDetector(
+                      onTap: () => _delete(nama),
+                      child: Icon(Icons.delete, color: red),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
