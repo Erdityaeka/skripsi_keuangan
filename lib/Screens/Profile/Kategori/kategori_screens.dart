@@ -25,7 +25,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
 
   String? _selected;
 
-  // ================= TAMBAH =================
+  //TAMBAH
   Future<void> _add() async {
     if (_selected == null) {
       _showMsg("Pilih kategori dulu");
@@ -53,7 +53,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
     );
   }
 
-  // ================= EDIT =================
+  //EDIT
   void _editDialog(String oldnama) {
     final controller = TextEditingController(text: oldnama);
 
@@ -122,7 +122,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
     );
   }
 
-  // ================= HAPUS =================
+  //HAPUS
   void _delete(String nama) {
     showDialog(
       context: context,
@@ -152,7 +152,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
     );
   }
 
-  // ================= SNACKBAR =================
+  //SNACKBAR
   void _showMsg(String msg, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
