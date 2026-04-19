@@ -28,24 +28,27 @@ class _KomentarScreensState extends State<KomentarScreens> {
       komentar.clear();
       notif("Berhasil kirim komentar");
     } catch (e) {
-      notif("Gagal kirim komentar");
+      notif("Gagal kirim komentar", isError: true);
     }
 
     setState(() => loading = false);
   }
 
   // SNACKBAR
-  void notif(String msg) {
+  void notif(String msg, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: isError ? rednotif : greennotif,
+        content: Center(child: Text(msg, style: whiteBold)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppbar(context),
-
-      // 🔥 FIX: cukup 1 Expanded saja
       body: SafeArea(
         child: Column(children: [Expanded(child: ListKomentar())]),
       ),
@@ -111,14 +114,6 @@ class _KomentarScreensState extends State<KomentarScreens> {
                     ),
                   ],
                 ),
-                trailing: user != null && user.uid == c.userId
-                    ? IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () async {
-                          await service.deleteComment(c.id);
-                        },
-                      )
-                    : null,
               ),
             );
           },

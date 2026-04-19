@@ -150,8 +150,8 @@ class FirestoreService {
       await doc.reference.delete();
     }
   }
-  //KOMENTAR
 
+  // KOMENTAR
   Future<void> addComment(String deskripsi) async {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -169,6 +169,8 @@ class FirestoreService {
         'tanggal': FieldValue.serverTimestamp(),
       });
 
+      await limitKomentar(); // 🔥 jaga max 20
+
       print("Komentar berhasil dikirim");
     } catch (e) {
       print("ERROR FIRESTORE: $e");
@@ -176,21 +178,46 @@ class FirestoreService {
     }
   }
 
-  // Komentar
+  // GET KOMENTAR
   Stream<List<KomentarModel>> getKomentar() {
     return _db
         .collection('komentar')
         .orderBy('tanggal', descending: true)
         .limit(20)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+        .map((snapshot) {
+          return snapshot.docs
+              .where((doc) => doc.data()['tanggal'] != null) // 🔥 anti null
               .map((doc) => KomentarModel.fromMap(doc.id, doc.data()))
-              .toList(),
-        );
+              .toList();
+        });
   }
 
-  Future<void> deleteComment(String id) async {
-    await _db.collection('komentar').doc(id).delete();
+  // LIMIT 20 DATA
+  Future<void> limitKomentar() async {
+    final snapshot = await _db
+        .collection('komentar')
+        .orderBy('tanggal', descending: true)
+        .limit(50)
+        .get();
+
+    // filter yang punya tanggal saja
+    final docs = snapshot.docs
+        .where((doc) => doc.data()['tanggal'] != null)
+        .toList();
+
+    if (docs.length <= 20) return;
+
+    // ambil data lama (setelah 20 terbaru)
+    final oldDocs = docs.skip(20);
+
+    // batch delete biar cepat & aman
+    final batch = _db.batch();
+
+    for (var doc in oldDocs) {
+      batch.delete(doc.reference);
+    }
+
+    await batch.commit();
   }
 }
