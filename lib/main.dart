@@ -43,7 +43,7 @@ class _RootAppState extends State<RootApp> {
 
       _showSnackBar(
         nowConnected ? "Internet terhubung" : "Tidak ada koneksi internet",
-        nowConnected ? greenblack : redblack,
+        nowConnected ? greennotif : redblack,
       );
     });
 
@@ -56,7 +56,7 @@ class _RootAppState extends State<RootApp> {
 
         _showSnackBar(
           nowConnected ? "Internet terhubung" : "Tidak ada koneksi internet",
-          nowConnected ? greenblack : redblack,
+          nowConnected ? greennotif : redblack,
         );
       }
     });

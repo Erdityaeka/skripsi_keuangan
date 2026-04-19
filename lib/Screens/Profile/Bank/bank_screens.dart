@@ -26,7 +26,7 @@ class _BankScreensState extends State<BankScreens> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: greenblack,
+        backgroundColor: greennotif,
         content: Center(
           child: Text("Bank berhasil ditambahkan", style: whiteBold),
         ),
@@ -57,7 +57,7 @@ class _BankScreensState extends State<BankScreens> {
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  backgroundColor: greenblack,
+                  backgroundColor: greennotif,
                   content: Center(
                     child: Text("Bank berhasil dihapus", style: whiteBold),
                   ),

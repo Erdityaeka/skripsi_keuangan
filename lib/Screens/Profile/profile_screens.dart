@@ -151,7 +151,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
       if (passwordController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: rednotfif,
+            backgroundColor: rednotif,
             content: Center(
               child: Text("Password wajib diisi", style: whiteBold),
             ),
@@ -185,7 +185,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              backgroundColor: greenblack,
+              backgroundColor: greennotif,
               content: Center(
                 child: Text("Akun berhasil dihapus", style: whiteBold),
               ),
@@ -201,7 +201,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: rednotfif,
+            backgroundColor: rednotif,
             content: Center(child: Text("Gagal hapus akun", style: whiteBold)),
           ),
         );

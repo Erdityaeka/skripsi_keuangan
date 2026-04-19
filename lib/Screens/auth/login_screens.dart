@@ -29,7 +29,7 @@ class _LoginScreensState extends State<LoginScreens> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg, textAlign: TextAlign.center, style: whiteBold),
-        backgroundColor: success ? greenblack : rednotfif,
+        backgroundColor: success ? greennotif : rednotif,
       ),
     );
   }

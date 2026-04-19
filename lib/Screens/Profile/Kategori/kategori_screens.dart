@@ -12,7 +12,7 @@ class KategoriScreens extends StatefulWidget {
 class _KategoriScreensState extends State<KategoriScreens> {
   final FirestoreService _firestore = FirestoreService();
 
-  final List<String> _categories = [
+  final List<String> _kategori = [
     "Makananan",
     "Minuman",
     "Transportasi",
@@ -157,7 +157,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: isError ? red : greenblack,
+        backgroundColor: isError ? rednotif : greennotif,
         content: Center(child: Text(msg, style: whiteBold)),
       ),
     );
@@ -201,8 +201,6 @@ class _KategoriScreensState extends State<KategoriScreens> {
                 children: [
                   Text('Judul Kategori', style: redReguler15),
                   const SizedBox(height: 15),
-
-                  // ✅ FIX (hapus Expanded)
                   Container(
                     height: 55,
                     decoration: BoxDecoration(
@@ -210,9 +208,10 @@ class _KategoriScreensState extends State<KategoriScreens> {
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: DropdownButtonFormField<String>(
+                      dropdownColor: white,
                       value: _selected,
-                      hint: const Text("Pilih kategori"),
-                      items: _categories
+                      hint: Text("Pilih kategori", style: greyReguler),
+                      items: _kategori
                           .map(
                             (e) => DropdownMenuItem(value: e, child: Text(e)),
                           )
@@ -263,7 +262,9 @@ class _KategoriScreensState extends State<KategoriScreens> {
           final data = snap.data ?? [];
 
           if (data.isEmpty) {
-            return const Center(child: Text("Belum ada kategori"));
+            return Center(
+              child: Text("Belum ada kategori", style: blackBold15),
+            );
           }
 
           return ListView.builder(
@@ -281,7 +282,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
                   ),
                   child: ListTile(
                     leading: Icon(Icons.table_chart, color: black),
-                    title: Text(nama, style: blackBold15), // ✅ FIX
+                    title: Text(nama, style: blackBold15),
                     trailing: GestureDetector(
                       onTap: () => _delete(nama),
                       child: Icon(Icons.delete, color: red),

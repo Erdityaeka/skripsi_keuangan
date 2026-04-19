@@ -191,7 +191,7 @@ class _UpdatescreenState extends State<Updatescreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Center(child: Text(msg, style: whiteBold)),
-        backgroundColor: success ? greenblack : redblack,
+        backgroundColor: success ? greennotif : redblack,
       ),
     );
   }
@@ -343,7 +343,7 @@ class _UpdatescreenState extends State<Updatescreen> {
               onPressed: loading ? null : simpan,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
-                backgroundColor: greenblack,
+                backgroundColor: greennotif,
               ),
               child: loading
                   ? const CircularProgressIndicator(color: Colors.white)
