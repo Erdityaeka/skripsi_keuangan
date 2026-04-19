@@ -47,7 +47,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
       body: Column(
         children: [
           buttonAddBank(),
-          Expanded(child: listBank()), // ✅ WAJIB
+          Expanded(child: listBank()),
         ],
       ),
     );
@@ -60,22 +60,47 @@ class _KategoriScreensState extends State<KategoriScreens> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Edit Kategori"),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: "Nama baru"),
+        backgroundColor: red,
+        title: Text(
+          "Ubah jika ingin edit kategori tersebut:",
+          style: whiteReguler,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                border: Border.all(color: white, width: 2),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: TextField(
+                  controller: controller,
+                  style: whiteReguler,
+                  decoration: InputDecoration(
+                    hintText: 'Edit Kategori',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
+            child: Text("Batal", style: whiteBold),
           ),
           TextButton(
             onPressed: () async {
               final newnama = controller.text.trim();
 
               if (newnama.isEmpty) {
-                _showMsg("Tidak boleh kosong");
+                _showMsg("Tidak boleh kosong", isError: true);
                 return;
               }
 
@@ -87,10 +112,10 @@ class _KategoriScreensState extends State<KategoriScreens> {
                 Navigator.pop(context);
                 _showMsg("Berhasil diupdate");
               } catch (e) {
-                _showMsg("Gagal update");
+                _showMsg("Gagal update", isError: true);
               }
             },
-            child: const Text("Simpan"),
+            child: Text("Ubah", style: greenBold15),
           ),
         ],
       ),
@@ -117,7 +142,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
                 Navigator.pop(context);
                 _showMsg("Berhasil dihapus");
               } catch (e) {
-                _showMsg("Gagal hapus");
+                _showMsg("Gagal hapus", isError: true);
               }
             },
             child: const Text("Hapus", style: TextStyle(color: Colors.red)),
@@ -128,9 +153,14 @@ class _KategoriScreensState extends State<KategoriScreens> {
   }
 
   // ================= SNACKBAR =================
-  void _showMsg(String msg) {
+  void _showMsg(String msg, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: isError ? red : greenblack,
+        content: Center(child: Text(msg, style: whiteBold)),
+      ),
+    );
   }
 
   PreferredSizeWidget _buildAppbar(BuildContext context) {
