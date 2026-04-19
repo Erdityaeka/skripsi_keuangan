@@ -16,22 +16,30 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
   bool _isPasswordVisible = false;
   String? Bank;
 
+  Future<void> _refreshData() async {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppbar(context),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
-          child: Column(
-            children: [
-              cardtransaksi(),
-              const SizedBox(height: 20),
-              cardBank(),
-              const SizedBox(height: 50),
-              listTransaksi(),
-              SizedBox(height: 80),
-            ],
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
+            child: Column(
+              children: [
+                cardtransaksi(),
+                const SizedBox(height: 20),
+                cardBank(),
+                const SizedBox(height: 50),
+                listTransaksi(),
+                SizedBox(height: 80),
+              ],
+            ),
           ),
         ),
       ),

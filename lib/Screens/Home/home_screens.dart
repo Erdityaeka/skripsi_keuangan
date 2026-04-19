@@ -14,6 +14,11 @@ class _HomeScreensState extends State<HomeScreens> {
   User? user = FirebaseAuth.instance.currentUser;
   bool _isPasswordVisible = false;
   String? Bank;
+
+  Future<void> _refreshData() async {
+    setState(() {}); 
+  }
+
   String capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
@@ -29,17 +34,21 @@ class _HomeScreensState extends State<HomeScreens> {
     String nama = parts.isNotEmpty ? parts[0] : "User";
     return Scaffold(
       appBar: _buildAppbar(context, nama),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
-          child: Column(
-            children: [
-              cardtransaksi(),
-              const SizedBox(height: 20),
-              cardBank(),
-              const SizedBox(height: 50),
-              listTransaksi(),
-            ],
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
+            child: Column(
+              children: [
+                cardtransaksi(),
+                const SizedBox(height: 20),
+                cardBank(),
+                const SizedBox(height: 50),
+                listTransaksi(),
+              ],
+            ),
           ),
         ),
       ),
