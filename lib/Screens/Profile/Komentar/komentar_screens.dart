@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:skripsi_keuangan/models/comentar_model.dart';
+import 'package:skripsi_keuangan/services/firestore_service.dart';
 
 class KomentarScreens extends StatefulWidget {
   const KomentarScreens({super.key});
@@ -9,20 +12,45 @@ class KomentarScreens extends StatefulWidget {
 }
 
 class _KomentarScreensState extends State<KomentarScreens> {
-  final List<Map<String, dynamic>> _messages = [];
+  final TextEditingController komentar = TextEditingController();
+  final FirestoreService service = FirestoreService();
+
+  bool loading = false;
+
+  // KIRIM
+  Future<void> kirimKomentar() async {
+    if (komentar.text.trim().isEmpty) return;
+
+    setState(() => loading = true);
+
+    try {
+      await service.addComment(komentar.text.trim());
+      komentar.clear();
+      notif("Berhasil kirim komentar");
+    } catch (e) {
+      notif("Gagal kirim komentar");
+    }
+
+    setState(() => loading = false);
+  }
+
+  // SNACKBAR
+  void notif(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppbar(context),
+
+      // 🔥 FIX: cukup 1 Expanded saja
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(child: ListKomentar()), // hanya ListPrompt yang scrollable
-          ],
-        ),
+        child: Column(children: [Expanded(child: ListKomentar())]),
       ),
-      bottomNavigationBar: inputPrompt(), // input bar fix di bawah
+
+      bottomNavigationBar: inputPrompt(),
     );
   }
 
@@ -34,32 +62,72 @@ class _KomentarScreensState extends State<KomentarScreens> {
         onPressed: () => Navigator.pop(context),
         icon: Icon(Icons.arrow_back, color: red),
       ),
-      title: Text('AI Uang Note', style: redBold20),
+      title: Text('Komentar', style: redBold20),
       centerTitle: true,
     );
   }
 
+  // LIST
   Widget ListKomentar() {
-    return ListView.builder(
-      itemCount: _messages.length,
-      itemBuilder: (context, i) {
-        bool isUser = _messages[i]['isUser'];
-        return Align(
-          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isUser ? Colors.blue[100] : Colors.grey[200],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(_messages[i]['text'], style: blackReguler),
-          ),
+    return StreamBuilder<List<KomentarModel>>(
+      stream: service.getKomentar(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return const Center(child: Text("Terjadi error"));
+        }
+
+        final comments = snapshot.data ?? [];
+
+        if (comments.isEmpty) {
+          return const Center(child: Text("Belum ada komentar"));
+        }
+
+        final user = FirebaseAuth.instance.currentUser;
+
+        return ListView.builder(
+          itemCount: comments.length,
+          itemBuilder: (context, index) {
+            final c = comments[index];
+
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: ListTile(
+                leading: const CircleAvatar(child: Icon(Icons.person)),
+                title: Text(c.nama),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(c.deskripsi),
+                    const SizedBox(height: 5),
+                    Text(
+                      c.tanggal != null
+                          ? "${c.tanggal!.day}/${c.tanggal!.month}/${c.tanggal!.year}"
+                          : "Baru saja",
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+                trailing: user != null && user.uid == c.userId
+                    ? IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          await service.deleteComment(c.id);
+                        },
+                      )
+                    : null,
+              ),
+            );
+          },
         );
       },
     );
   }
 
+  // INPUT
   Widget inputPrompt() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -67,7 +135,7 @@ class _KomentarScreensState extends State<KomentarScreens> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            height: 60,
+            height: 100,
             decoration: BoxDecoration(
               color: white,
               borderRadius: BorderRadius.circular(15),
@@ -77,10 +145,14 @@ class _KomentarScreensState extends State<KomentarScreens> {
               children: [
                 Expanded(
                   child: TextField(
+                    maxLines: 2,
+                    controller: komentar,
                     style: blackReguler,
                     decoration: InputDecoration(
-                      hintText: 'Tulis pertanyaan Anda...',
-                      hintStyle: blackReguler,
+                      hintText: 'Tulis Komentar Anda...',
+                      hintStyle: blackReguler.copyWith(
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 10,
@@ -90,17 +162,13 @@ class _KomentarScreensState extends State<KomentarScreens> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {
-                    // Logika kirim pertanyaan
-                  },
+                  onPressed: kirimKomentar,
                   icon: Icon(Icons.send, color: black),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 10),
-          Text('AI ini bisa dapat melakukan kesalahan!', style: blackReguler12),
-          const SizedBox(height: 30),
+          const SizedBox(height: 50),
         ],
       ),
     );

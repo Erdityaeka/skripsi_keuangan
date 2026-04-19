@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Edit%20Profile/edit_profile_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Komentar/komentar_screens.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
@@ -328,7 +329,15 @@ class _ProfileScreensState extends State<ProfileScreens> {
         const SizedBox(height: 30),
         _buildButton(Icons.perm_device_info, 'Tentang Aplikasi'),
         const SizedBox(height: 30),
-        _buildButton(Icons.help_outline, 'Komentar'),
+        InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => KomentarScreens()),
+            );
+          },
+          child: _buildButton(Icons.help_outline, 'Komentar'),
+        ),
         const SizedBox(height: 30),
         InkWell(
           onTap: _deleteAccount,
