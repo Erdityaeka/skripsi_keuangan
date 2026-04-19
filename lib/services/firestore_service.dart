@@ -169,7 +169,7 @@ class FirestoreService {
         'tanggal': FieldValue.serverTimestamp(),
       });
 
-      await limitKomentar(); // 🔥 jaga max 20
+      await limitKomentar();
 
       print("Komentar berhasil dikirim");
     } catch (e) {
@@ -183,11 +183,11 @@ class FirestoreService {
     return _db
         .collection('komentar')
         .orderBy('tanggal', descending: true)
-        .limit(20)
+        .limit(10)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs
-              .where((doc) => doc.data()['tanggal'] != null) // 🔥 anti null
+              .where((doc) => doc.data()['tanggal'] != null)
               .map((doc) => KomentarModel.fromMap(doc.id, doc.data()))
               .toList();
         });
@@ -198,7 +198,7 @@ class FirestoreService {
     final snapshot = await _db
         .collection('komentar')
         .orderBy('tanggal', descending: true)
-        .limit(50)
+        .limit(30)
         .get();
 
     // filter yang punya tanggal saja
@@ -206,10 +206,10 @@ class FirestoreService {
         .where((doc) => doc.data()['tanggal'] != null)
         .toList();
 
-    if (docs.length <= 20) return;
+    if (docs.length <= 10) return;
 
     // ambil data lama (setelah 20 terbaru)
-    final oldDocs = docs.skip(20);
+    final oldDocs = docs.skip(10);
 
     // batch delete biar cepat & aman
     final batch = _db.batch();

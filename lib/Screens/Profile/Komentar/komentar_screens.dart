@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/models/comentar_model.dart';
@@ -67,10 +66,12 @@ class _KomentarScreensState extends State<KomentarScreens> {
       ),
       title: Text('Komentar', style: redBold20),
       centerTitle: true,
+      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
     );
   }
 
   // LIST
+  // ignore: non_constant_identifier_names
   Widget ListKomentar() {
     return StreamBuilder<List<KomentarModel>>(
       stream: service.getKomentar(),
@@ -88,8 +89,6 @@ class _KomentarScreensState extends State<KomentarScreens> {
         if (comments.isEmpty) {
           return const Center(child: Text("Belum ada komentar"));
         }
-
-        final user = FirebaseAuth.instance.currentUser;
 
         return ListView.builder(
           itemCount: comments.length,
