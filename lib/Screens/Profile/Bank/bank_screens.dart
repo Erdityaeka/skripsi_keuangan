@@ -35,16 +35,13 @@ class _BankScreensState extends State<BankScreens> {
   }
 
   //HAPUS BANK
-  void _confirmDelete(String bankName) {
+  void _confirmDelete(String nama) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: red,
         title: Text("Hapus Bank?", style: whiteReguler),
-        content: Text(
-          "Yakin ingin menghapus '$bankName'?",
-          style: whiteReguler,
-        ),
+        content: Text("Yakin ingin menghapus '$nama'?", style: whiteReguler),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -52,7 +49,7 @@ class _BankScreensState extends State<BankScreens> {
           ),
           TextButton(
             onPressed: () async {
-              await _firestoreService.deleteBank(bankName);
+              await _firestoreService.deleteBank(nama);
 
               if (!mounted) return;
 
@@ -196,7 +193,7 @@ class _BankScreensState extends State<BankScreens> {
           return ListView.builder(
             itemCount: banks.length,
             itemBuilder: (context, index) {
-              final bankName = banks[index];
+              final nama = banks[index];
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
@@ -206,9 +203,9 @@ class _BankScreensState extends State<BankScreens> {
                 ),
                 child: ListTile(
                   leading: Icon(Icons.account_balance, color: black),
-                  title: Text(bankName, style: blackBold15),
+                  title: Text(nama, style: blackBold15),
                   trailing: GestureDetector(
-                    onTap: () => _confirmDelete(bankName),
+                    onTap: () => _confirmDelete(nama),
                     child: Icon(Icons.delete, color: red),
                   ),
                 ),
