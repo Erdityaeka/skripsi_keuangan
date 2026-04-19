@@ -41,7 +41,10 @@ class _BankScreensState extends State<BankScreens> {
       builder: (_) => AlertDialog(
         backgroundColor: red,
         title: Text("Hapus Bank?", style: whiteReguler),
-        content: Text("Yakin ingin menghapus '$nama'?", style: whiteReguler),
+        content: Text(
+          "Yakin ingin menghapus data bank '$nama'?",
+          style: whiteReguler,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

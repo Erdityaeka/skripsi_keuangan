@@ -43,7 +43,7 @@ class _RootAppState extends State<RootApp> {
 
       _showSnackBar(
         nowConnected ? "Internet terhubung" : "Tidak ada koneksi internet",
-        nowConnected ? greennotif : redblack,
+        nowConnected ? greennotif : rednotif,
       );
     });
 
@@ -56,7 +56,7 @@ class _RootAppState extends State<RootApp> {
 
         _showSnackBar(
           nowConnected ? "Internet terhubung" : "Tidak ada koneksi internet",
-          nowConnected ? greennotif : redblack,
+          nowConnected ? greennotif : rednotif,
         );
       }
     });
@@ -64,7 +64,7 @@ class _RootAppState extends State<RootApp> {
 
   void _showSnackBar(String message, Color color) {
     if (!mounted || _snackActive) return;
-    if (splashActive) return; 
+    if (splashActive) return;
 
     // snackbar aktif
     _snackActive = true;

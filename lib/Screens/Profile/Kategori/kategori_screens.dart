@@ -127,12 +127,16 @@ class _KategoriScreensState extends State<KategoriScreens> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Hapus"),
-        content: Text("Hapus '$nama'?"),
+        backgroundColor: red,
+        title: Text("Hapus Kategori?", style: whiteBold),
+        content: Text(
+          "Yakin ingin menghapus data kategori '$nama'?",
+          style: whiteBold,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
+            child: Text("Batal", style: whiteBold),
           ),
           TextButton(
             onPressed: () async {
@@ -145,7 +149,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
                 _showMsg("Gagal hapus", isError: true);
               }
             },
-            child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+            child: Text("Hapus", style: greenBold15),
           ),
         ],
       ),
