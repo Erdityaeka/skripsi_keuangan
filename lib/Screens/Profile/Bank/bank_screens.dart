@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:skripsi_keuangan/services/firestore_service.dart';
 
 class BankScreens extends StatefulWidget {
   const BankScreens({super.key});
@@ -9,11 +10,81 @@ class BankScreens extends StatefulWidget {
 }
 
 class _BankScreensState extends State<BankScreens> {
+  final FirestoreService _firestoreService = FirestoreService();
+  final TextEditingController _bankController = TextEditingController();
+
+  //TAMBAH BANK
+  Future<void> _addBank() async {
+    final text = _bankController.text.trim();
+
+    if (text.isEmpty) return;
+
+    await _firestoreService.addBank(text);
+    _bankController.clear();
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: greenblack,
+        content: Center(
+          child: Text("Bank berhasil ditambahkan", style: whiteBold),
+        ),
+      ),
+    );
+  }
+
+  //HAPUS BANK
+  void _confirmDelete(String bankName) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: red,
+        title: Text("Hapus Bank?", style: whiteReguler),
+        content: Text(
+          "Yakin ingin menghapus '$bankName'?",
+          style: whiteReguler,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Batal", style: whiteBold),
+          ),
+          TextButton(
+            onPressed: () async {
+              await _firestoreService.deleteBank(bankName);
+
+              if (!mounted) return;
+
+              Navigator.pop(context);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: greenblack,
+                  content: Center(
+                    child: Text("Bank berhasil dihapus", style: whiteBold),
+                  ),
+                ),
+              );
+            },
+            child: Text("Hapus", style: greenBold15),
+          ),
+        ],
+      ),
+    );
+  }
+
+  //UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppbar(context),
-      body: Column(children: [buttonAddBank(), listBank()]),
+      body: Column(
+        children: [
+          buttonAddBank(),
+          Expanded(child: listBank()),
+        ],
+      ),
     );
   }
 
@@ -22,9 +93,7 @@ class _BankScreensState extends State<BankScreens> {
       backgroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
-        onPressed: () {
-          Navigator.pop(context);
-        },
+        onPressed: () => Navigator.pop(context),
         icon: Icon(Icons.arrow_back, color: red),
       ),
       title: Text('Bank', style: redBold20),
@@ -32,6 +101,7 @@ class _BankScreensState extends State<BankScreens> {
     );
   }
 
+  //INPUT
   Widget buttonAddBank() {
     return Container(
       width: double.infinity,
@@ -40,89 +110,112 @@ class _BankScreensState extends State<BankScreens> {
         color: white,
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 0,
             blurRadius: 2,
             offset: const Offset(0, 3),
           ),
         ],
-        border: Border(bottom: BorderSide(color: grey, width: 1)),
+        border: Border(bottom: BorderSide(color: grey)),
       ),
       child: Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 30),
+        padding: const EdgeInsets.fromLTRB(20, 30, 20, 0),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Judul Bank', style: redReguler15),
-                  SizedBox(height: 15),
-                  Container(
-                    height: 55,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: red, width: 1.5),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hint: Text(
-                            'Masukan nama bank',
-                            style: greyReguler,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 15),
+                  _inputField(),
                 ],
               ),
             ),
-            SizedBox(width: 10), // jarak antara input dan tombol
-            Container(
-              width: 90,
-              height: 55,
-              decoration: BoxDecoration(
-                color: red,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Center(child: Icon(Icons.add, color: Colors.white)),
-            ),
+            const SizedBox(width: 10),
+            _buttonAdd(),
           ],
         ),
       ),
     );
   }
 
-  Widget listBank() {
-    return Padding(
-      padding: EdgeInsets.only(left: 20, right: 20, top: 30),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          border: Border.all(color: red, width: 2),
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(Icons.account_balance, size: 20, color: black),
-              const SizedBox(width: 20),
-              Text('Sea Bank', style: blackBold15),
-              Spacer(),
-              Icon(Icons.delete, size: 20, color: red),
-            ],
+  // INPUT
+  Widget _inputField() {
+    return Container(
+      height: 55,
+      decoration: BoxDecoration(
+        border: Border.all(color: red, width: 1.5),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        child: TextField(
+          controller: _bankController,
+          decoration: InputDecoration(
+            hintText: 'Masukan nama bank',
+            hintStyle: greyReguler,
+            border: InputBorder.none,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buttonAdd() {
+    return GestureDetector(
+      onTap: _addBank,
+      child: Container(
+        width: 90,
+        height: 55,
+        decoration: BoxDecoration(
+          color: red,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  //LIST BANK
+  Widget listBank() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: StreamBuilder<List<String>>(
+        stream: _firestoreService.getBank(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text("Belum ada bank", style: blackBold15));
+          }
+
+          final banks = snapshot.data!;
+
+          return ListView.builder(
+            itemCount: banks.length,
+            itemBuilder: (context, index) {
+              final bankName = banks[index];
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: red, width: 2),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: ListTile(
+                  leading: Icon(Icons.account_balance, color: black),
+                  title: Text(bankName, style: blackBold15),
+                  trailing: GestureDetector(
+                    onTap: () => _confirmDelete(bankName),
+                    child: Icon(Icons.delete, color: red),
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
