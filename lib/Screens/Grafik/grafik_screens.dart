@@ -107,14 +107,14 @@ class _GrafikScreensState extends State<GrafikScreens> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.bar_chart_rounded,
+                                Icons.leaderboard,
                                 size: 80,
                                 color: Colors.grey[300],
                               ),
                               const SizedBox(height: 10),
-                              const Text(
+                              Text(
                                 "Tidak ada data pada periode ini",
-                                style: TextStyle(color: Colors.grey),
+                                style: greyReguler,
                               ),
                             ],
                           ),
