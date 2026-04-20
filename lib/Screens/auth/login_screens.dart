@@ -24,7 +24,7 @@ class _LoginScreensState extends State<LoginScreens> {
     super.dispose();
   }
 
-  //snackbar 
+  //snackbar
   void _showSnack(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -55,7 +55,7 @@ class _LoginScreensState extends State<LoginScreens> {
       _showSnack("Login berhasil!", success: true);
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const TombolNav()),
+        MaterialPageRoute(builder: (context) =>  TombolNav()),
         (route) => false,
       );
       return;

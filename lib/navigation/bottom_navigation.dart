@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skripsi_keuangan/Screens/AI%20Analisis/ai_screen.dart';
+import 'package:skripsi_keuangan/Screens/Grafik/grafik_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/profile_screens.dart';
 import 'package:skripsi_keuangan/Screens/Home/home_screens.dart';
 import 'package:skripsi_keuangan/Screens/transaksi/transaksi_screens.dart';
@@ -29,7 +30,7 @@ class _TombolNavState extends State<TombolNav> {
       const HomeScreens(),
       const TransaksiScreens(showBackButton: false),
       Container(),
-      Container(),
+      GrafikScreens(),
       const ProfileScreens(),
     ];
 
