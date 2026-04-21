@@ -1,22 +1,33 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 import 'package:skripsi_keuangan/Screens/transaksi/transaksi_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:skripsi_keuangan/models/transaction_model.dart';
 
 class HomeScreens extends StatefulWidget {
-  const HomeScreens({super.key});
+  final List<TransaksiModel> transactions;
+
+  const HomeScreens({super.key, this.transactions = const []});
 
   @override
   State<HomeScreens> createState() => _HomeScreensState();
 }
 
 class _HomeScreensState extends State<HomeScreens> {
-  User? user = FirebaseAuth.instance.currentUser;
+  final currency = NumberFormat.simpleCurrency(locale: 'id', decimalDigits: 0);
+
+  String selectedBank = "semua";
   bool _isPasswordVisible = false;
-  String? Bank;
+
+  // SIMPAN BANK DI STATE
+  List<String> allBanks = ["semua"];
 
   Future<void> _refreshData() async {
-    setState(() {}); 
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) setState(() {});
   }
 
   String capitalize(String text) {
@@ -26,36 +37,95 @@ class _HomeScreensState extends State<HomeScreens> {
 
   @override
   Widget build(BuildContext context) {
-    String displayNama = user?.displayName ?? 'User';
-    // Ambil nama dari user, jika null gunakan 'User'
-    List<String> parts = displayNama.split(
-      '|',
-    ); // Pisahkan nama berdasarkan spasi
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text("User tidak ditemukan")));
+    }
+
+    String displayNama = user.displayName ?? 'User';
+    List<String> parts = displayNama.split('|');
     String nama = parts.isNotEmpty ? parts[0] : "User";
+
     return Scaffold(
       appBar: _buildAppbar(context, nama),
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
-            child: Column(
-              children: [
-                cardtransaksi(),
-                const SizedBox(height: 20),
-                cardBank(),
-                const SizedBox(height: 50),
-                listTransaksi(),
-              ],
+
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('user')
+            .doc(user.uid)
+            .collection('bank')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          //BANK
+          final banks =
+              snapshot.data?.docs
+                  .map((doc) => (doc['nama'] ?? '').toString().toLowerCase())
+                  .where((e) => e.isNotEmpty)
+                  .toList() ??
+              [];
+
+          //SIMPAN KE STATE
+          allBanks = ["semua", ...banks];
+
+          final current = allBanks.contains(selectedBank)
+              ? selectedBank
+              : "semua";
+
+          //FILTER
+          final filtered = widget.transactions.where((tx) {
+            final bank = (tx.bank).toLowerCase();
+            return current == "semua" || bank == current;
+          }).toList();
+
+          //SORT
+          filtered.sort((a, b) => b.tanggal.compareTo(a.tanggal));
+
+          final recent = filtered.take(3).toList();
+
+          //HITUNG
+          double income = 0;
+          double expense = 0;
+
+          for (var tx in filtered) {
+            if (tx.tipe == "pemasukan") {
+              income += tx.nominal;
+            } else {
+              expense += tx.nominal;
+            }
+          }
+
+          final saldo = income - expense;
+
+          return RefreshIndicator(
+            onRefresh: _refreshData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
+                child: Column(
+                  children: [
+                    cardtransaksi(income, expense, saldo),
+                    const SizedBox(height: 20),
+                    cardBank(), // ✅ tetap tanpa parameter
+                    const SizedBox(height: 30),
+                    listTransaksi(recent),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
-  // ui appbar
+  //APPBAR
+  // ignore: strict_top_level_inference
   PreferredSizeWidget _buildAppbar(context, String nama) {
     return AppBar(
       backgroundColor: whiteBold.color,
@@ -76,14 +146,11 @@ class _HomeScreensState extends State<HomeScreens> {
           ],
         ),
       ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(color: whiteBold.color),
-      ),
     );
   }
 
-  // ui card transaksi
-  Widget cardtransaksi() {
+  //CARD
+  Widget cardtransaksi(double income, double expense, double saldo) {
     return Container(
       width: double.infinity,
       height: 230,
@@ -92,68 +159,42 @@ class _HomeScreensState extends State<HomeScreens> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
-        padding: const EdgeInsets.only(top: 21.0, right: 15, left: 15),
+        padding: const EdgeInsets.all(15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Text('Pemasukan', style: greenBold15),
+            Text(currency.format(income), style: whiteReguler),
+
+            const SizedBox(height: 10),
+
+            Text('Pengeluaran', style: yellowBold15),
+            Text(currency.format(expense), style: whiteReguler),
+
+            const SizedBox(height: 10),
+
+            Row(
               children: [
-                Text('Pemasukan', style: greenBold15),
-                const SizedBox(height: 5),
-                Text(
-                  'Rp. 1.000.000',
-                  style: whiteReguler,
-                  overflow: TextOverflow.ellipsis,
+                Text('Total', style: whiteBold),
+                IconButton(
+                  icon: Icon(
+                    _isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
                 ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 15.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Pemasukan', style: yellowBold15),
-                  const SizedBox(height: 5),
-                  Text(
-                    'Rp. 1.000.000',
-                    style: whiteReguler,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text('Total', style: whiteBold),
-                      const SizedBox(width: 5),
-                      IconButton(
-                        icon: Icon(
-                          _isPasswordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: white,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  Text(
-                    _isPasswordVisible ? 'Rp. 1.000.000' : '••••••••',
-                    style: whiteReguler,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+
+            Text(
+              _isPasswordVisible ? currency.format(saldo) : '••••••',
+              style: whiteReguler,
             ),
           ],
         ),
@@ -161,7 +202,7 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  // ui card bank dengan dropdown
+  //DROPDOWN
   Widget cardBank() {
     return Container(
       width: double.infinity,
@@ -171,41 +212,45 @@ class _HomeScreensState extends State<HomeScreens> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
-            value: Bank,
+            value: selectedBank,
             dropdownColor: red,
-            hint: Text('SEMUA', style: whiteReguler),
             icon: Icon(Icons.arrow_drop_down, color: white),
-            onChanged: (String? newValue) {
-              setState(() {
-                Bank = newValue;
-              });
+
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() => selectedBank = value);
             },
-            items:
-                <String>[
-                  'SEMUA',
-                  'Bank BCA',
-                  'Bank Mandiri',
-                  'Bank BNI',
-                  'Bank BTN',
-                ].map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value, style: whiteReguler),
-                  );
-                }).toList(),
+
+            items: allBanks.map((bank) {
+              return DropdownMenuItem(
+                value: bank,
+                child: Text(bank.toUpperCase(), style: whiteReguler),
+              );
+            }).toList(),
           ),
         ),
       ),
     );
   }
 
-  // ui list transaksi
-  Widget listTransaksi() {
+  //LIST
+  Widget listTransaksi(List<TransaksiModel> list) {
+    if (list.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.all(20),
+        child: Text(
+          selectedBank == "semua"
+              ? "Belum ada transaksi"
+              : "Belum ada transaksi di Bank '${selectedBank.toUpperCase()}'",
+          style: blackBold15,
+        ),
+      );
+    }
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -217,8 +262,7 @@ class _HomeScreensState extends State<HomeScreens> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        TransaksiScreens(showBackButton: true),
+                    builder: (_) => TransaksiScreens(showBackButton: true),
                   ),
                 );
               },
@@ -226,137 +270,20 @@ class _HomeScreensState extends State<HomeScreens> {
             ),
           ],
         ),
-        SizedBox(height: 20),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('15, Maret, 2026', style: redReguler12),
-                    Text('Rp. 1.000.000', style: greenBold12),
-                    Text('Rp. 1.000.000', style: yellowBold12),
-                  ],
-                ),
+        const SizedBox(height: 20),
+
+        ...list.map((tx) {
+          return ListTile(
+            title: Text(tx.judul),
+            subtitle: Text(tx.bank),
+            trailing: Text(
+              currency.format(tx.nominal),
+              style: TextStyle(
+                color: tx.tipe == "pemasukan" ? Colors.green : Colors.orange,
               ),
-              Divider(
-                color: red, // warna garis
-                thickness: 1, // ketebalan garis
-                indent: 0, // jarak kiri
-                endIndent: 0,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 40, // lebar lingkaran
-                      height: 40, // tinggi lingkaran
-                      decoration: BoxDecoration(
-                        color: green,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.call_made, color: white, size: 24),
-                    ),
-                    SizedBox(width: 15),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Ayam Goreng',
-                          style: redBold15,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          'Makanan',
-                          style: redReguler12,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          'Bank BCA',
-                          style: redReguler12,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                    Spacer(),
-                    Text(
-                      'Rp. 1.000.000',
-                      style: greenBold12,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 40, // lebar lingkaran
-                      height: 40, // tinggi lingkaran
-                      decoration: BoxDecoration(
-                        color: yellow,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.call_made, color: white, size: 24),
-                    ),
-                    SizedBox(width: 15),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Ikan Goreng',
-                          style: redBold15,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          'Makanan',
-                          style: redReguler12,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          'Bank BCA',
-                          style: redReguler12,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                    Spacer(),
-                    Text(
-                      'Rp. 1.000.000',
-                      style: yellowBold12,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        }),
       ],
     );
   }

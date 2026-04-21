@@ -28,7 +28,7 @@ class _TombolNavState extends State<TombolNav> {
     // Daftar halaman untuk setiap tab
     final List<Widget> listPage = <Widget>[
       const HomeScreens(),
-      const TransaksiScreens(showBackButton: false),
+       TransaksiScreens(showBackButton: false),
       Container(),
       GrafikScreens(),
       const ProfileScreens(),

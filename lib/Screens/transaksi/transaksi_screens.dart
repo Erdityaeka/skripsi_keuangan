@@ -1,12 +1,24 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 import 'package:skripsi_keuangan/Screens/transaksi/edit_transaksi.dart';
 import 'package:skripsi_keuangan/Screens/transaksi/tambah_transaksi.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:skripsi_keuangan/models/transaction_model.dart';
 
 class TransaksiScreens extends StatefulWidget {
-  //memebriukan opsi button pada appbar
   final bool showBackButton;
-  const TransaksiScreens({super.key, required this.showBackButton});
+
+  // ✅ TIDAK WAJIB LAGI (INI YANG BIKIN NAVIGATION JADI AMAN)
+  final List<TransaksiModel> transactions;
+
+  const TransaksiScreens({
+    super.key,
+    required this.showBackButton,
+    this.transactions = const [], // ✅ default kosong
+  });
 
   @override
   State<TransaksiScreens> createState() => _TransaksiScreensState();
@@ -14,63 +26,148 @@ class TransaksiScreens extends StatefulWidget {
 
 class _TransaksiScreensState extends State<TransaksiScreens> {
   bool _isPasswordVisible = false;
-  String? Bank;
+  DateTime _focusedMonth = DateTime.now();
+
+  final currency = NumberFormat.simpleCurrency(locale: 'id', decimalDigits: 0);
+
+  String selectedBank = "semua";
 
   Future<void> _refreshData() async {
-    setState(() {});
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text("User tidak ditemukan")));
+    }
+
     return Scaffold(
       appBar: _buildAppbar(context),
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
-            child: Column(
-              children: [
-                cardtransaksi(),
-                const SizedBox(height: 20),
-                cardBank(),
-                const SizedBox(height: 50),
-                listTransaksi(),
-                SizedBox(height: 80),
-              ],
+
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('user')
+            .doc(user.uid)
+            .collection('bank')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text("Belum ada data bank"));
+          }
+
+          // ================= BANK =================
+          final banks = snapshot.data!.docs
+              .map((doc) => (doc['nama'] ?? '').toString().toLowerCase())
+              .where((e) => e.isNotEmpty)
+              .toList();
+
+          final allBanks = ["semua", ...banks];
+
+          final currentBank = allBanks.contains(selectedBank)
+              ? selectedBank
+              : "semua";
+
+          // ================= FILTER =================
+          final filtered = widget.transactions.where((tx) {
+            final sameMonth =
+                tx.tanggal.month == _focusedMonth.month &&
+                tx.tanggal.year == _focusedMonth.year;
+
+            final bank = (tx.bank).toLowerCase();
+
+            final sameBank = currentBank == "semua" || bank == currentBank;
+
+            return sameMonth && sameBank;
+          }).toList();
+
+          // ================= HITUNG =================
+          final pemasukan = filtered
+              .where((tx) => tx.tipe == "pemasukan")
+              .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+          final pengeluaran = filtered
+              .where((tx) => tx.tipe == "[pengeluaran]")
+              .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+          final saldo = pemasukan - pengeluaran;
+
+          // ================= GROUP =================
+          final Map<DateTime, List<TransaksiModel>> grouped = {};
+
+          for (var tx in filtered) {
+            final day = DateTime(
+              tx.tanggal.year,
+              tx.tanggal.month,
+              tx.tanggal.day,
+            );
+            grouped.putIfAbsent(day, () => []).add(tx);
+          }
+
+          final days = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+
+          return RefreshIndicator(
+            onRefresh: _refreshData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
+                child: Column(
+                  children: [
+                    cardtransaksi(pemasukan, pengeluaran, saldo),
+                    const SizedBox(height: 20),
+                    cardBank(allBanks),
+                    const SizedBox(height: 30),
+
+                    // DATA KALAU KOSONG
+                    days.isEmpty
+                        ? Text(
+                            currentBank == "semua"
+                                ? "Belum ada transaksi"
+                                : "Belum ada transaksi di Bank '${currentBank.toUpperCase()}'",
+                            style: blackBold15,
+                          )
+                        : listTransaksi(days, grouped),
+
+                    const SizedBox(height: 80),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
+
       floatingActionButton: _buildFloatingActionButton(),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.endFloat, // posisi tombol di kanan bawah
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  // ui appbar
+  // ================= APPBAR =================
   PreferredSizeWidget _buildAppbar(context) {
     return AppBar(
       backgroundColor: whiteBold.color,
-      automaticallyImplyLeading: false, // matikan otomatis
+      automaticallyImplyLeading: false,
       leading: widget.showBackButton
           ? IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               icon: Icon(Icons.arrow_back, color: red),
             )
           : null,
       title: Text('Transaksi', style: redBold20),
       centerTitle: true,
-
-      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
     );
   }
 
-  // ui card transaksi
-  Widget cardtransaksi() {
+  // ================= CARD =================
+  Widget cardtransaksi(double pemasukan, double pengeluaran, double saldo) {
     return Container(
       width: double.infinity,
       height: 230,
@@ -79,68 +176,42 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
-        padding: const EdgeInsets.only(top: 21.0, right: 15, left: 15),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Text('Pemasukan', style: greenBold15),
+            Text(currency.format(pemasukan), style: whiteReguler),
+
+            const SizedBox(height: 10),
+
+            Text('Pengeluaran', style: yellowBold15),
+            Text(currency.format(pengeluaran), style: whiteReguler),
+
+            const SizedBox(height: 10),
+
+            Row(
               children: [
-                Text('Pemasukan', style: greenBold15),
-                const SizedBox(height: 5),
-                Text(
-                  'Rp. 1.000.000',
-                  style: whiteReguler,
-                  overflow: TextOverflow.ellipsis,
+                Text('Total', style: whiteBold),
+                IconButton(
+                  icon: Icon(
+                    _isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
                 ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 15.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Pemasukan', style: yellowBold15),
-                  const SizedBox(height: 5),
-                  Text(
-                    'Rp. 1.000.000',
-                    style: whiteReguler,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text('Total', style: whiteBold),
-                      const SizedBox(width: 5),
-                      IconButton(
-                        icon: Icon(
-                          _isPasswordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: white,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  Text(
-                    _isPasswordVisible ? 'Rp. 1.000.000' : '••••••••',
-                    style: whiteReguler,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+
+            Text(
+              _isPasswordVisible ? currency.format(saldo) : '••••••',
+              style: whiteReguler,
             ),
           ],
         ),
@@ -148,241 +219,87 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // ui card bank dengan dropdown
-  Widget cardBank() {
+  // ================= DROPDOWN =================
+  Widget cardBank(List<String> banks) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: red,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(Icons.keyboard_arrow_left_outlined, color: white),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text('Januari', style: whiteBold),
-                const SizedBox(height: 4),
-                DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: Bank,
-                    hint: Text('SEMUA', style: whiteReguler),
-                    isDense: true,
-                    dropdownColor: red,
-                    icon: Icon(Icons.arrow_drop_down, color: white, size: 18),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        Bank = newValue;
-                      });
-                    },
-                    items:
-                        <String>[
-                          'SEMUA',
-                          'Bank BCA',
-                          'Bank Mandiri',
-                          'Bank BNI',
-                          'Bank BTN',
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(
-                              value,
-                              style: whiteReguler,
-                            ), // hanya teks, tanpa ikon
-                          );
-                        }).toList(),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 10),
-            Icon(Icons.keyboard_arrow_right_outlined, color: white),
-          ],
+      padding: const EdgeInsets.all(12),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedBank,
+          dropdownColor: red,
+          icon: Icon(Icons.arrow_drop_down, color: white),
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() => selectedBank = value);
+          },
+          items: banks.map((bank) {
+            return DropdownMenuItem(
+              value: bank,
+              child: Text(bank.toUpperCase(), style: whiteReguler),
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
-  // ui list transaksi
-  Widget listTransaksi() {
+  // ================= LIST =================
+  Widget listTransaksi(
+    List<DateTime> days,
+    Map<DateTime, List<TransaksiModel>> grouped,
+  ) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('15, Maret, 2026', style: redReguler12),
-                    Text('Rp. 1.000.000', style: greenBold12),
-                    Text('Rp. 1.000.000', style: yellowBold12),
-                  ],
-                ),
-              ),
-              Divider(
-                color: red, // warna garis
-                thickness: 1, // ketebalan garis
-                indent: 0, // jarak kiri
-                endIndent: 0,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => EditTransaksi()),
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 40, // lebar lingkaran
-                          height: 40, // tinggi lingkaran
-                          decoration: BoxDecoration(
-                            color: green,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.call_made, color: white, size: 24),
-                        ),
-                        SizedBox(width: 15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Ayam Goreng',
-                              style: redBold15,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              'Makanan',
-                              style: redReguler12,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              'Bank BCA',
-                              style: redReguler12,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                        Spacer(),
-                        Text(
-                          'Rp. 1.000.000',
-                          style: greenBold12,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+      children: days.map((day) {
+        final list = grouped[day]!;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(DateFormat('dd MMM yyyy').format(day), style: redReguler12),
+            ...list.map((tx) {
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => EditTransaksi()),
+                  );
+                },
+                child: ListTile(
+                  title: Text(tx.judul),
+                  subtitle: Text(tx.bank),
+                  trailing: Text(
+                    currency.format(tx.nominal),
+                    style: TextStyle(
+                      color: tx.tipe == "pemasukan"
+                          ? Colors.green
+                          : Colors.orange,
                     ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => EditTransaksi()),
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 40, // lebar lingkaran
-                          height: 40, // tinggi lingkaran
-                          decoration: BoxDecoration(
-                            color: yellow,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.call_made, color: white, size: 24),
-                        ),
-                        SizedBox(width: 15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Ikan Goreng',
-                              style: redBold15,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              'Makanan',
-                              style: redReguler12,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              'Bank BCA',
-                              style: redReguler12,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                        Spacer(),
-                        Text(
-                          'Rp. 1.000.000',
-                          style: yellowBold12,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+              );
+            }),
+          ],
+        );
+      }).toList(),
     );
   }
 
+  // ================= FAB =================
   FloatingActionButton _buildFloatingActionButton() {
     return FloatingActionButton(
+      backgroundColor: red,
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => TambahTransaksi()),
+          MaterialPageRoute(builder: (_) => TambahTransaksi()),
         );
       },
-      backgroundColor: red,
-      child: Icon(Icons.add, color: white),
+      child: const Icon(Icons.add, color: Colors.white),
     );
   }
 }
