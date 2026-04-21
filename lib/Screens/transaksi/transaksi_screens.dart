@@ -214,7 +214,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // ================= DROPDOWN =================
+  // DROPDOWN BANK
   Widget cardBank(List<String> banks) {
     return Container(
       width: double.infinity,
@@ -251,47 +251,48 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
         color: red,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              IconButton(
-                icon: Icon(Icons.chevron_left, color: white),
-                onPressed: () {
-                  setState(() {
-                    _focusedMonth = DateTime(
-                      _focusedMonth.year,
-                      _focusedMonth.month - 1,
-                    );
-                  });
-                },
-              ),
-              Spacer(),
-              Column(
-                children: [
-                  Text(
-                    DateFormat('MMMM yyyy').format(_focusedMonth),
-                    style: whiteBold,
-                  ),
-                  Text("$total Transaksi", style: greyReguler),
-                ],
-              ),
-              Spacer(),
-              IconButton(
-                icon: Icon(Icons.chevron_right, color: white),
-                onPressed: () {
-                  setState(() {
-                    _focusedMonth = DateTime(
-                      _focusedMonth.year,
-                      _focusedMonth.month + 1,
-                    );
-                  });
-                },
-              ),
-            ],
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: Icon(Icons.chevron_left, color: white),
+              onPressed: () {
+                setState(() {
+                  _focusedMonth = DateTime(
+                    _focusedMonth.year,
+                    _focusedMonth.month - 1,
+                  );
+                });
+              },
+            ),
+            Spacer(),
+            Column(
+              children: [
+                Text(
+                  DateFormat('MMMM yyyy').format(_focusedMonth),
+                  style: whiteBold,
+                ),
+                SizedBox(height: 10),
+                Text("$total Transaksi", style: greyReguler),
+              ],
+            ),
+            Spacer(),
+            IconButton(
+              icon: Icon(Icons.chevron_right, color: white),
+              onPressed: () {
+                setState(() {
+                  _focusedMonth = DateTime(
+                    _focusedMonth.year,
+                    _focusedMonth.month + 1,
+                  );
+                });
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,6 +1,5 @@
 import 'dart:io' as io;
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 class PickedImage {
@@ -14,7 +13,9 @@ class ImagePickerService {
   final ImagePicker _picker = ImagePicker();
 
   Future<PickedImage?> pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
     if (pickedFile != null) {
       if (kIsWeb) {
@@ -28,7 +29,9 @@ class ImagePickerService {
   }
 
   Future<PickedImage?> pickImageFromCamera() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.camera,
+    );
 
     if (pickedFile != null) {
       if (kIsWeb) {

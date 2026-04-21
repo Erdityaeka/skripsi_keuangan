@@ -87,9 +87,12 @@ class _ProfileScreensState extends State<ProfileScreens> {
         _forceLogout();
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Gagal memuat data")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: rednotif,
+          content: Center(child: Text("Gagal memuat data", style: whiteBold)),
+        ),
+      );
     }
   }
 

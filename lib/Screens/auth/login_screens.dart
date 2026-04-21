@@ -55,7 +55,7 @@ class _LoginScreensState extends State<LoginScreens> {
       _showSnack("Login berhasil!", success: true);
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) =>  TombolNav()),
+        MaterialPageRoute(builder: (context) => TombolNav()),
         (route) => false,
       );
       return;
@@ -195,20 +195,31 @@ class _LoginScreensState extends State<LoginScreens> {
             border: Border.all(color: red, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                icon: Icon(Icons.mark_email_unread_rounded, color: grey),
-                hintText: 'Masukan Email',
-                hintStyle: greyReguler,
-                border: InputBorder.none,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                child: Icon(Icons.mark_email_unread_rounded, color: grey),
               ),
-            ),
+              SizedBox(width: 5),
+              Expanded(
+                child: TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: 'Masukan Email',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
+
         const SizedBox(height: 20),
         Text('Password', style: blackReguler),
         const SizedBox(height: 10),
@@ -219,21 +230,35 @@ class _LoginScreensState extends State<LoginScreens> {
             border: Border.all(color: red, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: TextField(
-              controller: _passwordController,
-              obscureText: !_isPasswordVisible,
-              decoration: InputDecoration(
-                icon: Icon(Icons.lock_outline_rounded, color: grey),
-                hintText: 'Masukan Password',
-                hintStyle: greyReguler,
-                suffixIcon: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                child: Icon(Icons.lock_outline_rounded, color: grey),
+              ),
+              SizedBox(width: 5),
+              Expanded(
+                child: TextField(
+                  controller: _passwordController,
+                  obscureText: !_isPasswordVisible,
+
+                  decoration: InputDecoration(
+                    hintText: 'Masukan Password',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              Spacer(),
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(right: 14.0),
                   child: Icon(
                     _isPasswordVisible
                         ? Icons.visibility_outlined
@@ -241,9 +266,8 @@ class _LoginScreensState extends State<LoginScreens> {
                     color: black,
                   ),
                 ),
-                border: InputBorder.none,
               ),
-            ),
+            ],
           ),
         ),
       ],

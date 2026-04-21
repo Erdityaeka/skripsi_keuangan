@@ -18,7 +18,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
   final judul = TextEditingController();
   final nominal = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
-
+  bool _isLoading = false;
   String selectedType = "pemasukan";
   String? selectedKategory;
   String? selectedBank;
@@ -31,9 +31,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
   }
 
   // SIMPAN TRANSAKSI
-  // =========================
   void _saveTransaction() async {
-    // ================= VALIDASI =================
     if (judul.text.isEmpty ||
         nominal.text.isEmpty ||
         selectedKategory == null ||
@@ -47,8 +45,9 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       return;
     }
 
+    setState(() => _isLoading = true);
+
     try {
-      // ================= AMBIL NILAI =================
       final amount = double.parse(nominal.text.replaceAll('.', ''));
 
       final tx = TransaksiModel(
@@ -61,12 +60,12 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
         tipe: selectedType,
       );
 
-      // ================= SIMPAN KE FIRESTORE =================
       await _firestoreService.addTransaction(tx);
 
       if (!mounted) return;
 
-      // ================= BERHASIL =================
+      setState(() => _isLoading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(
@@ -76,10 +75,10 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
         ),
       );
 
-      // balik ke halaman sebelumnya
       Navigator.pop(context);
     } catch (e) {
-      // ================= GAGAL =================
+      setState(() => _isLoading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(child: Text("Gagal menyimpan: $e", style: whiteBold)),
@@ -89,6 +88,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppbar(context),
@@ -144,18 +144,21 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
             border: Border.all(color: red, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: TextField(
-              controller: judul,
-              decoration: InputDecoration(
-                hintText: 'Contoh: Mie Ayam',
-                hintStyle: greyReguler,
-                border: InputBorder.none,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+              child: TextField(
+                controller: judul,
+                decoration: InputDecoration(
+                  hintText: 'Contoh: Mie Ayam',
+                  hintStyle: greyReguler,
+                  border: InputBorder.none,
+                ),
               ),
             ),
           ),
         ),
+
         SizedBox(height: 15),
         Text('Nominal', style: redReguler15),
         SizedBox(height: 15),
@@ -166,26 +169,30 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
             border: Border.all(color: red, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: TextField(
-              controller: nominal,
-              decoration: InputDecoration(
-                prefixIcon: Text('Rp.', style: blackReguler),
-                prefixIconConstraints: BoxConstraints(
-                  minWidth: 0,
-                  minHeight: 0,
-                ),
-                hintText: '10.000',
-                hintStyle: greyReguler,
-                border: InputBorder.none,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(right: 5.0, left: 14.0),
+                child: Text('Rp.', style: blackReguler),
               ),
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                CurrencyInputFormatter(),
-              ],
-              keyboardType: TextInputType.number,
-            ),
+
+              Expanded(
+                child: TextField(
+                  controller: nominal,
+                  decoration: InputDecoration(
+                    hintText: '10.000',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    CurrencyInputFormatter(),
+                  ],
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -350,7 +357,13 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
           color: red,
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Center(child: Text('Simpan Transaksi', style: whiteBold)),
+        child: Center(
+          child: _isLoading
+              ? const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                )
+              : Text('Simpan Transaksi', style: whiteBold),
+        ),
       ),
     );
   }

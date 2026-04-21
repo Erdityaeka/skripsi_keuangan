@@ -58,11 +58,11 @@ class _SiginScreensState extends State<SiginScreens> {
     } catch (e) {
       print("ImagePicker error: $e");
     } finally {
-      _isPicking = false; 
+      _isPicking = false;
     }
   }
 
-  //REGISTER 
+  //REGISTER
   void _handleRegister() async {
     if (_namaController.text.isEmpty ||
         _emailController.text.isEmpty ||
@@ -177,20 +177,31 @@ class _SiginScreensState extends State<SiginScreens> {
             border: Border.all(color: red, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: TextField(
-              controller: _namaController,
-              enabled: !_isLoading,
-              decoration: InputDecoration(
-                icon: Icon(Icons.person_outline, color: greyReguler.color),
-                hintText: 'Masukan Nama',
-                hintStyle: greyReguler,
-                border: InputBorder.none,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                child: Icon(Icons.person, color: grey),
               ),
-            ),
+              SizedBox(width: 5),
+              Expanded(
+                child: TextField(
+                  controller: _namaController,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: 'Masukan Nama',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
+
         const SizedBox(height: 20),
         Text('Email Address', style: blackReguler),
         const SizedBox(height: 10),
@@ -201,24 +212,32 @@ class _SiginScreensState extends State<SiginScreens> {
             border: Border.all(color: red, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: TextField(
-              controller: _emailController,
-              enabled: !_isLoading,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                icon: Icon(
-                  Icons.mark_email_unread_rounded,
-                  color: greyReguler.color,
-                ),
-                hintText: 'Masukan Email',
-                hintStyle: greyReguler,
-                border: InputBorder.none,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                child: Icon(Icons.mark_email_unread_rounded, color: grey),
               ),
-            ),
+              SizedBox(width: 5),
+              Expanded(
+                child: TextField(
+                  controller: _emailController,
+                  enabled: !_isLoading,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: 'Masukan Email',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
+
         const SizedBox(height: 20),
         Text('Password', style: blackReguler),
         const SizedBox(height: 10),
@@ -229,35 +248,44 @@ class _SiginScreensState extends State<SiginScreens> {
             border: Border.all(color: red, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: TextField(
-              controller: _passwordController,
-              enabled: !_isLoading,
-              obscureText: !_isPasswordVisible,
-              decoration: InputDecoration(
-                icon: Icon(
-                  Icons.lock_outline_rounded,
-                  color: greyReguler.color,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                child: Icon(Icons.lock_outline_rounded, color: grey),
+              ),
+              SizedBox(width: 5),
+              Expanded(
+                child: TextField(
+                  controller: _passwordController,
+                  obscureText: !_isPasswordVisible,
+                  enabled: _isLoading,
+                  decoration: InputDecoration(
+                    hintText: 'Masukan Password',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
                 ),
-                hintText: 'Masukan Password',
-                hintStyle: greyReguler,
-                suffixIcon: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
+              ),
+              Spacer(),
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(right: 14.0),
                   child: Icon(
                     _isPasswordVisible
                         ? Icons.visibility_outlined
                         : Icons.visibility_off_outlined,
-                    color: blackReguler.color,
+                    color: black,
                   ),
                 ),
-                border: InputBorder.none,
               ),
-            ),
+            ],
           ),
         ),
       ],

@@ -42,13 +42,13 @@ class _UpdatescreenState extends State<Updatescreen> {
     loadFoto();
   }
 
-  // LOAD FOTO 
+  // LOAD FOTO
   Future<void> loadFoto() async {
     try {
       if (user == null) return;
 
       final doc = await FirebaseFirestore.instance
-          .collection('user') 
+          .collection('user')
           .doc(user!.uid)
           .get();
 
@@ -69,7 +69,7 @@ class _UpdatescreenState extends State<Updatescreen> {
     }
   }
 
-  // PILIH FOTO 
+  // PILIH FOTO
   Future<void> pilihFoto() async {
     // MENCEGAH 2X KLIK
     if (pickingImage) return;
@@ -85,11 +85,11 @@ class _UpdatescreenState extends State<Updatescreen> {
     } catch (e) {
       print("Error picker: $e");
     } finally {
-      pickingImage = false; 
+      pickingImage = false;
     }
   }
 
-  // SIMPAN 
+  // SIMPAN
   Future<void> simpan() async {
     if (namaC.text.trim().isEmpty) {
       notif("Nama harus diisi");
@@ -106,7 +106,7 @@ class _UpdatescreenState extends State<Updatescreen> {
     String? namaFile;
 
     try {
-      // SIMPAN FOTO 
+      // SIMPAN FOTO
       if (fotoBaru != null) {
         final dir = await getApplicationDocumentsDirectory();
         final pathBaru = '${dir.path}/${fotoBaru!.name}';
@@ -118,13 +118,13 @@ class _UpdatescreenState extends State<Updatescreen> {
           namaFile = fotoBaru!.name;
 
           await FirebaseFirestore.instance
-              .collection('user') 
+              .collection('user')
               .doc(user!.uid)
               .set({'foto': namaFile}, SetOptions(merge: true));
         }
       }
 
-      // UPDATE AUTH 
+      // UPDATE AUTH
       final res = await AuthService().updateProfile(
         newName: namaC.text.trim(),
         newfotoFileName: namaFile,
@@ -134,7 +134,7 @@ class _UpdatescreenState extends State<Updatescreen> {
 
       setState(() => loading = false);
 
-      // JIKA EMAIL BERUBAH 
+      // JIKA EMAIL BERUBAH
       if (emailC.text.trim() != user?.email) {
         notif("Cek email baru untuk verifikasi");
 
@@ -150,7 +150,7 @@ class _UpdatescreenState extends State<Updatescreen> {
         return;
       }
 
-      // NORMAL 
+      // NORMAL
       if (res == null) {
         notif("Profile berhasil diperbarui", success: true);
         // ignore: use_build_context_synchronously
@@ -164,7 +164,7 @@ class _UpdatescreenState extends State<Updatescreen> {
     }
   }
 
-  // HAPUS FOTO 
+  // HAPUS FOTO
   Future<void> hapusFoto() async {
     try {
       await FirebaseFirestore.instance.collection('user').doc(user!.uid).set({
@@ -186,17 +186,17 @@ class _UpdatescreenState extends State<Updatescreen> {
     }
   }
 
-  // NOTIF 
+  // NOTIF
   void notif(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Center(child: Text(msg, style: whiteBold)),
-        backgroundColor: success ? greennotif : redblack,
+        backgroundColor: success ? greennotif : rednotif,
       ),
     );
   }
 
-  // WIDGET UI 
+  // WIDGET UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -244,18 +244,27 @@ class _UpdatescreenState extends State<Updatescreen> {
                 border: Border.all(color: red, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(14.0),
-                child: TextField(
-                  controller: namaC,
-
-                  decoration: InputDecoration(
-                    icon: Icon(Icons.person_outline, color: greyReguler.color),
-                    hintText: 'Masukan Nama',
-                    hintStyle: greyReguler,
-                    border: InputBorder.none,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                    child: Icon(Icons.person, color: grey),
                   ),
-                ),
+                  SizedBox(width: 5),
+                  Expanded(
+                    child: TextField(
+                      controller: namaC,
+                      decoration: InputDecoration(
+                        isCollapsed: true,
+                        contentPadding: EdgeInsets.zero,
+                        hintText: 'Masukan Nama',
+                        hintStyle: greyReguler,
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -269,21 +278,28 @@ class _UpdatescreenState extends State<Updatescreen> {
                 border: Border.all(color: red, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(14.0),
-                child: TextField(
-                  controller: emailC,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    icon: Icon(
-                      Icons.mark_email_unread_rounded,
-                      color: greyReguler.color,
-                    ),
-                    hintText: 'Masukan Email',
-                    hintStyle: greyReguler,
-                    border: InputBorder.none,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                    child: Icon(Icons.mark_email_unread_rounded, color: grey),
                   ),
-                ),
+                  SizedBox(width: 5),
+                  Expanded(
+                    child: TextField(
+                      controller: emailC,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        isCollapsed: true,
+                        contentPadding: EdgeInsets.zero,
+                        hintText: 'Masukan Email',
+                        hintStyle: greyReguler,
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 20),
@@ -296,34 +312,43 @@ class _UpdatescreenState extends State<Updatescreen> {
                 border: Border.all(color: red, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(14.0),
-                child: TextField(
-                  controller: passwordC,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    icon: Icon(
-                      Icons.lock_outline_rounded,
-                      color: greyReguler.color,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                    child: Icon(Icons.lock_outline_rounded, color: grey),
+                  ),
+                  SizedBox(width: 5),
+                  Expanded(
+                    child: TextField(
+                      controller: passwordC,
+                      obscureText: !_isPasswordVisible,
+                      decoration: InputDecoration(
+                        hintText: 'Masukan Password',
+                        hintStyle: greyReguler,
+                        border: InputBorder.none,
+                      ),
                     ),
-                    hintText: 'Masukan Password',
-                    hintStyle: greyReguler,
-                    suffixIcon: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
+                  ),
+                  Spacer(),
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.only(right: 14.0),
                       child: Icon(
                         _isPasswordVisible
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
-                        color: blackReguler.color,
+                        color: black,
                       ),
                     ),
-                    border: InputBorder.none,
                   ),
-                ),
+                ],
               ),
             ),
 
