@@ -8,21 +8,22 @@ import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 
 class HomeScreens extends StatefulWidget {
-  final List<TransaksiModel> transactions;
-
-  const HomeScreens({super.key, this.transactions = const []});
+  const HomeScreens({super.key});
 
   @override
   State<HomeScreens> createState() => _HomeScreensState();
 }
 
 class _HomeScreensState extends State<HomeScreens> {
-  final currency = NumberFormat.simpleCurrency(locale: 'id', decimalDigits: 0);
+  final currency = NumberFormat.currency(
+    locale: 'id',
+    symbol: 'Rp. ',
+    decimalDigits: 0,
+  );
 
   String selectedBank = "semua";
   bool _isPasswordVisible = false;
 
-  // SIMPAN BANK DI STATE
   List<String> allBanks = ["semua"];
 
   Future<void> _refreshData() async {
@@ -50,44 +51,47 @@ class _HomeScreensState extends State<HomeScreens> {
     return Scaffold(
       appBar: _buildAppbar(context, nama),
 
+      // ================= STREAM FIRESTORE =================
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('user')
             .doc(user.uid)
-            .collection('bank')
+            .collection('transaksi')
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          //BANK
-          final banks =
-              snapshot.data?.docs
-                  .map((doc) => (doc['nama'] ?? '').toString().toLowerCase())
-                  .where((e) => e.isNotEmpty)
-                  .toList() ??
-              [];
+          // ================= AMBIL DATA =================
+          final all = snapshot.data!.docs.map((doc) {
+            return TransaksiModel.fromMap(
+              doc.id,
+              doc.data() as Map<String, dynamic>,
+            );
+          }).toList();
 
-          //SIMPAN KE STATE
+          // ================= AMBIL BANK =================
+          final banks = all.map((tx) => tx.bank.toLowerCase()).toSet().toList();
+
           allBanks = ["semua", ...banks];
 
           final current = allBanks.contains(selectedBank)
               ? selectedBank
               : "semua";
 
-          //FILTER
-          final filtered = widget.transactions.where((tx) {
-            final bank = (tx.bank).toLowerCase();
+          // ================= FILTER =================
+          final filtered = all.where((tx) {
+            final bank = tx.bank.toLowerCase();
             return current == "semua" || bank == current;
           }).toList();
 
-          //SORT
+          // ================= SORT =================
           filtered.sort((a, b) => b.tanggal.compareTo(a.tanggal));
 
           final recent = filtered.take(3).toList();
 
-          //HITUNG
+          // ================= HITUNG =================
           double income = 0;
           double expense = 0;
 
@@ -111,7 +115,7 @@ class _HomeScreensState extends State<HomeScreens> {
                   children: [
                     cardtransaksi(income, expense, saldo),
                     const SizedBox(height: 20),
-                    cardBank(), // ✅ tetap tanpa parameter
+                    cardBank(),
                     const SizedBox(height: 30),
                     listTransaksi(recent),
                   ],
@@ -124,8 +128,7 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  //APPBAR
-  // ignore: strict_top_level_inference
+  // ================= APPBAR =================
   PreferredSizeWidget _buildAppbar(context, String nama) {
     return AppBar(
       backgroundColor: whiteBold.color,
@@ -149,7 +152,7 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  //CARD
+  // ================= CARD =================
   Widget cardtransaksi(double income, double expense, double saldo) {
     return Container(
       width: double.infinity,
@@ -202,7 +205,7 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  //DROPDOWN
+  // ================= DROPDOWN =================
   Widget cardBank() {
     return Container(
       width: double.infinity,
@@ -218,12 +221,10 @@ class _HomeScreensState extends State<HomeScreens> {
             value: selectedBank,
             dropdownColor: red,
             icon: Icon(Icons.arrow_drop_down, color: white),
-
             onChanged: (value) {
               if (value == null) return;
               setState(() => selectedBank = value);
             },
-
             items: allBanks.map((bank) {
               return DropdownMenuItem(
                 value: bank,
@@ -236,11 +237,11 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  //LIST
+  // ================= LIST =================
   Widget listTransaksi(List<TransaksiModel> list) {
     if (list.isEmpty) {
       return Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Text(
           selectedBank == "semua"
               ? "Belum ada transaksi"
@@ -253,6 +254,7 @@ class _HomeScreensState extends State<HomeScreens> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ===== HEADER =====
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -262,7 +264,8 @@ class _HomeScreensState extends State<HomeScreens> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => TransaksiScreens(showBackButton: true),
+                    builder: (_) =>
+                        const TransaksiScreens(showBackButton: true),
                   ),
                 );
               },
@@ -270,17 +273,104 @@ class _HomeScreensState extends State<HomeScreens> {
             ),
           ],
         ),
+
         const SizedBox(height: 20),
 
+        // ===== LIST =====
         ...list.map((tx) {
-          return ListTile(
-            title: Text(tx.judul),
-            subtitle: Text(tx.bank),
-            trailing: Text(
-              currency.format(tx.nominal),
-              style: TextStyle(
-                color: tx.tipe == "pemasukan" ? Colors.green : Colors.orange,
-              ),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: red, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: black.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ===== HEADER =====
+                Padding(
+                  padding: const EdgeInsets.only(left: 11, right: 11, top: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          DateFormat('dd MMM yyyy').format(tx.tanggal), // ✅ FIX
+                          style: redReguler12,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        currency.format(tx.nominal),
+                        style: tx.tipe == "pemasukan"
+                            ? greenBold12
+                            : yellowBold12,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 5),
+                Divider(color: red, thickness: 1),
+
+                // ===== ITEM =====
+                Padding(
+                  padding: const EdgeInsets.all(11.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: tx.tipe == "pemasukan" ? green : yellow,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          tx.tipe == "pemasukan"
+                              ? Icons.call_made
+                              : Icons.call_received,
+                          color: white,
+                          size: 18,
+                        ),
+                      ),
+
+                      const SizedBox(width: 15),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tx.judul,
+                              style: redBold15,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 5),
+                            Text(tx.kategori, style: redReguler12),
+                            const SizedBox(height: 5),
+                            Text(tx.bank, style: redReguler12),
+                          ],
+                        ),
+                      ),
+
+                      Text(
+                        currency.format(tx.nominal),
+                        style: tx.tipe == "pemasukan"
+                            ? greenBold12
+                            : yellowBold12,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           );
         }),

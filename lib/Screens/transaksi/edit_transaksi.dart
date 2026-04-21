@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:skripsi_keuangan/models/transaction_model.dart';
 
 class EditTransaksi extends StatefulWidget {
-  const EditTransaksi({super.key});
+  const EditTransaksi({super.key, required TransaksiModel tx});
 
   @override
   State<EditTransaksi> createState() => _EditTransaksiState();

@@ -10,14 +10,12 @@ import 'package:skripsi_keuangan/models/transaction_model.dart';
 
 class TransaksiScreens extends StatefulWidget {
   final bool showBackButton;
-
-  // ✅ TIDAK WAJIB LAGI (INI YANG BIKIN NAVIGATION JADI AMAN)
   final List<TransaksiModel> transactions;
 
   const TransaksiScreens({
     super.key,
     required this.showBackButton,
-    this.transactions = const [], // ✅ default kosong
+    this.transactions = const [],
   });
 
   @override
@@ -52,7 +50,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
         stream: FirebaseFirestore.instance
             .collection('user')
             .doc(user.uid)
-            .collection('bank')
+            .collection('transaksi') // ✅ FIX
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -60,13 +58,22 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("Belum ada data bank"));
+            return const Center(child: Text("Belum ada transaksi"));
           }
 
+          // ================= DATA =================
+          final transactions = snapshot.data!.docs.map((doc) {
+            return TransaksiModel.fromMap(
+              doc.id,
+              doc.data() as Map<String, dynamic>,
+            );
+          }).toList();
+
           // ================= BANK =================
-          final banks = snapshot.data!.docs
-              .map((doc) => (doc['nama'] ?? '').toString().toLowerCase())
+          final banks = transactions
+              .map((tx) => tx.bank.toLowerCase())
               .where((e) => e.isNotEmpty)
+              .toSet()
               .toList();
 
           final allBanks = ["semua", ...banks];
@@ -76,13 +83,12 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
               : "semua";
 
           // ================= FILTER =================
-          final filtered = widget.transactions.where((tx) {
+          final filtered = transactions.where((tx) {
             final sameMonth =
                 tx.tanggal.month == _focusedMonth.month &&
                 tx.tanggal.year == _focusedMonth.year;
 
-            final bank = (tx.bank).toLowerCase();
-
+            final bank = tx.bank.toLowerCase();
             final sameBank = currentBank == "semua" || bank == currentBank;
 
             return sameMonth && sameBank;
@@ -94,7 +100,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
               .fold(0.0, (sum, tx) => sum + tx.nominal);
 
           final pengeluaran = filtered
-              .where((tx) => tx.tipe == "[pengeluaran]")
+              .where((tx) => tx.tipe == "pengeluaran")
               .fold(0.0, (sum, tx) => sum + tx.nominal);
 
           final saldo = pemasukan - pengeluaran;
@@ -125,17 +131,11 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                     const SizedBox(height: 20),
                     cardBank(allBanks),
                     const SizedBox(height: 30),
-
-                    // DATA KALAU KOSONG
+                    cardBulan(filtered.length),
+                    const SizedBox(height: 30),
                     days.isEmpty
-                        ? Text(
-                            currentBank == "semua"
-                                ? "Belum ada transaksi"
-                                : "Belum ada transaksi di Bank '${currentBank.toUpperCase()}'",
-                            style: blackBold15,
-                          )
+                        ? const Text("Belum ada transaksi")
                         : listTransaksi(days, grouped),
-
                     const SizedBox(height: 80),
                   ],
                 ),
@@ -182,14 +182,10 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
           children: [
             Text('Pemasukan', style: greenBold15),
             Text(currency.format(pemasukan), style: whiteReguler),
-
             const SizedBox(height: 10),
-
             Text('Pengeluaran', style: yellowBold15),
             Text(currency.format(pengeluaran), style: whiteReguler),
-
             const SizedBox(height: 10),
-
             Row(
               children: [
                 Text('Total', style: whiteBold),
@@ -208,7 +204,6 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                 ),
               ],
             ),
-
             Text(
               _isPasswordVisible ? currency.format(saldo) : '••••••',
               style: whiteReguler,
@@ -248,6 +243,59 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
+  // ================= BULAN =================
+  Widget cardBulan(int total) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: red,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              IconButton(
+                icon: Icon(Icons.chevron_left, color: white),
+                onPressed: () {
+                  setState(() {
+                    _focusedMonth = DateTime(
+                      _focusedMonth.year,
+                      _focusedMonth.month - 1,
+                    );
+                  });
+                },
+              ),
+              Spacer(),
+              Column(
+                children: [
+                  Text(
+                    DateFormat('MMMM yyyy').format(_focusedMonth),
+                    style: whiteBold,
+                  ),
+                  Text("$total Transaksi", style: greyReguler),
+                ],
+              ),
+              Spacer(),
+              IconButton(
+                icon: Icon(Icons.chevron_right, color: white),
+                onPressed: () {
+                  setState(() {
+                    _focusedMonth = DateTime(
+                      _focusedMonth.year,
+                      _focusedMonth.month + 1,
+                    );
+                  });
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   // ================= LIST =================
   Widget listTransaksi(
     List<DateTime> days,
@@ -258,31 +306,152 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
         final list = grouped[day]!;
 
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(DateFormat('dd MMM yyyy').format(day), style: redReguler12),
-            ...list.map((tx) {
-              return InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => EditTransaksi()),
-                  );
-                },
-                child: ListTile(
-                  title: Text(tx.judul),
-                  subtitle: Text(tx.bank),
-                  trailing: Text(
-                    currency.format(tx.nominal),
-                    style: TextStyle(
-                      color: tx.tipe == "pemasukan"
-                          ? Colors.green
-                          : Colors.orange,
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: red, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: black.withOpacity(0.5), // biar tidak terlalu pekat
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ================= HEADER =================
+                  Padding(
+                    padding: EdgeInsets.only(left: 11, right: 11, top: 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            DateFormat('dd MMM yyyy').format(day),
+                            style: redReguler12,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          currency.format(
+                            list
+                                .where((e) => e.tipe == "pemasukan")
+                                .fold(0.0, (s, e) => s + e.nominal),
+                          ),
+                          style: greenBold12,
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            currency.format(
+                              list
+                                  .where((e) => e.tipe == "pengeluaran")
+                                  .fold(0.0, (s, e) => s + e.nominal),
+                            ),
+                            style: yellowBold12,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            textAlign: TextAlign.right,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              );
-            }),
+
+                  SizedBox(height: 5),
+                  Divider(color: red, thickness: 1),
+
+                  // ================= LIST ITEM =================
+                  Column(
+                    children: list.map((tx) {
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EditTransaksi(tx: tx),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(11.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: tx.tipe == "pemasukan"
+                                      ? green
+                                      : yellow,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    tx.tipe == "pemasukan"
+                                        ? Icons.call_made
+                                        : Icons.call_received,
+                                    color: white,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
+
+                              SizedBox(width: 15),
+
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      tx.judul,
+                                      style: redBold15,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                    SizedBox(height: 5),
+                                    Text(
+                                      tx.kategori,
+                                      style: redReguler12,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                    SizedBox(height: 5),
+                                    Text(
+                                      tx.bank,
+                                      style: redReguler12,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              SizedBox(width: 10),
+
+                              Text(
+                                currency.format(tx.nominal),
+                                style: tx.tipe == "pemasukan"
+                                    ? greenBold12
+                                    : yellowBold12,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
           ],
         );
       }).toList(),
