@@ -55,7 +55,7 @@ class _LoginScreensState extends State<LoginScreens> {
       _showSnack("Login berhasil!", success: true);
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => TombolNav()),
+        MaterialPageRoute(builder: (context) => BottomNavigation()),
         (route) => false,
       );
       return;

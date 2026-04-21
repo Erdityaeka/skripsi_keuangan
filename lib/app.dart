@@ -54,7 +54,7 @@ class _SplashWrapperState extends State<SplashWrapper> {
       if (user == null) {
         return const LoginScreens();
       } else {
-        return const TombolNav();
+        return const BottomNavigation();
       }
     }
   }
