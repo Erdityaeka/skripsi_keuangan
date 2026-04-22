@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
+import 'package:skripsi_keuangan/services/firestore_service.dart';
 
 class GrafikScreens extends StatefulWidget {
   const GrafikScreens({super.key});
@@ -14,43 +13,34 @@ class GrafikScreens extends StatefulWidget {
 }
 
 class _GrafikScreensState extends State<GrafikScreens> {
-
-  // Menyimpan bulan saat dipilih
-  DateTime _focusedMonth = DateTime.now();
-  String _viewMode = "Bulanan";
-  int _selectedWeek = 1;
+  DateTime _focusedMonth = DateTime.now(); // Bulan Aktif
+  String _viewMode = "Bulanan"; // Mode Tampilan
+  int _selectedWeek = 1; // Minggu Dipilih
+  final firestoreService = FirestoreService();
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
     return Scaffold(
       backgroundColor: white,
       appBar: _buidAppbar(),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('user')
-            .doc(user!.uid)
-            .collection('transaksi')
-            .snapshots(),
+
+      // Data Transaksi
+      body: StreamBuilder<List<TransaksiModel>>(
+        stream: firestoreService.gettransaksi(),
+
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
+          final all = snapshot.data!;
 
-          final all = snapshot.data!.docs.map((doc) {
-            return TransaksiModel.fromMap(
-              doc.id,
-              doc.data() as Map<String, dynamic>,
-            );
-          }).toList();
-
-          // Filter Bulan
+          // Filter Bulanan
           List<TransaksiModel> month = all.where((tx) {
             return tx.tanggal.month == _focusedMonth.month &&
                 tx.tanggal.year == _focusedMonth.year;
           }).toList();
 
+          // Filter Mingguan
           List<TransaksiModel> finalFiltered = month;
 
           if (_viewMode == "Mingguan") {
@@ -64,9 +54,13 @@ class _GrafikScreensState extends State<GrafikScreens> {
             }).toList();
           }
 
+          // Mengurutkan Data Terbaru
           finalFiltered.sort((a, b) => b.tanggal.compareTo(a.tanggal));
+
+          // Mngambil 3 Data Terbaru
           final displayData = finalFiltered.take(3).toList();
 
+          // Hitung Transaski
           double pemasukan = 0;
           double pengeluaran = 0;
 
@@ -94,8 +88,8 @@ class _GrafikScreensState extends State<GrafikScreens> {
                   _buildFilterBulanan(),
                   const SizedBox(height: 15),
                   if (_viewMode == "Mingguan") _buildFilterMingguan(),
-                  const SizedBox(height: 25),
 
+                  const SizedBox(height: 25),
                   if (total == 0)
                     Padding(
                       padding: const EdgeInsets.only(top: 100),
@@ -114,7 +108,9 @@ class _GrafikScreensState extends State<GrafikScreens> {
                         ],
                       ),
                     )
+                  // Tampilan Data
                   else ...[
+                    // Grafik Pie Chart
                     Container(
                       height: 280,
                       decoration: BoxDecoration(
@@ -124,6 +120,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
+                          // Grafik
                           PieChart(
                             PieChartData(
                               sectionsSpace: 8,
@@ -134,72 +131,17 @@ class _GrafikScreensState extends State<GrafikScreens> {
                                   color: green,
                                   title: "",
                                   radius: 20,
-                                  badgeWidget: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(10),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: green.withOpacity(0.1),
-                                          blurRadius: 4,
-                                        ),
-                                      ],
-                                      border: Border.all(
-                                        color: green.withOpacity(0.2),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      "Masuk",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: green,
-                                      ),
-                                    ),
-                                  ),
-                                  badgePositionPercentageOffset: 1.5,
                                 ),
                                 PieChartSectionData(
                                   value: pengeluaran,
                                   color: yellow,
                                   title: "",
                                   radius: 20,
-                                  badgeWidget: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(10),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: yellow.withOpacity(0.1),
-                                          blurRadius: 4,
-                                        ),
-                                      ],
-                                      border: Border.all(
-                                        color: yellow.withOpacity(0.2),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      "Keluar",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: yellow,
-                                      ),
-                                    ),
-                                  ),
-                                  badgePositionPercentageOffset: 1.5,
                                 ),
                               ],
                             ),
                           ),
+                          // Teks Tengah
                           Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -219,6 +161,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
 
                     const SizedBox(height: 40),
 
+                    // Total Transaksi
                     Row(
                       children: [
                         _dataTotalTransaksi(
@@ -239,20 +182,9 @@ class _GrafikScreensState extends State<GrafikScreens> {
 
                     const SizedBox(height: 40),
 
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Daftar Transaksi",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3436),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-
+                    // List Transaksi
                     _dataTransaksiList(displayData, currencyFormatter),
+
                     const SizedBox(height: 30),
                   ],
                 ],

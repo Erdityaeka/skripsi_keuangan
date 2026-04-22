@@ -5,7 +5,7 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  //  REGISTER 
+  // Register
   Future<String?> register({
     required String email,
     required String password,
@@ -50,7 +50,7 @@ class AuthService {
     }
   }
 
-  //  LOGIN 
+  // Log in
   Future<String?> signIn(String email, String password) async {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
@@ -69,12 +69,12 @@ class AuthService {
     }
   }
 
-  //  UPDATE PROFIL 
+  // Update Profile
   Future<String?> updateProfile({
     required String newName,
     String? newfotoFileName,
     String? newEmail,
-    String? currentPassword, 
+    String? currentPassword,
   }) async {
     try {
       if (newName.trim().isEmpty) {
@@ -84,10 +84,10 @@ class AuthService {
       User? user = _auth.currentUser;
       if (user == null) return "User tidak ditemukan";
 
-      // Update nama + gender
+      // Update Nama
       await user.updateDisplayName(newName);
 
-      //  UPDATE EMAIL 
+      //  Update Email
       if (newEmail != null &&
           newEmail.trim().isNotEmpty &&
           newEmail != user.email) {
@@ -114,8 +114,9 @@ class AuthService {
         }
       }
 
-      //  UPDATE FIRESTORE 
+      //  Update Firestore
       await _db.collection('user').doc(user.uid).set({
+        // ignore: use_null_aware_elements
         if (newfotoFileName != null) 'profileImage': newfotoFileName,
       }, SetOptions(merge: true));
 
@@ -138,10 +139,10 @@ class AuthService {
     }
   }
 
-  //  LOGOUT 
+  //  Log Out
   Future<void> signOut() async => await _auth.signOut();
 
-  //  RESET PASSWORD 
+  //  Reset Password
   Future<String?> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
@@ -160,6 +161,6 @@ class AuthService {
     }
   }
 
-  //  STREAM USER 
+  //  Mendeteksi Perubahan Log in
   Stream<User?> get userChanges => _auth.authStateChanges();
 }

@@ -1,146 +1,169 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:skripsi_keuangan/models/transaction_model.dart';
+import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/Screens/transaksi/edit_transaksi.dart';
 import 'package:skripsi_keuangan/Screens/transaksi/tambah_transaksi.dart';
-import 'package:skripsi_keuangan/Theme/warna_teks.dart';
-import 'package:skripsi_keuangan/models/transaction_model.dart';
+import 'package:skripsi_keuangan/services/firestore_service.dart';
 
 class TransaksiScreens extends StatefulWidget {
   final bool showBackButton;
-  final List<TransaksiModel> transactions;
 
-  const TransaksiScreens({
-    super.key,
-    required this.showBackButton,
-    this.transactions = const [],
-  });
+  const TransaksiScreens({super.key, required this.showBackButton});
 
   @override
   State<TransaksiScreens> createState() => _TransaksiScreensState();
 }
 
 class _TransaksiScreensState extends State<TransaksiScreens> {
+  // STATE
   bool _isPasswordVisible = false;
   DateTime _focusedMonth = DateTime.now();
 
   final currency = NumberFormat.simpleCurrency(locale: 'id', decimalDigits: 0);
 
   String selectedBank = "semua";
+  List<String> allBanks = ["semua"];
+
+  final firestoreService = FirestoreService();
 
   Future<void> _refreshData() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) setState(() {});
+    setState(() {});
+  }
+
+  // Mengetahui Data Bank Sama
+  String normalize(String? val) {
+    return (val ?? '').toLowerCase().trim();
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      return const Scaffold(body: Center(child: Text("User tidak ditemukan")));
-    }
-
     return Scaffold(
       appBar: _buildAppbar(context),
 
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('user')
-            .doc(user.uid)
-            .collection('transaksi') // ✅ FIX
-            .snapshots(),
+      // Menampilkan Data Transaksi
+      body: StreamBuilder<List<TransaksiModel>>(
+        stream: firestoreService.gettransaksi(),
+
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
+          final transactions = snapshot.data!;
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("Belum ada transaksi"));
-          }
+          // Menempilkan Data Bank
+          return StreamBuilder<List<String>>(
+            stream: firestoreService.getBank(),
 
-          // ================= DATA =================
-          final transactions = snapshot.data!.docs.map((doc) {
-            return TransaksiModel.fromMap(
-              doc.id,
-              doc.data() as Map<String, dynamic>,
-            );
-          }).toList();
+            builder: (context, bankSnap) {
+              if (!bankSnap.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          // ================= BANK =================
-          final banks = transactions
-              .map((tx) => tx.bank.toLowerCase())
-              .where((e) => e.isNotEmpty)
-              .toSet()
-              .toList();
+              // Data Dari Kolekesi Bank
+              final bankMaster = bankSnap.data!
+                  .map((e) => normalize(e))
+                  .where((e) => e.isNotEmpty)
+                  .toSet();
 
-          final allBanks = ["semua", ...banks];
+              // bank dari transaksi
+              final bankFromTx = transactions
+                  .map((tx) => normalize(tx.bank))
+                  .where((e) => e.isNotEmpty)
+                  .toSet();
 
-          final currentBank = allBanks.contains(selectedBank)
-              ? selectedBank
-              : "semua";
+              allBanks = [
+                "semua",
+                ...{...bankMaster, ...bankFromTx}.toList()..sort(),
+              ];
 
-          // ================= FILTER =================
-          final filtered = transactions.where((tx) {
-            final sameMonth =
-                tx.tanggal.month == _focusedMonth.month &&
-                tx.tanggal.year == _focusedMonth.year;
+              // Kondisi Bank Tidak Ada
+              if (!allBanks.contains(selectedBank)) {
+                selectedBank = "semua";
+              }
 
-            final bank = tx.bank.toLowerCase();
-            final sameBank = currentBank == "semua" || bank == currentBank;
+              // Filter
+              final filtered = transactions.where((tx) {
+                // Filter Bulan
+                final sameMonth =
+                    tx.tanggal.month == _focusedMonth.month &&
+                    tx.tanggal.year == _focusedMonth.year;
 
-            return sameMonth && sameBank;
-          }).toList();
+                // Filter Bank
+                final bank = normalize(tx.bank);
+                final sameBank =
+                    selectedBank == "semua" || bank == selectedBank;
 
-          // ================= HITUNG =================
-          final pemasukan = filtered
-              .where((tx) => tx.tipe == "pemasukan")
-              .fold(0.0, (sum, tx) => sum + tx.nominal);
+                return sameMonth && sameBank;
+              }).toList();
 
-          final pengeluaran = filtered
-              .where((tx) => tx.tipe == "pengeluaran")
-              .fold(0.0, (sum, tx) => sum + tx.nominal);
+              // Hitung Transaksi
+              final pemasukan = filtered
+                  .where((tx) => tx.tipe == "pemasukan")
+                  .fold(0.0, (sum, tx) => sum + tx.nominal);
 
-          final saldo = pemasukan - pengeluaran;
+              final pengeluaran = filtered
+                  .where((tx) => tx.tipe == "pengeluaran")
+                  .fold(0.0, (sum, tx) => sum + tx.nominal);
 
-          // ================= GROUP =================
-          final Map<DateTime, List<TransaksiModel>> grouped = {};
+              final saldo = pemasukan - pengeluaran;
 
-          for (var tx in filtered) {
-            final day = DateTime(
-              tx.tanggal.year,
-              tx.tanggal.month,
-              tx.tanggal.day,
-            );
-            grouped.putIfAbsent(day, () => []).add(tx);
-          }
+              final Map<DateTime, List<TransaksiModel>> grouped = {};
 
-          final days = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+              for (var tx in filtered) {
+                final day = DateTime(
+                  tx.tanggal.year,
+                  tx.tanggal.month,
+                  tx.tanggal.day,
+                );
+                grouped.putIfAbsent(day, () => []).add(tx);
+              }
 
-          return RefreshIndicator(
-            onRefresh: _refreshData,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
-                child: Column(
-                  children: [
-                    cardtransaksi(pemasukan, pengeluaran, saldo),
-                    const SizedBox(height: 20),
-                    cardBank(allBanks),
-                    const SizedBox(height: 30),
-                    cardBulan(filtered.length),
-                    const SizedBox(height: 30),
-                    days.isEmpty
-                        ? const Text("Belum ada transaksi")
-                        : listTransaksi(days, grouped),
-                    const SizedBox(height: 80),
-                  ],
+              final days = grouped.keys.toList()
+                ..sort((a, b) => b.compareTo(a));
+
+              return RefreshIndicator(
+                onRefresh: _refreshData,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        // Card Saldo
+                        cardtransaksi(pemasukan, pengeluaran, saldo),
+
+                        const SizedBox(height: 20),
+
+                        // Dropwodn Bank
+                        cardBank(allBanks),
+
+                        const SizedBox(height: 30),
+
+                        // Filter Bulan
+                        cardBulan(filtered.length),
+
+                        const SizedBox(height: 30),
+
+                        filtered.isEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Text(
+                                  selectedBank == "semua"
+                                      ? "Belum ada transaksi"
+                                      : "Belum ada transaksi di Bank '${selectedBank.toUpperCase()}'",
+                                  style: blackBold15,
+                                ),
+                              )
+                            : listTransaksi(days, grouped),
+
+                        const SizedBox(height: 80),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           );
         },
       ),
@@ -150,7 +173,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // ================= APPBAR =================
+  // APPBAR
   PreferredSizeWidget _buildAppbar(context) {
     return AppBar(
       backgroundColor: whiteBold.color,
@@ -163,10 +186,11 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
           : null,
       title: Text('Transaksi', style: redBold20),
       centerTitle: true,
+      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
     );
   }
 
-  // ================= CARD =================
+  // CARD
   Widget cardtransaksi(double pemasukan, double pengeluaran, double saldo) {
     return Container(
       width: double.infinity,
@@ -243,7 +267,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // ================= BULAN =================
+  // BULAN
   Widget cardBulan(int total) {
     return Container(
       width: double.infinity,
@@ -297,11 +321,23 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // ================= LIST =================
+  // LIST
   Widget listTransaksi(
     List<DateTime> days,
     Map<DateTime, List<TransaksiModel>> grouped,
   ) {
+    if (days.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          selectedBank == "semua"
+              ? "Belum ada transaksi"
+              : "Belum ada transaksi di Bank '${selectedBank.toUpperCase()}'",
+          style: blackBold15,
+        ),
+      );
+    }
+
     return Column(
       children: days.map((day) {
         final list = grouped[day]!;
@@ -316,7 +352,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                 border: Border.all(color: red, width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: black.withOpacity(0.5), // biar tidak terlalu pekat
+                    color: black.withOpacity(0.5),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -325,9 +361,13 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ================= HEADER =================
+                  //HEADER
                   Padding(
-                    padding: EdgeInsets.only(left: 11, right: 11, top: 10),
+                    padding: const EdgeInsets.only(
+                      left: 11,
+                      right: 11,
+                      top: 10,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
@@ -339,7 +379,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                             maxLines: 1,
                           ),
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         Text(
                           currency.format(
                             list
@@ -348,7 +388,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                           ),
                           style: greenBold12,
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         Expanded(
                           flex: 2,
                           child: Text(
@@ -367,10 +407,10 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                     ),
                   ),
 
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Divider(color: red, thickness: 1),
 
-                  // ================= LIST ITEM =================
+                  //LIST ITEM
                   Column(
                     children: list.map((tx) {
                       return InkWell(
@@ -405,9 +445,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                                   ),
                                 ),
                               ),
-
-                              SizedBox(width: 15),
-
+                              const SizedBox(width: 15),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -418,14 +456,14 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                     ),
-                                    SizedBox(height: 5),
+                                    const SizedBox(height: 5),
                                     Text(
                                       tx.kategori,
                                       style: redReguler12,
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                     ),
-                                    SizedBox(height: 5),
+                                    const SizedBox(height: 5),
                                     Text(
                                       tx.bank,
                                       style: redReguler12,
@@ -435,9 +473,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                                   ],
                                 ),
                               ),
-
-                              SizedBox(width: 10),
-
+                              const SizedBox(width: 10),
                               Text(
                                 currency.format(tx.nominal),
                                 style: tx.tipe == "pemasukan"
@@ -459,7 +495,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // ================= FAB =================
+  // Floating Action Button
   FloatingActionButton _buildFloatingActionButton() {
     return FloatingActionButton(
       backgroundColor: red,

@@ -331,7 +331,7 @@ class _UpdatescreenState extends State<Updatescreen> {
                       ),
                     ),
                   ),
-                  Spacer(),
+                  SizedBox(width: 5),
                   InkWell(
                     onTap: () {
                       setState(() {
