@@ -16,7 +16,6 @@ class TransaksiScreens extends StatefulWidget {
 }
 
 class _TransaksiScreensState extends State<TransaksiScreens> {
-  // STATE
   bool _isPasswordVisible = false;
   DateTime _focusedMonth = DateTime.now();
 
@@ -51,7 +50,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
           }
           final transactions = snapshot.data!;
 
-          // Menempilkan Data Bank
+          // Menampilkan Data Bank
           return StreamBuilder<List<String>>(
             stream: firestoreService.getBank(),
 
@@ -66,7 +65,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                   .where((e) => e.isNotEmpty)
                   .toSet();
 
-              // bank dari transaksi
+              // Bank dari transaksi
               final bankFromTx = transactions
                   .map((tx) => normalize(tx.bank))
                   .where((e) => e.isNotEmpty)
@@ -131,11 +130,11 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                     child: Column(
                       children: [
                         // Card Saldo
-                        cardtransaksi(pemasukan, pengeluaran, saldo),
+                        cardSaldo(pemasukan, pengeluaran, saldo),
 
                         const SizedBox(height: 20),
 
-                        // Dropwodn Bank
+                        // Dropdown Bank
                         cardBank(allBanks),
 
                         const SizedBox(height: 30),
@@ -174,6 +173,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
   }
 
   // APPBAR
+  // ignore: strict_top_level_inference
   PreferredSizeWidget _buildAppbar(context) {
     return AppBar(
       backgroundColor: whiteBold.color,
@@ -190,8 +190,8 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // CARD
-  Widget cardtransaksi(double pemasukan, double pengeluaran, double saldo) {
+  // Card Saldo
+  Widget cardSaldo(double pemasukan, double pengeluaran, double saldo) {
     return Container(
       width: double.infinity,
       height: 230,
@@ -238,7 +238,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // DROPDOWN BANK
+  // Dropdown Bank
   Widget cardBank(List<String> banks) {
     return Container(
       width: double.infinity,
@@ -267,7 +267,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // BULAN
+  // Card Bulan
   Widget cardBulan(int total) {
     return Container(
       width: double.infinity,
@@ -321,7 +321,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // LIST
+  // List Transaksi
   Widget listTransaksi(
     List<DateTime> days,
     Map<DateTime, List<TransaksiModel>> grouped,
@@ -342,154 +342,155 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
       children: days.map((day) {
         final list = grouped[day]!;
 
-        return Column(
-          children: [
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: red, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: black.withOpacity(0.5),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  //HEADER
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 11,
-                      right: 11,
-                      top: 10,
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: red, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: black.withOpacity(0.5),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            DateFormat('dd MMM yyyy').format(day),
-                            style: redReguler12,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 11,
+                        right: 11,
+                        top: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              DateFormat('dd MMM yyyy').format(day),
+                              style: redReguler12,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          currency.format(
-                            list
-                                .where((e) => e.tipe == "pemasukan")
-                                .fold(0.0, (s, e) => s + e.nominal),
-                          ),
-                          style: greenBold12,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
+                          const SizedBox(width: 10),
+                          Text(
                             currency.format(
                               list
-                                  .where((e) => e.tipe == "pengeluaran")
+                                  .where((e) => e.tipe == "pemasukan")
                                   .fold(0.0, (s, e) => s + e.nominal),
                             ),
-                            style: yellowBold12,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            textAlign: TextAlign.right,
+                            style: greenBold12,
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 5),
-                  Divider(color: red, thickness: 1),
-
-                  //LIST ITEM
-                  Column(
-                    children: list.map((tx) {
-                      return InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => EditTransaksi(tx: tx),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              currency.format(
+                                list
+                                    .where((e) => e.tipe == "pengeluaran")
+                                    .fold(0.0, (s, e) => s + e.nominal),
+                              ),
+                              style: yellowBold12,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              textAlign: TextAlign.right,
                             ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(11.0),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: tx.tipe == "pemasukan"
-                                      ? green
-                                      : yellow,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    tx.tipe == "pemasukan"
-                                        ? Icons.call_made
-                                        : Icons.call_received,
-                                    color: white,
-                                    size: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+                    Divider(color: red, thickness: 1),
+                    Column(
+                      children: list.map((tx) {
+                        return InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditTransaksi(tx: tx),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(11.0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: tx.tipe == "pemasukan"
+                                        ? green
+                                        : yellow,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      tx.tipe == "pemasukan"
+                                          ? Icons.call_made
+                                          : Icons.call_received,
+                                      color: white,
+                                      size: 18,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 15),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      tx.judul,
-                                      style: redBold15,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      tx.kategori,
-                                      style: redReguler12,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      tx.bank,
-                                      style: redReguler12,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  ],
+                                const SizedBox(width: 15),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        tx.judul,
+                                        style: redBold15,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        tx.kategori,
+                                        style: redReguler12,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        tx.bank,
+                                        style: redReguler12,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                currency.format(tx.nominal),
-                                style: tx.tipe == "pemasukan"
-                                    ? greenBold12
-                                    : yellowBold12,
-                              ),
-                            ],
+                                const SizedBox(width: 10),
+                                Text(
+                                  currency.format(tx.nominal),
+                                  style: tx.tipe == "pemasukan"
+                                      ? greenBold12
+                                      : yellowBold12,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       }).toList(),
     );
