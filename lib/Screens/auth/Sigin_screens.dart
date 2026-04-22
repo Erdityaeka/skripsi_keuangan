@@ -268,7 +268,7 @@ class _SiginScreensState extends State<SiginScreens> {
                   ),
                 ),
               ),
-              Spacer(),
+              SizedBox(width: 5),
               InkWell(
                 onTap: () {
                   setState(() {

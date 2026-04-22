@@ -103,6 +103,7 @@ class _RootAppState extends State<RootApp> {
               child: IgnorePointer(
                 ignoring: isConnected,
                 child: Container(
+                  // ignore: deprecated_member_use
                   color: Colors.black.withOpacity(0.5),
                   child: Center(
                     child: Column(

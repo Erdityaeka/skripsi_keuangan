@@ -250,7 +250,7 @@ class _LoginScreensState extends State<LoginScreens> {
                   ),
                 ),
               ),
-              Spacer(),
+              SizedBox(width: 5),
               InkWell(
                 onTap: () {
                   setState(() {
