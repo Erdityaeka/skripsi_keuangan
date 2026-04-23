@@ -387,7 +387,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
           border: Border.all(color: red, width: 3),
           boxShadow: [
             BoxShadow(
-              color: black.withOpacity(0.5), // biar tidak terlalu pekat
+              color: black.withOpacity(0.5),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),

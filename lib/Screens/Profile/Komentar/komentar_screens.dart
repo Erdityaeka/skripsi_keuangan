@@ -87,7 +87,7 @@ class _KomentarScreensState extends State<KomentarScreens> {
         final comments = snapshot.data ?? [];
 
         if (comments.isEmpty) {
-          return const Center(child: Text("Belum ada komentar"));
+          return Center(child: Text("Belum ada komentar", style: greyReguler));
         }
 
         return ListView.builder(

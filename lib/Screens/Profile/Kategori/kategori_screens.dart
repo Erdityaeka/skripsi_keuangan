@@ -267,7 +267,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
 
           if (data.isEmpty) {
             return Center(
-              child: Text("Belum ada kategori", style: blackBold15),
+              child: Text("Belum ada data kategori", style: greyReguler),
             );
           }
 

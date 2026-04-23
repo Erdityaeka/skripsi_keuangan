@@ -280,7 +280,7 @@ class _HomeScreensState extends State<HomeScreens> {
           selectedBank == "semua"
               ? "Belum ada transaksi"
               : "Belum ada transaksi di Bank '${selectedBank.toUpperCase()}'",
-          style: blackBold15,
+          style: greyReguler,
         ),
       );
     }

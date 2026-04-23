@@ -151,7 +151,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                                   selectedBank == "semua"
                                       ? "Belum ada transaksi"
                                       : "Belum ada transaksi di Bank '${selectedBank.toUpperCase()}'",
-                                  style: blackBold15,
+                                  style: greyReguler,
                                 ),
                               )
                             : listTransaksi(days, grouped),

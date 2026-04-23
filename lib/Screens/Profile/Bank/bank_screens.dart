@@ -188,7 +188,9 @@ class _BankScreensState extends State<BankScreens> {
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text("Belum ada bank", style: blackBold15));
+            return Center(
+              child: Text("Belum ada data bank", style: greyReguler),
+            );
           }
 
           final banks = snapshot.data!;
