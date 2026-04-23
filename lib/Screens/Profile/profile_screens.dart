@@ -304,7 +304,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
-  // BUTTON
+  // Widget Button Body
   Widget buttonBody() {
     return Column(
       children: [
@@ -358,6 +358,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
+  // Widget Build Button
   Widget _buildButton(IconData icon, String text) {
     return Container(
       width: double.infinity,
@@ -378,16 +379,56 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
-  // LOGOUT
+  // Logout
   Widget butonLogout() {
     return GestureDetector(
       onTap: () async {
-        await AuthService().signOut();
-        if (!mounted) return;
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginScreens()),
-          (route) => false,
+        // 🔥 tampilkan dialog dulu
+        bool? confirm = await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: red,
+            title: Text("Logout", style: whiteBold),
+            content: Text("Apakah yakin ingin logout?", style: whiteReguler),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("BATAL", style: whiteBold),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+
+                  await AuthService().signOut();
+
+                  if (!mounted) return;
+
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreens(),
+                    ),
+                    (route) => false,
+                  );
+                },
+                child: Text("IYA", style: greenBold15),
+              ),
+            ],
+          ),
         );
+        if (confirm == true) {
+          await AuthService().signOut();
+
+          if (!mounted) return;
+
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Berhasil logout")));
+
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreens()),
+            (route) => false,
+          );
+        }
       },
       child: Container(
         width: double.infinity,
