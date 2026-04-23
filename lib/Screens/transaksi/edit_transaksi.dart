@@ -101,6 +101,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
     }
   }
 
+  // Fungsi Hapus Transaksi
   void _deleteTransaksi() {
     showDialog(
       context: context,
@@ -196,11 +197,14 @@ class _EditTransaksiState extends State<EditTransaksi> {
       title: Text('Edit Transaksi', style: redBold20),
       centerTitle: true,
       actions: [
-        IconButton(
-          onPressed: () {
-            _deleteTransaksi();
-          },
-          icon: Icon(Icons.delete, color: red),
+        Padding(
+          padding: EdgeInsets.only(right: 10),
+          child: IconButton(
+            onPressed: () {
+              _deleteTransaksi();
+            },
+            icon: Icon(Icons.delete, color: red),
+          ),
         ),
       ],
       flexibleSpace: Container(decoration: BoxDecoration(color: white)),
