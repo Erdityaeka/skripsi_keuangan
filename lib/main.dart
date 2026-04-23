@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:lottie/lottie.dart';
 import 'package:skripsi_keuangan/services/gemini_service.dart';
+import 'package:skripsi_keuangan/test.dart';
 import 'firebase_options.dart';
 import 'package:skripsi_keuangan/app.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
@@ -33,7 +35,8 @@ class RootApp extends StatefulWidget {
 class _RootAppState extends State<RootApp> {
   late StreamSubscription<List<ConnectivityResult>> _sub;
   bool isConnected = true;
-  bool _snackLock = false;
+
+  bool _showOnlineAnim = false;
 
   @override
   void initState() {
@@ -54,30 +57,19 @@ class _RootAppState extends State<RootApp> {
 
     if (nowConnected == isConnected) return;
 
-    setState(() => isConnected = nowConnected);
+    setState(() {
+      isConnected = nowConnected;
 
-    _showSnackBar(
-      nowConnected ? "Internet terhubung" : "Tidak ada koneksi internet",
-      nowConnected ? greennotif : rednotif,
-    );
-  }
+      // Memberi Waktu Animasi Terhubung
+      if (nowConnected) {
+        _showOnlineAnim = true;
 
-  //SNACKBAR
-  void _showSnackBar(String msg, Color color) {
-    if (!mounted || _snackLock || splashActive) return;
-
-    _snackLock = true;
-
-    messengerKey.currentState?.showSnackBar(
-      SnackBar(
-        content: Center(child: Text(msg, style: whiteBold)),
-        backgroundColor: color,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-
-    Future.delayed(const Duration(seconds: 3), () {
-      _snackLock = false;
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() => _showOnlineAnim = false);
+          }
+        });
+      }
     });
   }
 
@@ -94,7 +86,6 @@ class _RootAppState extends State<RootApp> {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: messengerKey,
 
-      // Mengubah Nama Hai Bahasa Inggris Menjadi Bahasa Indo
       locale: const Locale('id', 'ID'),
       supportedLocales: const [Locale('id', 'ID'), Locale('en', 'US')],
       localizationsDelegates: const [
@@ -102,32 +93,30 @@ class _RootAppState extends State<RootApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+
       theme: ThemeData(scaffoldBackgroundColor: white),
+
       builder: (context, child) {
         return Stack(
           children: [
             child!,
 
-            //Memberikan Loading Saat Tidak Ada Koneksi
+            // ================= OFFLINE =================
             AnimatedOpacity(
               opacity: isConnected ? 0 : 1,
               duration: const Duration(milliseconds: 300),
               child: IgnorePointer(
                 ignoring: isConnected,
                 child: Container(
-                  // ignore: deprecated_member_use
                   color: Colors.black.withOpacity(0.5),
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(color: white),
-                        const SizedBox(height: 12),
-                        Text(
-                          "Menunggu koneksi...",
-                          style: whiteReguler.copyWith(
-                            decoration: TextDecoration.none,
-                          ),
+                        Lottie.asset(
+                          "images/animasiinternet.json",
+                          width: 350,
+                          height: 350,
                         ),
                       ],
                     ),
@@ -135,11 +124,26 @@ class _RootAppState extends State<RootApp> {
                 ),
               ),
             ),
+
+            // ================= ONLINE =================
+            if (_showOnlineAnim)
+              Positioned(
+                top: 300,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Lottie.asset(
+                    "images/internet.json",
+                    width: 350,
+                    height: 350,
+                  ),
+                ),
+              ),
           ],
         );
       },
 
-      home: const AppScreen(),
+      home: const test(),
     );
   }
 }
