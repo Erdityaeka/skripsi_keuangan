@@ -37,7 +37,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
 
   void _loadData() {
     service.gettransaksi().listen((data) {
-      print("DATA MASUK: ${data.length}"); // 🔥 DEBUG
+      print("DATA MASUK: ${data.length}");
 
       setState(() {
         transactions = data;
@@ -89,7 +89,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
   // ================= BANK LIST =================
   List<String> get bankList {
     final banks = transactions
-        .map((e) => e.bank ?? "")
+        .map((e) => e.bank)
         .where((e) => e.isNotEmpty)
         .toSet()
         .toList();
@@ -146,7 +146,12 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
   }
 
   void _showMsg(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: rednotif,
+        content: Center(child: Text(msg, style: whiteBold)),
+      ),
+    );
   }
 
   // ================= EXPORT =================
@@ -156,7 +161,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     try {
       final data = _getFilteredData();
 
-      print("FILTERED DATA: ${data.length}"); // 🔥 DEBUG
+      print("FILTERED DATA: ${data.length}");
 
       if (data.isEmpty) {
         _showMsg("Data kosong");
