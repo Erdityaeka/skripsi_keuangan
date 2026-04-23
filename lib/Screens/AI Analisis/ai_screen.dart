@@ -40,7 +40,7 @@ class _AiScreenState extends State<AiScreen> {
         text.contains("pemasukan");
   }
 
-  // mengambil Nilai Transaksi
+  // Mengambil Nilai Transaksi
   Future<String> _getFinancialContext() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return "user_not_login";
@@ -57,14 +57,11 @@ class _AiScreenState extends State<AiScreen> {
     Map<String, double> perBulan = {};
 
     for (var t in list) {
-      final nominal = t.nominal ?? 0;
-      final tipe = (t.tipe ?? "").toLowerCase();
+      final nominal = t.nominal;
+      final tipe = (t.tipe).toLowerCase();
 
-      // 🔥 FIX UTAMA (timezone)
-      final tanggal = t.tanggal?.toLocal();
-      if (tanggal == null) continue;
-
-      // 🔥 FIX UTAMA (format bulan Indonesia)
+      // Format Bulan
+      final tanggal = t.tanggal.toLocal();
       final bulan = DateFormat('MMMM yyyy', 'id_ID').format(tanggal);
 
       perBulan.putIfAbsent(bulan, () => 0);
@@ -78,7 +75,6 @@ class _AiScreenState extends State<AiScreen> {
       }
     }
 
-    // 🔥 buat detail bulan
     String detailBulan = "";
     perBulan.forEach((bulan, saldo) {
       detailBulan += "$bulan: $saldo\n";
