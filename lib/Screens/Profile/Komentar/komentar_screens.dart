@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/models/comentar_model.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
@@ -95,21 +97,79 @@ class _KomentarScreensState extends State<KomentarScreens> {
           itemBuilder: (context, index) {
             final c = comments[index];
 
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.person)),
-                title: Text(c.nama),
-                subtitle: Column(
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: red, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(c.deskripsi),
-                    const SizedBox(height: 5),
+                    // ================= HEADER =================
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 25,
+                          backgroundColor: white,
+                          child: ClipOval(
+                            child: Lottie.asset(
+                              "images/profilekomentar.json",
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 15),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(c.nama, style: blackBold15),
+                              const SizedBox(height: 4),
+                              Text(
+                                c.tanggal != null
+                                    ? DateFormat(
+                                        "d MMM yyyy, HH:mm",
+                                        "id_ID",
+                                      ).format(c.tanggal!)
+                                    : "Baru saja",
+                                style: blackReguler12,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    Divider(color: grey, thickness: 1),
+
+                    const SizedBox(height: 10),
+
+                    // ================= DESKRIPSI =================
                     Text(
-                      c.tanggal != null
-                          ? "${c.tanggal!.day}/${c.tanggal!.month}/${c.tanggal!.year}"
-                          : "Baru saja",
-                      style: const TextStyle(fontSize: 12),
+                      c.deskripsi,
+                      style: blackReguler,
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.justify,
                     ),
                   ],
                 ),
@@ -139,19 +199,17 @@ class _KomentarScreensState extends State<KomentarScreens> {
               children: [
                 Expanded(
                   child: TextField(
-                    maxLines: 2,
                     controller: komentar,
                     style: blackReguler,
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
                     decoration: InputDecoration(
-                      hintText: 'Tulis Komentar Anda...',
-                      hintStyle: blackReguler.copyWith(
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      hintText: 'Tulis komentar Anda...',
+                      hintStyle: blackReguler,
+                      border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 10,
                       ),
-                      border: InputBorder.none,
                     ),
                   ),
                 ),
