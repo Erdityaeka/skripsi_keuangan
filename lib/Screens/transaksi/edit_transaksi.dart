@@ -449,7 +449,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
         Text(text, style: const TextStyle(color: Colors.orange)),
         TextButton.icon(
           icon: const Icon(Icons.add),
-          label: const Text("Tambah"),
+          label: const Text("Tambah Data"),
           onPressed: action,
         ),
       ],

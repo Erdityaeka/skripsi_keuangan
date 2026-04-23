@@ -374,7 +374,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
         Text(text, style: const TextStyle(color: Colors.orange)),
         TextButton.icon(
           icon: const Icon(Icons.add),
-          label: const Text("Tambah Transaksi"),
+          label: const Text("Tambah Data"),
           onPressed: action,
         ),
       ],
