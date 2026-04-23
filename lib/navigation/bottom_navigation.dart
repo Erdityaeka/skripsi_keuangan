@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:skripsi_keuangan/Screens/AI%20Analisis/ai_screen.dart';
+import 'package:skripsi_keuangan/Screens/AI Analisis/ai_screen.dart';
 import 'package:skripsi_keuangan/Screens/Grafik/grafik_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/profile_screens.dart';
 import 'package:skripsi_keuangan/Screens/Home/home_screens.dart';
@@ -18,6 +18,15 @@ class _BottomNavigationState extends State<BottomNavigation> {
   int _selectedTabIndex = 0;
 
   void _onNavBarTapped(int index) {
+    // 🔥 KHUSUS AI (INDEX 2)
+    if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AiScreen()),
+      );
+      return; // 🔥 PENTING: jangan ubah index
+    }
+
     setState(() {
       _selectedTabIndex = index;
     });
@@ -25,16 +34,15 @@ class _BottomNavigationState extends State<BottomNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    // Daftar halaman untuk setiap tab
+    // 🔥 AI DIHAPUS DARI LIST
     final List<Widget> listPage = <Widget>[
       const HomeScreens(),
-       TransaksiScreens(showBackButton: false),
-      Container(),
+      TransaksiScreens(showBackButton: false),
+      Container(), // dummy (index 2)
       GrafikScreens(),
       const ProfileScreens(),
     ];
 
-    // Daftar item navigasi bawah
     final List<BottomNavigationBarItem> bottomNavBarItems =
         <BottomNavigationBarItem>[
           const BottomNavigationBarItem(
@@ -51,36 +59,24 @@ class _BottomNavigationState extends State<BottomNavigation> {
             ),
             label: 'Transaksi',
           ),
+
+          // 🔥 AI BUTTON (TANPA GestureDetector)
           BottomNavigationBarItem(
             icon: Padding(
-              padding: EdgeInsets.only(top: 15),
-              child: GestureDetector(
-                onTap: () {
-                  // Aksi ketika ikon AI ditekan
-                  // Misalnya, navigasi ke halaman AI
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const AiScreen()),
-                  );
-                },
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Color.fromARGB(
-                      255,
-                      255,
-                      255,
-                      255,
-                    ), // warna background bulat
-                    shape: BoxShape.circle, // bentuk bulat
-                  ),
-                  child: Center(child: Text("AI", style: redBold14)),
+              padding: const EdgeInsets.only(top: 15),
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
                 ),
+                child: Center(child: Text("AI", style: redBold14)),
               ),
             ),
-            label: "", // label di bawah icon
+            label: "",
           ),
+
           const BottomNavigationBarItem(
             icon: Padding(
               padding: EdgeInsets.only(top: 15),
@@ -97,13 +93,12 @@ class _BottomNavigationState extends State<BottomNavigation> {
           ),
         ];
 
-    // BottomNavigationBar
     final BottomNavigationBar bottomNavBar = BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       backgroundColor: redBold20.color,
       items: bottomNavBarItems,
       currentIndex: _selectedTabIndex,
-      unselectedItemColor: greyReguler.color, // Warna yang benar
+      unselectedItemColor: greyReguler.color,
       selectedItemColor: Colors.white,
       onTap: _onNavBarTapped,
       selectedLabelStyle: GoogleFonts.poppins(
@@ -118,8 +113,8 @@ class _BottomNavigationState extends State<BottomNavigation> {
     );
 
     return Scaffold(
-      body: Center(child: listPage[_selectedTabIndex]),
-      bottomNavigationBar: bottomNavBar, // Tambahkan di sini
+      body: listPage[_selectedTabIndex],
+      bottomNavigationBar: bottomNavBar,
     );
   }
 }
