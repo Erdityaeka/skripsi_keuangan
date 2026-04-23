@@ -3,38 +3,59 @@ import 'package:skripsi_keuangan/keys/api_keys.dart';
 
 class GeminiService {
   static Future<void> initialize() async {
-    try {
-      Gemini.init(apiKey: ApiKeys.geminiApiKey);
-    } catch (e) {
-      print("Gemini Init Error: $e");
-    }
+    Gemini.init(apiKey: ApiKeys.geminiApiKey);
   }
 
   static Future<String> generateText(
     String prompt, {
     String context = "",
   }) async {
-    try {
-      // PAKAI .prompt() 
-      final response = await Gemini.instance.prompt(
-        parts: [
-          Part.text("KONTEKS KEUANGAN: $context"),
-          Part.text(
-            "INSTRUKSI: Jangan pakai bintang (*), jawab dengan teks polos.",
-          ),
-          Part.text("PERTANYAAN USER: $prompt"),
-        ],
-      );
+    int maxRetry = 3;
 
-      // Mengambil data lewat .output (jalur resmi terbaru)
-      if (response != null && response.output != null) {
-        return response.output!.replaceAll('*', '').trim();
+    for (int i = 0; i < maxRetry; i++) {
+      try {
+        // 🔥 batasi context
+        if (context.length > 1500) {
+          context = context.substring(0, 1500);
+        }
+
+        final response = await Gemini.instance.prompt(
+          parts: [
+            Part.text("""
+$context
+
+Pertanyaan:
+$prompt
+
+Jawab dengan bahasa sederhana tanpa simbol seperti # atau *.
+"""),
+          ],
+        );
+
+        if (response != null && response.output != null) {
+          String text = response.output!;
+
+          // bersihkan markdown
+          text = text.replaceAll('#', '').replaceAll('*', '');
+
+          return text.trim();
+        }
+
+        return "AI tidak memberikan respon.";
+      } catch (e) {
+        print("Gemini Error: $e");
+
+        // 🔥 HANDLE 429
+        if (e.toString().contains("429")) {
+          // delay bertahap (2s, 4s, 6s)
+          await Future.delayed(Duration(seconds: 2 * (i + 1)));
+          continue; // retry
+        }
+
+        return "Gagal memproses AI.";
       }
-
-      return "Respon kosong.";
-    } catch (e) {
-      print("Gemini Error: $e");
-      return 'Gagal memproses AI.';
     }
+
+    return "Server AI sedang sibuk.\nCoba lagi beberapa saat.";
   }
 }

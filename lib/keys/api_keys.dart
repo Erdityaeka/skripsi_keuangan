@@ -2,5 +2,5 @@
 
 class ApiKeys {
   static const String geminiApiKey =
-      'AIzaSyDQqXnJx7X87kT8gKGxqLT-hxO-qzJr1S4'; // Ganti dengan API Key asli
+      'AIzaSyDLNkWw0tHIniO68pvN1vs_oRIF3uOun7E'; // Ganti dengan API Key asli
 }

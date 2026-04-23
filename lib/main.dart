@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:skripsi_keuangan/services/gemini_service.dart';
 import 'firebase_options.dart';
 import 'package:skripsi_keuangan/app.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
@@ -14,8 +15,9 @@ bool splashActive = true;
 //MAIN
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('id');
+  await initializeDateFormatting('id_ID', null);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await GeminiService.initialize();
   runApp(const RootApp());
 }
 
