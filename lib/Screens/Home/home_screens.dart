@@ -115,18 +115,18 @@ class _HomeScreensState extends State<HomeScreens> {
               final recent = filtered.take(3).toList();
 
               // Hitung Transaksi
-              double income = 0;
-              double expense = 0;
+              double pemasukan = 0;
+              double pengeluaran = 0;
 
               for (var tx in filtered) {
                 if (tx.tipe == "pemasukan") {
-                  income += tx.nominal;
+                  pemasukan += tx.nominal;
                 } else {
-                  expense += tx.nominal;
+                  pengeluaran += tx.nominal;
                 }
               }
 
-              final saldo = income - expense;
+              final saldo = pemasukan - pengeluaran;
 
               return RefreshIndicator(
                 onRefresh: _refreshData,
@@ -141,7 +141,7 @@ class _HomeScreensState extends State<HomeScreens> {
                     child: Column(
                       children: [
                         // Card Saldo
-                        cardSaldo(income, expense, saldo),
+                        cardSaldo(pemasukan, pengeluaran, saldo),
 
                         const SizedBox(height: 20),
 
@@ -191,7 +191,7 @@ class _HomeScreensState extends State<HomeScreens> {
   }
 
   // Card Saldo
-  Widget cardSaldo(double income, double expense, double saldo) {
+  Widget cardSaldo(double pemasukan, double pengeluaran, double saldo) {
     return Container(
       width: double.infinity,
       height: 230,
@@ -205,10 +205,10 @@ class _HomeScreensState extends State<HomeScreens> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Pemasukan', style: greenBold15),
-            Text(currency.format(income), style: whiteReguler),
+            Text(currency.format(pemasukan), style: whiteReguler),
             const SizedBox(height: 10),
             Text('Pengeluaran', style: yellowBold15),
-            Text(currency.format(expense), style: whiteReguler),
+            Text(currency.format(pengeluaran), style: whiteReguler),
             const SizedBox(height: 10),
             Row(
               children: [

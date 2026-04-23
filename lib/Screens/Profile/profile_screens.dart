@@ -11,13 +11,10 @@ import 'package:skripsi_keuangan/Screens/Profile/Komentar/komentar_screens.dart'
 import 'package:skripsi_keuangan/Screens/Profile/Laporan/unduh_laporan_screens.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
-import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
 
 class ProfileScreens extends StatefulWidget {
-  const ProfileScreens({super.key, this.transactions});
-
-  final List<TransaksiModel>? transactions;
+  const ProfileScreens({super.key});
 
   @override
   State<ProfileScreens> createState() => _ProfileScreensState();
@@ -333,12 +330,9 @@ class _ProfileScreensState extends State<ProfileScreens> {
         const SizedBox(height: 30),
         InkResponse(
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => UnduhLaporanScreens(
-                  transactions: widget.transactions ?? [],
-                ),
-              ),
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => UnduhLaporanScreens()),
             );
           },
           child: _buildButton(Icons.download, 'Unduh Laporan'),

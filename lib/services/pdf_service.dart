@@ -22,7 +22,7 @@ class PdfService {
     double pengeluaran = 0;
 
     for (var tx in transactions) {
-      if (tx.tipe == "income") {
+      if (tx.tipe == "pemasukan") {
         pemasukan += tx.nominal;
       } else {
         pengeluaran += tx.nominal;
@@ -45,10 +45,13 @@ class PdfService {
           pw.Divider(),
 
           pw.Text(
-            "Periode : ${DateFormat('dd/MM/yyyy').format(startDate)} - ${DateFormat('dd/MM/yyyy').format(endDate)}",
+            "Periode : ${DateFormat('dd MMM yyyy', 'id').format(startDate)} - ${DateFormat('dd MMM yyyy', 'id').format(endDate)}",
           ),
+          pw.SizedBox(height: 10),
           pw.Text("Pemasukan : ${currency.format(pemasukan)}"),
+          pw.SizedBox(height: 10),
           pw.Text("Pengeluaran : ${currency.format(pengeluaran)}"),
+          pw.SizedBox(height: 10),
           pw.Text(
             "Saldo : ${currency.format(saldo)}",
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
@@ -56,23 +59,29 @@ class PdfService {
 
           pw.SizedBox(height: 20),
 
+          // ignore: deprecated_member_use
           pw.Table.fromTextArray(
             headers: [
               "No",
               "Tanggal",
               "Keterangan",
-              "Pengeluaran",
               "Pemasukan",
+              "Pengeluaran",
+              "Bank",
               "Kategori",
             ],
             data: List.generate(transactions.length, (index) {
               final tx = transactions[index];
               return [
                 (index + 1).toString(),
-                DateFormat('dd/MM/yyyy').format(tx.tanggal),
+                DateFormat('dd/MMM/yyyy').format(tx.tanggal),
                 tx.judul,
-                tx.tipe == "expense" ? currency.format(tx.nominal) : "",
-                tx.tipe == "income" ? currency.format(tx.nominal) : "",
+
+                tx.tipe == "pemasukan" ? currency.format(tx.nominal) : "",
+                tx.tipe == "pengeluaran" ? currency.format(tx.nominal) : "",
+
+                tx.bank,
+
                 tx.kategori,
               ];
             }),
@@ -91,11 +100,13 @@ class PdfService {
       ),
     );
 
-    // Buat nama file aman (hapus spasi)
+    // Buat nama file
     final safeTitle =
-        "${judulLaporan.replaceAll(" ", "_")}_${DateFormat('dd_MM_yyyy').format(startDate)}_${DateFormat('dd_MM_yyyy').format(endDate)}";
+        "${judulLaporan.replaceAll(" ", " ")} "
+        "${DateFormat('dd MMMM yyyy', 'id').format(startDate)} - "
+        "${DateFormat('dd MMMM yyyy', 'id').format(endDate)}";
 
-    // Tentukan folder Download/keuangan
+    // Masukan Ke file Manager Lewat Path Android
     final keuanganDir = Directory("/storage/emulated/0/Download/keuangan");
 
     // Buat folder "keuangan" kalau belum ada

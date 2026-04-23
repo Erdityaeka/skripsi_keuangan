@@ -66,7 +66,7 @@ class _AiScreenState extends State<AiScreen> {
 
       perBulan.putIfAbsent(bulan, () => 0);
 
-      if (tipe == "income") {
+      if (tipe == "pemasukan") {
         masuk += nominal;
         perBulan[bulan] = perBulan[bulan]! + nominal;
       } else {
