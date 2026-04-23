@@ -8,12 +8,16 @@ import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Edit%20Profile/edit_profile_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Komentar/komentar_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Laporan/unduh_laporan_screens.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
 
 class ProfileScreens extends StatefulWidget {
-  const ProfileScreens({super.key});
+  const ProfileScreens({super.key, this.transactions});
+
+  final List<TransaksiModel>? transactions;
 
   @override
   State<ProfileScreens> createState() => _ProfileScreensState();
@@ -327,7 +331,18 @@ class _ProfileScreensState extends State<ProfileScreens> {
           child: _buildButton(Icons.table_chart, 'Tambah Kategori'),
         ),
         const SizedBox(height: 30),
-        _buildButton(Icons.download, 'Unduh Laporan'),
+        InkResponse(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => UnduhLaporanScreens(
+                  transactions: widget.transactions ?? [],
+                ),
+              ),
+            );
+          },
+          child: _buildButton(Icons.download, 'Unduh Laporan'),
+        ),
         const SizedBox(height: 30),
         _buildButton(Icons.perm_device_info, 'Tentang Aplikasi'),
         const SizedBox(height: 30),

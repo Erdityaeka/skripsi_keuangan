@@ -7,6 +7,7 @@ import 'package:skripsi_keuangan/services/gemini_service.dart';
 import 'firebase_options.dart';
 import 'package:skripsi_keuangan/app.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 //GLOBAL
 final messengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -92,13 +93,22 @@ class _RootAppState extends State<RootApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: messengerKey,
-      theme: ThemeData(scaffoldBackgroundColor: Colors.white),
+
+      // Mengubah Nama Hai Bahasa Inggris Menjadi Bahasa Indo
+      locale: const Locale('id', 'ID'),
+      supportedLocales: const [Locale('id', 'ID'), Locale('en', 'US')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: ThemeData(scaffoldBackgroundColor: white),
       builder: (context, child) {
         return Stack(
           children: [
             child!,
 
-            //LOADING SAAT TIDAK ADA INTERNET
+            //Memberikan Loading Saat Tidak Ada Koneksi
             AnimatedOpacity(
               opacity: isConnected ? 0 : 1,
               duration: const Duration(milliseconds: 300),
@@ -118,7 +128,6 @@ class _RootAppState extends State<RootApp> {
                           style: whiteReguler.copyWith(
                             decoration: TextDecoration.none,
                           ),
-                          // tanpa garis
                         ),
                       ],
                     ),

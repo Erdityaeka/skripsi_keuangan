@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/services/pdf_service.dart';
 
@@ -30,6 +31,25 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
+      helpText: 'Pilih Tanggal',
+
+      // opsional (biar full Indonesia)
+      cancelText: 'Batal',
+      confirmText: 'OK',
+
+      // 🔥 INI BAGIAN PENTING
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: red, // warna header & tombol
+              onPrimary: white, // warna text di header
+              onSurface: black, // warna tanggal
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked == null) return;
