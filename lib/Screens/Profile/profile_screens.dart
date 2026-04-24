@@ -9,6 +9,7 @@ import 'package:skripsi_keuangan/Screens/Profile/Edit%20Profile/edit_profile_scr
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Komentar/komentar_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Laporan/unduh_laporan_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Tentang/tentang_screens.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
@@ -338,7 +339,15 @@ class _ProfileScreensState extends State<ProfileScreens> {
           child: _buildButton(Icons.download, 'Unduh Laporan'),
         ),
         const SizedBox(height: 30),
-        _buildButton(Icons.perm_device_info, 'Tentang Aplikasi'),
+        InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TentangScreens()),
+            );
+          },
+          child: _buildButton(Icons.perm_device_info, 'Tentang Aplikasi'),
+        ),
         const SizedBox(height: 30),
         InkWell(
           onTap: () {
