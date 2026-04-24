@@ -177,11 +177,14 @@ Tugas:
     return Scaffold(
       appBar: _buildAppbar(),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(child: _list()),
-            inputPrompt(),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.only(right: 20, left: 20, bottom: 30),
+          child: Column(
+            children: [
+              Expanded(child: _list()),
+              inputPrompt(),
+            ],
+          ),
         ),
       ),
     );
@@ -279,12 +282,14 @@ Tugas:
   // Input Prompt
   Widget inputPrompt() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            height: 100,
+            height: 80, // 🔥 dari 100 → 80 biar lebih pas
             width: double.infinity,
             decoration: BoxDecoration(
               color: white,
@@ -305,6 +310,7 @@ Tugas:
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
+                        vertical: 10, // 🔥 biar tidak mepet
                       ),
                     ),
                   ),
@@ -316,9 +322,11 @@ Tugas:
               ],
             ),
           ),
+
           const SizedBox(height: 10),
           Text('AI ini bisa melakukan kesalahan!', style: blackReguler12),
-          const SizedBox(height: 30),
+
+          const SizedBox(height: 10),
         ],
       ),
     );

@@ -51,10 +51,16 @@ class _KomentarScreensState extends State<KomentarScreens> {
     return Scaffold(
       appBar: _buildAppbar(context),
       body: SafeArea(
-        child: Column(children: [Expanded(child: ListKomentar())]),
+        child: Padding(
+          padding: const EdgeInsets.only(right: 20, left: 20, bottom: 30),
+          child: Column(
+            children: [
+              Expanded(child: ListKomentar()),
+              inputKomentar(),
+            ],
+          ),
+        ),
       ),
-
-      bottomNavigationBar: inputPrompt(),
     );
   }
 
@@ -182,14 +188,17 @@ class _KomentarScreensState extends State<KomentarScreens> {
   }
 
   // INPUT
-  Widget inputPrompt() {
+  Widget inputKomentar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            height: 100,
+            width: double.infinity,
+            height: 80, 
             decoration: BoxDecoration(
               color: white,
               borderRadius: BorderRadius.circular(15),
@@ -209,6 +218,7 @@ class _KomentarScreensState extends State<KomentarScreens> {
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
+                        vertical: 10,
                       ),
                     ),
                   ),
@@ -220,7 +230,8 @@ class _KomentarScreensState extends State<KomentarScreens> {
               ],
             ),
           ),
-          const SizedBox(height: 50),
+
+          const SizedBox(height: 10), 
         ],
       ),
     );
