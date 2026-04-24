@@ -122,7 +122,7 @@ Tugas:
     try {
       String response;
 
-      // 🔥 BEDAKAN TOPIK
+      //  BEDAKAN TOPIK
       if (isFinanceQuestion(text)) {
         String context = await _getFinancialContext();
 
@@ -177,9 +177,13 @@ Tugas:
     return Scaffold(
       appBar: _buildAppbar(),
       body: SafeArea(
-        child: Column(children: [Expanded(child: _list())]),
+        child: Column(
+          children: [
+            Expanded(child: _list()),
+            inputPrompt(),
+          ],
+        ),
       ),
-      bottomNavigationBar: inputPrompt(),
     );
   }
 

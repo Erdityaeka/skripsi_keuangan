@@ -20,16 +20,14 @@ class AuthService {
 
       final uid = userCredential.user?.uid;
       if (uid != null) {
-        final data = {'nama': nama};
+        final data = {
+          'nama': nama,
+          if (fotoFileName != null && fotoFileName.isNotEmpty)
+            'foto': fotoFileName,
+        };
 
-        if (fotoFileName != null && fotoFileName.isNotEmpty) {
-          data['foto'] = fotoFileName;
-        }
-
-        await _db
-            .collection('user')
-            .doc(uid)
-            .set(data, SetOptions(merge: true));
+        // 🔥 TANPA MERGE
+        await _db.collection('user').doc(uid).set(data);
       }
 
       return null;
