@@ -117,7 +117,7 @@ class AuthService {
       //  Update Firestore
       await _db.collection('user').doc(user.uid).set({
         // ignore: use_null_aware_elements
-        if (newfotoFileName != null) 'profileImage': newfotoFileName,
+        if (newfotoFileName != null) 'foto': newfotoFileName,
       }, SetOptions(merge: true));
 
       await user.reload();
