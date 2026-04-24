@@ -260,7 +260,7 @@ class _SiginScreensState extends State<SiginScreens> {
                 child: TextField(
                   controller: _passwordController,
                   obscureText: !_isPasswordVisible,
-                  enabled: _isLoading,
+                  enabled: !_isLoading,
                   decoration: InputDecoration(
                     hintText: 'Masukan Password',
                     hintStyle: greyReguler,
