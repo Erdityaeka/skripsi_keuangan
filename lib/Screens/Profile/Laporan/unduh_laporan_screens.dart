@@ -206,128 +206,211 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("EKSPOR")),
+      appBar: _buildAppbar(context),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 30,
+                bottom: 30,
+              ),
               child: Column(
                 children: [
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text("Judul Laporan"),
-                  ),
-                  const SizedBox(height: 8),
-
-                  TextField(
-                    controller: judulController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
+                  _buildInputJudul(),
                   const Divider(height: 30),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () => _pickDate(true),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text("Dari Tanggal"),
-                              const SizedBox(height: 5),
-                              Text(
-                                startDate == null
-                                    ? "Pilih Tanggal"
-                                    : DateFormat(
-                                        'dd MMM yyyy',
-                                      ).format(startDate!),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () => _pickDate(false),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text("Sampai Tanggal"),
-                              const SizedBox(height: 5),
-                              Text(
-                                endDate == null
-                                    ? "Pilih Tanggal"
-                                    : DateFormat(
-                                        'dd MMM yyyy',
-                                      ).format(endDate!),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildTanggal(),
 
                   const Divider(height: 30),
 
-                  DropdownButtonFormField<String>(
-                    value: selectedType,
-                    items: ["Semua", "Pemasukan", "Pengeluaran"]
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                    onChanged: (val) => setState(() => selectedType = val!),
-                    decoration: const InputDecoration(labelText: "Kategori"),
-                  ),
+                  _buildTipe(),
 
                   const SizedBox(height: 10),
-
-                  DropdownButtonFormField<String>(
-                    value: selectedBank,
-                    items: bankList
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                    onChanged: (val) => setState(() => selectedBank = val!),
-                    decoration: const InputDecoration(labelText: "Bank"),
-                  ),
+                  _buildBank(),
 
                   const Spacer(),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("BATAL"),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                          ),
-                          onPressed: _export,
-                          child: const Text("EKSPOR"),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildButtonUnduh(),
                 ],
               ),
             ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppbar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      leading: IconButton(
+        onPressed: () => Navigator.pop(context),
+        icon: Icon(Icons.arrow_back, color: red),
+      ),
+      title: Text('Unduh Laporan', style: redBold20),
+      centerTitle: true,
+    );
+  }
+
+  // Widget UI Judul
+  Widget _buildInputJudul() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Judul Transaksi', style: redReguler15),
+        SizedBox(height: 15),
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+              child: TextField(
+                controller: judulController,
+                decoration: InputDecoration(
+                  hintStyle: greyReguler,
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Widget UI Tanggal
+  Widget _buildTanggal() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: () => _pickDate(true),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Dari Tanggal", style: blackReguler12),
+                    const SizedBox(height: 5),
+                    Text(
+                      startDate == null
+                          ? "Pilih Tanggal"
+                          : DateFormat('dd MMM yyyy').format(startDate!),
+                      style: blackBold15,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: InkWell(
+                onTap: () => _pickDate(false),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Sampai Tanggal", style: blackReguler12),
+                    const SizedBox(height: 5),
+                    Text(
+                      endDate == null
+                          ? "Pilih Tanggal"
+                          : DateFormat('dd MMM yyyy').format(endDate!),
+                      style: blackBold15,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Widget UI Tipe
+  Widget _buildTipe() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Tipe Transaksi', style: redReguler15),
+        SizedBox(height: 15),
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedType,
+                dropdownColor: white,
+                icon: Icon(Icons.arrow_drop_down, color: black),
+                onChanged: (val) => setState(() => selectedType = val!),
+                items: ["Semua", "Pemasukan", "Pengeluaran"]
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Widget UI Bank
+  Widget _buildBank() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Bank', style: redReguler15),
+        SizedBox(height: 15),
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedBank,
+                dropdownColor: white,
+                icon: Icon(Icons.arrow_drop_down, color: black),
+                onChanged: (val) => setState(() => selectedBank = val!),
+                items: bankList
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Widget UI Buttun Unduh
+  Widget _buildButtonUnduh() {
+    return Container(
+      width: double.infinity,
+      height: 60,
+      decoration: BoxDecoration(
+        color: greennotif,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Center(child: Text("Unduh Laporan", style: whiteBold)),
     );
   }
 }
