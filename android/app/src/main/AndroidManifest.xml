@@ -3,7 +3,7 @@
 <!-- Permission internet untuk produksi -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="skripsi_keuangan"
+        android:label="Uang Note"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

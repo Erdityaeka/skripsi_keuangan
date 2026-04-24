@@ -15,9 +15,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 5), () {
+    Timer(const Duration(seconds: 2), () {
       if (mounted) {
-        // pastikan widget masih aktif
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreens()),
@@ -31,7 +30,6 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // 🔥 BAGIAN ATAS (biar dorong ke tengah)
           Expanded(
             child: Center(
               child: Image.asset('images/Icon.png', width: 360, height: 360),
