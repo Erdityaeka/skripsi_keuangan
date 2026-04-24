@@ -403,14 +403,17 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
 
   // Widget UI Buttun Unduh
   Widget _buildButtonUnduh() {
-    return Container(
-      width: double.infinity,
-      height: 60,
-      decoration: BoxDecoration(
-        color: greennotif,
-        borderRadius: BorderRadius.circular(15),
+    return InkWell(
+      onTap: _export,
+      child: Container(
+        width: double.infinity,
+        height: 60,
+        decoration: BoxDecoration(
+          color: greennotif,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Center(child: Text("Unduh Laporan", style: whiteBold)),
       ),
-      child: Center(child: Text("Unduh Laporan", style: whiteBold)),
     );
   }
 }
