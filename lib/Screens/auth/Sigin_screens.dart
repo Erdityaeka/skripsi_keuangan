@@ -61,7 +61,7 @@ class _SiginScreensState extends State<SiginScreens> {
     }
   }
 
-  // 🔥 SIMPAN FOTO KE LOCAL (INI KUNCI FIX)
+  // Simpan Foto
   Future<String?> _simpanFoto(File imageFile) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
@@ -69,7 +69,7 @@ class _SiginScreensState extends State<SiginScreens> {
       final fileName =
           DateTime.now().millisecondsSinceEpoch.toString() + ".jpg";
 
-      final newFile = await imageFile.copy('${dir.path}/$fileName');
+      await imageFile.copy('${dir.path}/$fileName');
 
       return fileName;
     } catch (e) {
