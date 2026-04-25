@@ -52,13 +52,18 @@ class _KomentarScreensState extends State<KomentarScreens> {
       appBar: _buildAppbar(context),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(right: 20, left: 20, bottom: 30),
-          child: Column(
-            children: [
-              Expanded(child: ListKomentar()),
-              inputKomentar(),
-            ],
+          padding: const EdgeInsets.only(right: 20, left: 20),
+          child: ListKomentar(),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
+          child: inputKomentar(),
         ),
       ),
     );
@@ -189,51 +194,46 @@ class _KomentarScreensState extends State<KomentarScreens> {
 
   // INPUT
   Widget inputKomentar() {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: double.infinity,
-            height: 80, 
-            decoration: BoxDecoration(
-              color: white,
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: red, width: 1.5),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: komentar,
-                    style: blackReguler,
-                    maxLines: null,
-                    keyboardType: TextInputType.multiline,
-                    decoration: InputDecoration(
-                      hintText: 'Tulis komentar Anda...',
-                      hintStyle: blackReguler,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: double.infinity,
+          height: 80,
+          decoration: BoxDecoration(
+            color: white,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: red, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: komentar,
+                  style: blackReguler,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  decoration: InputDecoration(
+                    hintText: 'Tulis komentar Anda...',
+                    hintStyle: blackReguler,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
                     ),
                   ),
                 ),
-                IconButton(
-                  onPressed: kirimKomentar,
-                  icon: Icon(Icons.send, color: black),
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                onPressed: kirimKomentar,
+                icon: Icon(Icons.send, color: black),
+              ),
+            ],
           ),
+        ),
 
-          const SizedBox(height: 10), 
-        ],
-      ),
+        const SizedBox(height: 10),
+      ],
     );
   }
 }

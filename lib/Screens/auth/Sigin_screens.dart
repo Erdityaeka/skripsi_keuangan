@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart'; // 🔥 TAMBAHAN
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
@@ -16,7 +17,6 @@ class _SiginScreensState extends State<SiginScreens> {
   bool _isPasswordVisible = false;
   bool _isPicking = false;
   final TextEditingController _emailController = TextEditingController();
-
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _namaController = TextEditingController();
 
@@ -49,7 +49,6 @@ class _SiginScreensState extends State<SiginScreens> {
 
     try {
       final picker = ImagePicker();
-
       final image = await picker.pickImage(source: ImageSource.gallery);
 
       if (image != null && mounted) {
@@ -59,6 +58,23 @@ class _SiginScreensState extends State<SiginScreens> {
       print("ImagePicker error: $e");
     } finally {
       _isPicking = false;
+    }
+  }
+
+  // 🔥 SIMPAN FOTO KE LOCAL (INI KUNCI FIX)
+  Future<String?> _simpanFoto(File imageFile) async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+
+      final fileName =
+          DateTime.now().millisecondsSinceEpoch.toString() + ".jpg";
+
+      final newFile = await imageFile.copy('${dir.path}/$fileName');
+
+      return fileName;
+    } catch (e) {
+      print("Error simpan foto: $e");
+      return null;
     }
   }
 
@@ -83,27 +99,39 @@ class _SiginScreensState extends State<SiginScreens> {
 
     setState(() => _isLoading = true);
 
-    String? error = await AuthService().register(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-      nama: _namaController.text.trim(),
-      fotoFileName: _pickedImage?.name,
-    );
+    String? fotoFileName;
 
-    setState(() => _isLoading = false);
+    try {
+      // 🔥 SIMPAN FOTO KE LOCAL DULU
+      if (_pickedImage != null) {
+        final file = File(_pickedImage!.path);
+        fotoFileName = await _simpanFoto(file);
+      }
 
-    if (error == null) {
-      _showSnack("Akun berhasil dibuat!", success: true);
+      String? error = await AuthService().register(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        nama: _namaController.text.trim(),
+        fotoFileName: fotoFileName, // 🔥 SUDAH BENAR
+      );
 
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.push(
-          // ignore: use_build_context_synchronously
-          context,
-          MaterialPageRoute(builder: (context) => LoginScreens()),
-        );
-      });
-    } else {
-      _showSnack("Gagal mendaftar: $error");
+      setState(() => _isLoading = false);
+
+      if (error == null) {
+        _showSnack("Akun berhasil dibuat!", success: true);
+
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreens()),
+          );
+        });
+      } else {
+        _showSnack("Gagal mendaftar: $error");
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnack("Terjadi kesalahan");
     }
   }
 
@@ -178,20 +206,16 @@ class _SiginScreensState extends State<SiginScreens> {
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
                 padding: const EdgeInsets.only(right: 5.0, left: 14.0),
                 child: Icon(Icons.person, color: grey),
               ),
-              SizedBox(width: 5),
               Expanded(
                 child: TextField(
                   controller: _namaController,
                   enabled: !_isLoading,
                   decoration: InputDecoration(
-                    isCollapsed: true,
-                    contentPadding: EdgeInsets.zero,
                     hintText: 'Masukan Nama',
                     hintStyle: greyReguler,
                     border: InputBorder.none,
@@ -213,21 +237,17 @@ class _SiginScreensState extends State<SiginScreens> {
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
                 padding: const EdgeInsets.only(right: 5.0, left: 14.0),
                 child: Icon(Icons.mark_email_unread_rounded, color: grey),
               ),
-              SizedBox(width: 5),
               Expanded(
                 child: TextField(
                   controller: _emailController,
                   enabled: !_isLoading,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    isCollapsed: true,
-                    contentPadding: EdgeInsets.zero,
                     hintText: 'Masukan Email',
                     hintStyle: greyReguler,
                     border: InputBorder.none,
@@ -249,13 +269,11 @@ class _SiginScreensState extends State<SiginScreens> {
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
                 padding: const EdgeInsets.only(right: 5.0, left: 14.0),
                 child: Icon(Icons.lock_outline_rounded, color: grey),
               ),
-              SizedBox(width: 5),
               Expanded(
                 child: TextField(
                   controller: _passwordController,
@@ -268,7 +286,6 @@ class _SiginScreensState extends State<SiginScreens> {
                   ),
                 ),
               ),
-              SizedBox(width: 5),
               InkWell(
                 onTap: () {
                   setState(() {
@@ -279,9 +296,8 @@ class _SiginScreensState extends State<SiginScreens> {
                   padding: EdgeInsets.only(right: 14.0),
                   child: Icon(
                     _isPasswordVisible
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: black,
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                   ),
                 ),
               ),
@@ -293,27 +309,21 @@ class _SiginScreensState extends State<SiginScreens> {
   }
 
   Widget button() {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: _handleRegister,
-          child: Container(
-            width: double.infinity,
-            height: 50,
-            decoration: BoxDecoration(
-              color: redBold20.color,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: _isLoading
-                  ? const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    )
-                  : Text('Daftar', style: whiteBold),
-            ),
-          ),
+    return GestureDetector(
+      onTap: _handleRegister,
+      child: Container(
+        width: double.infinity,
+        height: 50,
+        decoration: BoxDecoration(
+          color: red,
+          borderRadius: BorderRadius.circular(10),
         ),
-      ],
+        child: Center(
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : Text('Daftar', style: whiteBold),
+        ),
+      ),
     );
   }
 }

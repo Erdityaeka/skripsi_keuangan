@@ -178,13 +178,18 @@ Tugas:
       appBar: _buildAppbar(),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(right: 20, left: 20, bottom: 30),
-          child: Column(
-            children: [
-              Expanded(child: _list()),
-              inputPrompt(),
-            ],
+          padding: const EdgeInsets.only(right: 20, left: 20),
+          child: _list(),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
+          child: inputPrompt(),
         ),
       ),
     );
@@ -281,54 +286,49 @@ Tugas:
 
   // Input Prompt
   Widget inputPrompt() {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            height: 80, // 🔥 dari 100 → 80 biar lebih pas
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: white,
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: red, width: 1.5),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    style: blackReguler,
-                    maxLines: null,
-                    keyboardType: TextInputType.multiline,
-                    decoration: InputDecoration(
-                      hintText: 'Tulis pertanyaan Anda...',
-                      hintStyle: blackReguler,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10, // 🔥 biar tidak mepet
-                      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 80,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: white,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: red, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _textController,
+                  style: blackReguler,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  decoration: InputDecoration(
+                    hintText: 'Tulis pertanyaan Anda...',
+                    hintStyle: blackReguler,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10, // 🔥 biar tidak mepet
                     ),
                   ),
                 ),
-                IconButton(
-                  onPressed: _sendMessage,
-                  icon: Icon(Icons.send, color: black),
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                onPressed: _sendMessage,
+                icon: Icon(Icons.send, color: black),
+              ),
+            ],
           ),
+        ),
 
-          const SizedBox(height: 10),
-          Text('AI ini bisa melakukan kesalahan!', style: blackReguler12),
+        const SizedBox(height: 10),
+        Text('AI ini bisa melakukan kesalahan!', style: blackReguler12),
 
-          const SizedBox(height: 10),
-        ],
-      ),
+        const SizedBox(height: 10),
+      ],
     );
   }
 }
