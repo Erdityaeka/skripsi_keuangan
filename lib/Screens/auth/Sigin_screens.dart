@@ -50,11 +50,6 @@ class _SiginScreensState extends State<SiginScreens> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
           content: Center(
             child: Text(msg, style: whiteBold, textAlign: TextAlign.center),
           ),

@@ -55,11 +55,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
           backgroundColor: success ? greennotif : rednotif,
           content: Center(
             child: Text(msg, style: whiteBold, textAlign: TextAlign.center),
