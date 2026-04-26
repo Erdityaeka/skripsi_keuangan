@@ -13,69 +13,138 @@ class ScanStrukScreen extends StatefulWidget {
 }
 
 class _ScanStrukScreenState extends State<ScanStrukScreen> {
+  // Service OCR
   final OCRService _ocrService = OCRService();
+
+  // Service database
   final FirestoreService _db = FirestoreService();
+
+  // Service image picker
   final ImagePickerService _picker = ImagePickerService();
 
+  // File gambar struk
   File? _imageFile;
+
+  // Controller input
   final _tokoController = TextEditingController();
   final _nominalController = TextEditingController();
 
+  // Dropdown pilihan
   String _selectedTipe = 'pengeluaran';
   String? _selectedKategori;
   String? _selectedBank;
+
+  // Status loading scan
   bool _isProcessing = false;
 
+  @override
+  void dispose() {
+    // Hindari memory leak
+    _tokoController.dispose();
+    _nominalController.dispose();
+
+    // Tutup OCR
+    _ocrService.dispose();
+
+    super.dispose();
+  }
+
+  // Notifikasi aman
+  void _showSnack(String msg, {bool success = false}) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+  }
+
+  // Ambil gambar
   Future<void> _pickImage(bool fromCamera) async {
-    final res = fromCamera
-        ? await _picker.pickImageFromCamera()
-        : await _picker.pickImage();
-    if (res?.file != null) {
-      setState(() {
-        _imageFile = res!.file;
-        _tokoController.clear();
-        _nominalController.clear();
-      });
+    try {
+      final res = fromCamera
+          ? await _picker.pickImageFromCamera()
+          : await _picker.pickImage();
+
+      if (res?.file != null && mounted) {
+        setState(() {
+          _imageFile = res!.file;
+
+          // Reset hasil lama
+          _tokoController.clear();
+          _nominalController.clear();
+        });
+      }
+    } catch (e) {
+      _showSnack("Gagal mengambil gambar");
     }
   }
 
+  // Scan OCR
   Future<void> _scanReceipt() async {
     if (_imageFile == null) return;
+
+    if (!mounted) return;
+
     setState(() => _isProcessing = true);
+
     try {
       final result = await _ocrService.scanStruk(_imageFile!);
-      if (result != null) {
+
+      if (result != null && mounted) {
         setState(() {
-          _tokoController.text = result['judul'];
-          _nominalController.text = (result['nominal'] as double)
+          _tokoController.text = result['judul'] ?? '';
+
+          _nominalController.text = (result['nominal'] as double? ?? 0)
               .toInt()
               .toString();
         });
+      } else {
+        _showSnack("Teks struk tidak terbaca");
       }
+    } catch (e) {
+      _showSnack("Gagal scan struk");
     } finally {
-      setState(() => _isProcessing = false);
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
+  // Simpan transaksi
   Future<void> _simpanData() async {
-    if (_tokoController.text.isEmpty || _nominalController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Nama toko dan nominal wajib diisi!")),
-      );
+    // Validasi wajib
+    if (_tokoController.text.trim().isEmpty ||
+        _nominalController.text.trim().isEmpty) {
+      _showSnack("Nama toko dan nominal wajib diisi!");
       return;
     }
-    await _db.addTransaction(
-      TransaksiModel(
-        id: '',
-        judul: _tokoController.text,
-        nominal: double.tryParse(_nominalController.text) ?? 0,
-        kategori: _selectedKategori ?? 'Lainnya',
-        bank: _selectedBank ?? 'Cash',
-        tipe: _selectedTipe,
-        tanggal: DateTime.now(),
-      ),
-    );
-    Navigator.pop(context);
+
+    try {
+      await _db.addTransaction(
+        TransaksiModel(
+          id: '',
+          judul: _tokoController.text.trim(),
+          nominal: double.tryParse(_nominalController.text) ?? 0,
+          kategori: _selectedKategori ?? 'Lainnya',
+          bank: _selectedBank ?? 'Cash',
+          tipe: _selectedTipe,
+          tanggal: DateTime.now(),
+        ),
+      );
+
+      if (!mounted) return;
+
+      _showSnack("Transaksi berhasil disimpan", success: true);
+
+      Navigator.pop(context);
+    } catch (e) {
+      _showSnack("Gagal menyimpan data");
+    }
   }
 
   @override
@@ -86,7 +155,8 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
         backgroundColor: Colors.blueAccent,
         foregroundColor: Colors.white,
       ),
-      // PENTING: Menggunakan SingleChildScrollView agar seluruh halaman bisa di-scroll
+
+      // Scroll utama
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -97,11 +167,12 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 "Pratinjau Struk (Cubit untuk Zoom)",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
+
               const SizedBox(height: 10),
 
-              // AREA FOTO
+              // Preview gambar
               Container(
-                height: 400, // Tinggi area foto
+                height: 400,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.black12,
@@ -135,6 +206,8 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
               ),
 
               const SizedBox(height: 10),
+
+              // Tombol scan
               if (_imageFile != null)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -144,6 +217,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                       icon: const Icon(Icons.refresh),
                       label: const Text("Ganti Foto"),
                     ),
+
                     ElevatedButton.icon(
                       onPressed: _isProcessing ? null : _scanReceipt,
                       icon: const Icon(Icons.document_scanner),
@@ -157,6 +231,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 ),
 
               const SizedBox(height: 20),
+
               const Text(
                 'Jika ada kesalahan, mohon input manual!',
                 style: TextStyle(
@@ -164,20 +239,27 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               const Divider(height: 30),
 
-              // FORM INPUTAN (IKUT TER-SCROLL)
+              // Input toko
               _buildTextField(_tokoController, "Nama Toko", Icons.store),
+
               const SizedBox(height: 15),
+
+              // Input nominal
               _buildTextField(
                 _nominalController,
                 "Nominal (Rp)",
                 Icons.money,
                 isNumber: true,
               ),
+
               const SizedBox(height: 20),
 
+              // Dropdown tipe
               const Text("Tipe", style: TextStyle(fontWeight: FontWeight.bold)),
+
               DropdownButtonFormField<String>(
                 value: _selectedTipe,
                 items: const [
@@ -195,14 +277,18 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
               ),
 
               const SizedBox(height: 15),
+
+              // Dropdown kategori
               const Text(
                 "Kategori",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
+
               StreamBuilder<List<String>>(
                 stream: _db.getCategories(),
                 builder: (context, snapshot) {
                   final list = snapshot.data ?? [];
+
                   return DropdownButtonFormField<String>(
                     hint: const Text("Pilih Kategori"),
                     value: list.contains(_selectedKategori)
@@ -220,11 +306,15 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
               ),
 
               const SizedBox(height: 15),
+
+              // Dropdown bank
               const Text("Bank", style: TextStyle(fontWeight: FontWeight.bold)),
+
               StreamBuilder<List<String>>(
                 stream: _db.getBank(),
                 builder: (context, snapshot) {
                   final list = snapshot.data ?? [];
+
                   return DropdownButtonFormField<String>(
                     hint: const Text("Pilih Bank"),
                     value: list.contains(_selectedBank) ? _selectedBank : null,
@@ -240,6 +330,8 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
               ),
 
               const SizedBox(height: 30),
+
+              // Tombol simpan
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -260,9 +352,8 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                   ),
                 ),
               ),
-              const SizedBox(
-                height: 40,
-              ), // Ruang tambahan di bawah agar nyaman di-scroll
+
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -270,6 +361,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     );
   }
 
+  // Widget input reusable
   Widget _buildTextField(
     TextEditingController controller,
     String label,
@@ -287,6 +379,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     );
   }
 
+  // Bottom sheet pilih kamera / galeri
   void _showPickerMenu() {
     showModalBottomSheet(
       context: context,
@@ -301,6 +394,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 _pickImage(false);
               },
             ),
+
             ListTile(
               leading: const Icon(Icons.camera_alt),
               title: const Text("Kamera"),
