@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,59 +14,41 @@ class SiginScreens extends StatefulWidget {
 }
 
 class _SiginScreensState extends State<SiginScreens> {
-  // Status password
   bool _isPasswordVisible = false;
-
-  // Proteksi double klik pilih gambar
   bool _isPicking = false;
-
-  // Status loading register
-  bool _isLoading = false;
-
-  // Controller input
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _namaController = TextEditingController();
 
-  // Foto profile
+  bool _isLoading = false;
   XFile? _pickedImage;
-
-  // Posisi slider foto
-  double _yAlignment = 0.0;
+  double _yAlignment = 0.0; // Koordinat geser foto
 
   @override
   void dispose() {
-    // Hindari memory leak
     _emailController.dispose();
     _passwordController.dispose();
     _namaController.dispose();
     super.dispose();
   }
 
-  // Notifikasi aman
+  // Notifikasi
   void _showSnack(String msg, {bool success = false}) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Center(
-            child: Text(msg, style: whiteBold, textAlign: TextAlign.center),
-          ),
-          backgroundColor: success ? greennotif : rednotif,
-        ),
-      );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Center(child: Text(msg, style: whiteBold)),
+        backgroundColor: success ? greennotif : rednotif,
+      ),
+    );
   }
 
-  // Pilih gambar gallery
+  // Fungsi untuk memilih gambar
   Future<void> _pickImage() async {
-    if (_isPicking || _isLoading) return;
-
+    if (_isPicking) return;
     _isPicking = true;
-
     try {
-      final image = await ImagePicker().pickImage(
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 50,
       );
@@ -73,162 +56,105 @@ class _SiginScreensState extends State<SiginScreens> {
       if (image != null && mounted) {
         setState(() {
           _pickedImage = image;
-
-          // Reset posisi slider
-          _yAlignment = 0.0;
+          _yAlignment = 0.0; // Reset posisi ke tengah setiap pilih foto baru
         });
       }
     } catch (e) {
-      _showSnack("Gagal memilih foto");
+      print("ImagePicker error: $e");
     } finally {
       _isPicking = false;
     }
   }
 
-  // Validasi input
-  bool _validateInput() {
+  // REGISTER
+  void _handleRegister() async {
     if (_namaController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
       _showSnack("Semua field harus diisi!");
-      return false;
+      return;
     }
 
     if (!_emailController.text.contains("@")) {
       _showSnack("Format email tidak valid!");
-      return false;
+      return;
     }
 
     if (_passwordController.text.length < 6) {
       _showSnack("Password minimal 6 karakter!");
-      return false;
+      return;
     }
-
-    return true;
-  }
-
-  // Register akun
-  Future<void> _handleRegister() async {
-    if (!_validateInput()) return;
-
-    if (!mounted) return;
 
     setState(() => _isLoading = true);
 
-    try {
-      // Format foto + posisi slider
-      String? finalFotoString;
+    // Menggabungkan nama file dan posisi (Contoh: "image.jpg|0.5")
+    String? finalFotoString;
+    if (_pickedImage != null) {
+      finalFotoString = "${_pickedImage!.name}|$_yAlignment";
+    }
 
-      if (_pickedImage != null) {
-        finalFotoString = "${_pickedImage!.name}|$_yAlignment";
-      }
+    String? error = await AuthService().register(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      nama: _namaController.text.trim(),
+      fotoFileName: finalFotoString,
+    );
 
-      final error = await AuthService().register(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        nama: _namaController.text.trim(),
-        fotoFileName: finalFotoString,
-      );
+    setState(() => _isLoading = false);
 
-      if (!mounted) return;
-
-      if (error == null) {
-        _showSnack("Akun berhasil dibuat!", success: true);
-
-        Future.delayed(const Duration(seconds: 1), () {
-          if (!mounted) return;
-
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreens()),
-          );
-        });
-      } else {
-        _showSnack("Gagal mendaftar: $error");
-      }
-    } catch (e) {
-      _showSnack("Terjadi kesalahan");
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+    if (error == null) {
+      _showSnack("Akun berhasil dibuat!", success: true);
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreens()),
+        );
+      });
+    } else {
+      _showSnack("Gagal mendaftar: $error");
     }
   }
 
-  // Widget input reusable
-  Widget _buildInputField({
-    required String label,
-    required String hint,
-    required IconData icon,
-    required TextEditingController controller,
-    bool isPassword = false,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: blackReguler),
-        const SizedBox(height: 10),
-
-        Container(
-          width: double.infinity,
-          height: 55,
-          decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 5, left: 14),
-                child: Icon(icon, color: grey),
-              ),
-
-              const SizedBox(width: 5),
-
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  enabled: !_isLoading,
-                  keyboardType: keyboardType,
-                  obscureText: isPassword ? !_isPasswordVisible : false,
-                  decoration: InputDecoration(
-                    isCollapsed: true,
-                    contentPadding: EdgeInsets.zero,
-                    hintText: hint,
-                    hintStyle: greyReguler,
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-
-              if (isPassword)
-                InkWell(
-                  onTap: () {
-                    if (!mounted) return;
-
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 14),
-                    child: Icon(
-                      _isPasswordVisible
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: black,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(child: image()),
+                const SizedBox(height: 40),
+                input(),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreens(),
+                          ),
+                        );
+                      },
+                      child: Text('Sudah punya akun?', style: redReguler15),
                     ),
-                  ),
+                  ],
                 ),
-            ],
+                const SizedBox(height: 35),
+                button(),
+              ],
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 
-  // Widget foto profile
   Widget image() {
     return Column(
       children: [
@@ -250,24 +176,15 @@ class _SiginScreensState extends State<SiginScreens> {
             ),
           ),
         ),
-
         if (_pickedImage != null) ...[
           const SizedBox(height: 10),
-
           Slider(
             value: _yAlignment,
             min: -1.0,
             max: 1.0,
             activeColor: red,
-            onChanged: (val) {
-              if (!mounted) return;
-
-              setState(() {
-                _yAlignment = val;
-              });
-            },
+            onChanged: (val) => setState(() => _yAlignment = val),
           ),
-
           Text(
             "Geser posisi foto profil",
             style: TextStyle(fontSize: 12, color: grey),
@@ -277,42 +194,132 @@ class _SiginScreensState extends State<SiginScreens> {
     );
   }
 
-  // Widget semua input
   Widget input() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildInputField(
-          label: 'Nama',
-          hint: 'Masukan Nama',
-          icon: Icons.person,
-          controller: _namaController,
+        Text('Nama', style: blackReguler),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                child: Icon(Icons.person, color: grey),
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: TextField(
+                  controller: _namaController,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: 'Masukan Nama',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-
         const SizedBox(height: 20),
-
-        _buildInputField(
-          label: 'Email Address',
-          hint: 'Masukan Email',
-          icon: Icons.mark_email_unread_rounded,
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
+        Text('Email Address', style: blackReguler),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                child: Icon(Icons.mark_email_unread_rounded, color: grey),
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: TextField(
+                  controller: _emailController,
+                  enabled: !_isLoading,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: 'Masukan Email',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-
         const SizedBox(height: 20),
-
-        _buildInputField(
-          label: 'Password',
-          hint: 'Masukan Password',
-          icon: Icons.lock_outline_rounded,
-          controller: _passwordController,
-          isPassword: true,
+        Text('Password', style: blackReguler),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 5.0, left: 14.0),
+                child: Icon(Icons.lock_outline_rounded, color: grey),
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: TextField(
+                  controller: _passwordController,
+                  obscureText: !_isPasswordVisible,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    hintText: 'Masukan Password',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 5),
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 14.0),
+                  child: Icon(
+                    _isPasswordVisible
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: black,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  // Tombol daftar
   Widget button() {
     return GestureDetector(
       onTap: _isLoading ? null : _handleRegister,
@@ -327,52 +334,6 @@ class _SiginScreensState extends State<SiginScreens> {
           child: _isLoading
               ? const CircularProgressIndicator(color: Colors.white)
               : Text('Daftar', style: whiteBold),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(child: image()),
-
-                const SizedBox(height: 40),
-
-                input(),
-
-                const SizedBox(height: 20),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreens(),
-                          ),
-                        );
-                      },
-                      child: Text('Sudah punya akun?', style: redReguler15),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 35),
-
-                button(),
-              ],
-            ),
-          ),
         ),
       ),
     );
