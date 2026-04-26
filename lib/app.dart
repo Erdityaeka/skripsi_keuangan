@@ -5,7 +5,7 @@ import 'package:skripsi_keuangan/Screens/SplashScreen/splash_screen.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/navigation/bottom_navigation.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
-import '../main.dart'; 
+import '../main.dart';
 
 class AppScreen extends StatelessWidget {
   const AppScreen({super.key});
