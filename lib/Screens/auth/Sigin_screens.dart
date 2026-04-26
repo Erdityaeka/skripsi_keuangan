@@ -2,6 +2,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
@@ -22,7 +25,7 @@ class _SiginScreensState extends State<SiginScreens> {
 
   bool _isLoading = false;
   XFile? _pickedImage;
-  double _yAlignment = 0.0; // Koordinat geser foto
+  double _yAlignment = 0.0;
 
   @override
   void dispose() {
@@ -32,7 +35,6 @@ class _SiginScreensState extends State<SiginScreens> {
     super.dispose();
   }
 
-  // Notifikasi
   void _showSnack(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -42,10 +44,10 @@ class _SiginScreensState extends State<SiginScreens> {
     );
   }
 
-  // Fungsi untuk memilih gambar
   Future<void> _pickImage() async {
     if (_isPicking) return;
     _isPicking = true;
+
     try {
       final picker = ImagePicker();
       final image = await picker.pickImage(
@@ -56,7 +58,7 @@ class _SiginScreensState extends State<SiginScreens> {
       if (image != null && mounted) {
         setState(() {
           _pickedImage = image;
-          _yAlignment = 0.0; // Reset posisi ke tengah setiap pilih foto baru
+          _yAlignment = 0.0;
         });
       }
     } catch (e) {
@@ -66,7 +68,6 @@ class _SiginScreensState extends State<SiginScreens> {
     }
   }
 
-  // REGISTER
   void _handleRegister() async {
     if (_namaController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty ||
@@ -87,31 +88,58 @@ class _SiginScreensState extends State<SiginScreens> {
 
     setState(() => _isLoading = true);
 
-    // Menggabungkan nama file dan posisi (Contoh: "image.jpg|0.5")
     String? finalFotoString;
-    if (_pickedImage != null) {
-      finalFotoString = "${_pickedImage!.name}|$_yAlignment";
-    }
 
-    String? error = await AuthService().register(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-      nama: _namaController.text.trim(),
-      fotoFileName: finalFotoString,
-    );
+    try {
+      if (_pickedImage != null) {
+        final directory = await getApplicationDocumentsDirectory();
 
-    setState(() => _isLoading = false);
+        final fileName =
+            "${DateTime.now().millisecondsSinceEpoch}_${_pickedImage!.name}";
 
-    if (error == null) {
-      _showSnack("Akun berhasil dibuat!", success: true);
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreens()),
-        );
-      });
-    } else {
-      _showSnack("Gagal mendaftar: $error");
+        await File(_pickedImage!.path).copy('${directory.path}/$fileName');
+
+        finalFotoString = "$fileName|$_yAlignment";
+      }
+
+      String? error = await AuthService().register(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        nama: _namaController.text.trim(),
+        fotoFileName: finalFotoString,
+      );
+
+      if (error == null) {
+        final user = FirebaseAuth.instance.currentUser;
+
+        if (user != null) {
+          await FirebaseFirestore.instance
+              .collection('user')
+              .doc(user.uid)
+              .set({
+                'nama': _namaController.text.trim(),
+                if (finalFotoString != null) 'foto': finalFotoString,
+              });
+        }
+
+        setState(() => _isLoading = false);
+
+        _showSnack("Akun berhasil dibuat!", success: true);
+
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreens()),
+          );
+        });
+      } else {
+        setState(() => _isLoading = false);
+        _showSnack("Gagal mendaftar: $error");
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnack("Gagal mendaftar: Terjadi kesalahan sistem");
+      print("REGISTER SCREEN ERROR: $e");
     }
   }
 
