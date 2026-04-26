@@ -1,10 +1,9 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
 
@@ -16,16 +15,21 @@ class Updatescreen extends StatefulWidget {
 }
 
 class _UpdatescreenState extends State<Updatescreen> {
+  // Controller input
   final namaC = TextEditingController();
   final emailC = TextEditingController();
   final passwordC = TextEditingController();
+
+  // Status aplikasi
   bool pickingImage = false;
   bool _isPasswordVisible = false;
-
   bool loading = false;
 
-  User? user = FirebaseAuth.instance.currentUser;
+  // Posisi foto profile
+  double _posisifoto = 0.0;
 
+  // Data user
+  User? user = FirebaseAuth.instance.currentUser;
   File? fotoLama;
   XFile? fotoBaru;
 
@@ -33,16 +37,28 @@ class _UpdatescreenState extends State<Updatescreen> {
   void initState() {
     super.initState();
 
+    // Ambil nama dari Firebase Auth
     if (user?.displayName != null) {
       final data = user!.displayName!.split('|');
       namaC.text = data[0];
     }
 
+    // Ambil email
     emailC.text = user?.email ?? "";
+
+    // Load foto profile
     loadFoto();
   }
 
-  // LOAD FOTO
+  @override
+  void dispose() {
+    // Hindari memory leak
+    namaC.dispose();
+    emailC.dispose();
+    passwordC.dispose();
+    super.dispose();
+  }
+
   Future<void> loadFoto() async {
     try {
       if (user == null) return;
@@ -52,15 +68,19 @@ class _UpdatescreenState extends State<Updatescreen> {
           .doc(user!.uid)
           .get();
 
-      if (!mounted) return;
+      final dataFoto = doc.data()?['foto'];
 
-      final namaFile = doc.data()?['foto'];
+      if (dataFoto != null && dataFoto.contains('|')) {
+        final parts = dataFoto.split('|');
 
-      if (namaFile != null) {
+        // Simpan posisi slider
+        _posisifoto = double.tryParse(parts[1]) ?? 0.0;
+
         final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/$namaFile');
+        final file = File('${dir.path}/${parts[0]}');
 
-        if (await file.exists()) {
+        // Cek file ada
+        if (await file.exists() && mounted) {
           setState(() => fotoLama = file);
         }
       }
@@ -69,115 +89,46 @@ class _UpdatescreenState extends State<Updatescreen> {
     }
   }
 
-  // PILIH FOTO
   Future<void> pilihFoto() async {
-    // MENCEGAH 2X KLIK
+    // Hindari klik berulang
     if (pickingImage) return;
 
     pickingImage = true;
 
     try {
-      final img = await ImagePicker().pickImage(source: ImageSource.gallery);
+      final img = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 50,
+      );
 
       if (img != null && mounted) {
-        setState(() => fotoBaru = img);
+        setState(() {
+          fotoBaru = img;
+          _posisifoto = 0.0;
+        });
       }
     } catch (e) {
-      print("Error picker: $e");
+      notif("Gagal memilih foto");
     } finally {
       pickingImage = false;
     }
   }
 
-  // SIMPAN
-  Future<void> simpan() async {
-    if (namaC.text.trim().isEmpty) {
-      notif("Nama harus diisi");
-      return;
-    }
-
-    if (emailC.text.trim() != user?.email && passwordC.text.trim().isEmpty) {
-      notif("Masukkan password untuk mengganti email");
-      return;
-    }
-
-    setState(() => loading = true);
-
-    String? namaFile;
-
-    try {
-      // SIMPAN FOTO
-      if (fotoBaru != null) {
-        final dir = await getApplicationDocumentsDirectory();
-        final pathBaru = '${dir.path}/${fotoBaru!.name}';
-
-        final file = File(fotoBaru!.path);
-
-        if (await file.exists()) {
-          await file.copy(pathBaru);
-          namaFile = fotoBaru!.name;
-
-          await FirebaseFirestore.instance
-              .collection('user')
-              .doc(user!.uid)
-              .set({'foto': namaFile}, SetOptions(merge: true));
-        }
-      }
-
-      // UPDATE AUTH
-      final res = await AuthService().updateProfile(
-        newName: namaC.text.trim(),
-        newfotoFileName: namaFile,
-        newEmail: emailC.text.trim(),
-        currentPassword: passwordC.text.trim(),
-      );
-
-      setState(() => loading = false);
-
-      // JIKA EMAIL BERUBAH
-      if (emailC.text.trim() != user?.email) {
-        notif("Cek email baru untuk verifikasi");
-
-        await FirebaseAuth.instance.signOut();
-
-        if (!mounted) return;
-
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreens()),
-          (route) => false,
-        );
-        return;
-      }
-
-      // NORMAL
-      if (res == null) {
-        notif("Profile berhasil diperbarui", success: true);
-        // ignore: use_build_context_synchronously
-        Navigator.pop(context);
-      } else {
-        notif(res);
-      }
-    } catch (e) {
-      setState(() => loading = false);
-      notif("Terjadi kesalahan Update");
-    }
-  }
-
-  // HAPUS FOTO
   Future<void> hapusFoto() async {
     try {
-      await FirebaseFirestore.instance.collection('user').doc(user!.uid).set({
-        'foto': null,
-      }, SetOptions(merge: true));
+      if (user == null) return;
 
-      if (fotoLama != null && await fotoLama!.exists()) {
-        await fotoLama!.delete();
-      }
+      // Hapus dari Firestore
+      await FirebaseFirestore.instance.collection('user').doc(user!.uid).update(
+        {'foto': null},
+      );
+
+      if (!mounted) return;
 
       setState(() {
         fotoLama = null;
         fotoBaru = null;
+        _posisifoto = 0.0;
       });
 
       notif("Foto berhasil dihapus", success: true);
@@ -186,199 +137,281 @@ class _UpdatescreenState extends State<Updatescreen> {
     }
   }
 
-  // NOTIF
-  void notif(String msg, {bool success = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Center(child: Text(msg, style: whiteBold)),
-        backgroundColor: success ? greennotif : rednotif,
-      ),
-    );
+  Future<void> simpan() async {
+    // Validasi input
+    if (namaC.text.trim().isEmpty) return notif("Nama harus diisi");
+    if (emailC.text.trim().isEmpty) return notif("Email harus diisi");
+    if (user == null) return notif("User tidak ditemukan");
+
+    setState(() => loading = true);
+
+    String? finalFotoString;
+
+    try {
+      // Jika foto baru dipilih
+      if (fotoBaru != null) {
+        final dir = await getApplicationDocumentsDirectory();
+
+        await File(fotoBaru!.path).copy('${dir.path}/${fotoBaru!.name}');
+
+        finalFotoString = "${fotoBaru!.name}|$_posisifoto";
+      }
+      // Jika pakai foto lama
+      else if (fotoLama != null) {
+        finalFotoString = "${fotoLama!.path.split('/').last}|$_posisifoto";
+      }
+
+      // Simpan ke Firestore
+      await FirebaseFirestore.instance.collection('user').doc(user!.uid).set({
+        'foto': finalFotoString,
+        'nama': namaC.text.trim(),
+      }, SetOptions(merge: true));
+
+      // Update Auth
+      final res = await AuthService().updateProfile(
+        newName: namaC.text.trim(),
+        newfotoFileName: finalFotoString,
+        newEmail: emailC.text.trim(),
+        currentPassword: passwordC.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      if (res == null) {
+        notif("Berhasil Update", success: true);
+        Navigator.pop(context);
+      } else {
+        // Error dari AuthService
+        notif(res);
+      }
+    } catch (e) {
+      notif("Gagal Update");
+    } finally {
+      if (mounted) {
+        setState(() => loading = false);
+      }
+    }
   }
 
-  // WIDGET UI
+  void notif(String msg, {bool success = false}) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Center(
+            child: Text(msg, style: whiteBold, textAlign: TextAlign.center),
+          ),
+          backgroundColor: success ? greennotif : rednotif,
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: white,
         elevation: 0,
         leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
           icon: Icon(Icons.arrow_back, color: red),
         ),
         title: Text('Edit Profile', style: redBold20),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GestureDetector(
-              onTap: pilihFoto,
-              child: Center(
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: red,
-                  backgroundImage: fotoBaru != null
-                      ? FileImage(File(fotoBaru!.path))
-                      : (fotoLama != null ? FileImage(fotoLama!) : null),
-                  child: (fotoBaru == null && fotoLama == null)
-                      ? Icon(Icons.person, size: 50, color: white)
-                      : null,
-                ),
-              ),
-            ),
-
+            image(),
             const SizedBox(height: 20),
-            Text('Nama', style: blackReguler),
-            const SizedBox(height: 10),
-            Container(
-              width: double.infinity,
-              height: 55,
-              decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 5.0, left: 14.0),
-                    child: Icon(Icons.person, color: grey),
-                  ),
-                  SizedBox(width: 5),
-                  Expanded(
-                    child: TextField(
-                      controller: namaC,
-                      decoration: InputDecoration(
-                        isCollapsed: true,
-                        contentPadding: EdgeInsets.zero,
-                        hintText: 'Masukan Nama',
-                        hintStyle: greyReguler,
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            Text('Email Address', style: blackReguler),
-            const SizedBox(height: 10),
-            Container(
-              width: double.infinity,
-              height: 55,
-              decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 5.0, left: 14.0),
-                    child: Icon(Icons.mark_email_unread_rounded, color: grey),
-                  ),
-                  SizedBox(width: 5),
-                  Expanded(
-                    child: TextField(
-                      controller: emailC,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        isCollapsed: true,
-                        contentPadding: EdgeInsets.zero,
-                        hintText: 'Masukan Email',
-                        hintStyle: greyReguler,
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text('Password', style: blackReguler),
-            const SizedBox(height: 10),
-            Container(
-              width: double.infinity,
-              height: 55,
-              decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 5.0, left: 14.0),
-                    child: Icon(Icons.lock_outline_rounded, color: grey),
-                  ),
-                  SizedBox(width: 5),
-                  Expanded(
-                    child: TextField(
-                      controller: passwordC,
-                      obscureText: !_isPasswordVisible,
-                      decoration: InputDecoration(
-                        hintText: 'Masukan Password',
-                        hintStyle: greyReguler,
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 5),
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.only(right: 14.0),
-                      child: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        color: black,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
+            input(),
+            const SizedBox(height: 25),
+            buttonHapus(),
             const SizedBox(height: 15),
-
-            const SizedBox(height: 25),
-            ElevatedButton(
-              onPressed: hapusFoto,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: red,
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: Text("HAPUS FOTO PROFIL", style: whiteBold),
-            ),
-            const SizedBox(height: 25),
-            ElevatedButton(
-              onPressed: loading ? null : simpan,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: greennotif,
-              ),
-              child: loading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text("SIMPAN", style: whiteBold),
-            ),
-
-            const SizedBox(height: 10),
+            buttonSimpan(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget image() {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: pilihFoto,
+          child: CircleAvatar(
+            radius: 50,
+            backgroundColor: red,
+            child: ClipOval(
+              child: SizedBox.expand(
+                child: fotoBaru != null
+                    ? Image.file(
+                        File(fotoBaru!.path),
+                        fit: BoxFit.cover,
+                        alignment: Alignment(0, _posisifoto),
+                      )
+                    : (fotoLama != null
+                          ? Image.file(
+                              fotoLama!,
+                              fit: BoxFit.cover,
+                              alignment: Alignment(0, _posisifoto),
+                            )
+                          : Icon(Icons.person, size: 50, color: white)),
+              ),
+            ),
+          ),
+        ),
+
+        // Slider posisi foto
+        if (fotoBaru != null || fotoLama != null) ...[
+          Slider(
+            value: _posisifoto,
+            min: -1.0,
+            max: 1.0,
+            activeColor: red,
+            onChanged: (val) {
+              if (!mounted) return;
+              setState(() => _posisifoto = val);
+            },
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget input() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Input Nama
+        Text('Nama', style: blackReguler),
+        const SizedBox(height: 10),
+        Container(
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Icon(Icons.person, color: grey),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: namaC,
+                  decoration: const InputDecoration(
+                    hintText: 'Nama',
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 15),
+
+        // Input Email
+        Text('Email', style: blackReguler),
+        const SizedBox(height: 10),
+        Container(
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Icon(Icons.email, color: grey),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: emailC,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    hintText: 'Email',
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 15),
+
+        // Input Password
+        Text('Password', style: blackReguler),
+        const SizedBox(height: 10),
+        Container(
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Icon(Icons.lock, color: grey),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: passwordC,
+                  obscureText: !_isPasswordVisible,
+                  decoration: const InputDecoration(
+                    hintText: 'Password',
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  if (!mounted) return;
+                  setState(() => _isPasswordVisible = !_isPasswordVisible);
+                },
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget buttonHapus() {
+    return ElevatedButton(
+      onPressed: (fotoBaru != null || fotoLama != null) ? hapusFoto : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: red,
+        minimumSize: const Size(double.infinity, 50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: Text("HAPUS FOTO PROFIL", style: whiteBold),
+    );
+  }
+
+  Widget buttonSimpan() {
+    return ElevatedButton(
+      onPressed: loading ? null : simpan,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: greennotif,
+        minimumSize: const Size(double.infinity, 50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: loading
+          ? CircularProgressIndicator(color: white)
+          : Text("SIMPAN", style: whiteBold),
     );
   }
 }

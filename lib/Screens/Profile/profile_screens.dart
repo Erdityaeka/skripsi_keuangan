@@ -1,4 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,24 +22,57 @@ class ProfileScreens extends StatefulWidget {
 }
 
 class _ProfileScreensState extends State<ProfileScreens> {
+  // User aktif
   User? user = FirebaseAuth.instance.currentUser;
 
+  // Foto profile
   String? fotoImageName;
   File? fotoImageFile;
 
-  // huruf depan jadi besar
+  // Posisi foto
+  double _yPosisi = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Load data awal
+    _refreshData();
+  }
+
+  // Huruf awal kapital
   String capitalize(String text) {
     if (text.isEmpty) return text;
+
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  // AMBIL DATA
-  // ================== PERBAIKI _refreshData ==================
+  // Notifikasi aman
+  void _showSnack(String msg, {bool success = false}) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: success ? greennotif : rednotif,
+          content: Center(
+            child: Text(msg, style: whiteBold, textAlign: TextAlign.center),
+          ),
+        ),
+      );
+  }
+
+  // Refresh data user
   Future<void> _refreshData() async {
     try {
       user = FirebaseAuth.instance.currentUser;
 
-      // JANGAN paksa logout saat startup
       if (user == null) return;
 
       final doc = await FirebaseFirestore.instance
@@ -51,157 +83,336 @@ class _ProfileScreensState extends State<ProfileScreens> {
       if (!mounted) return;
 
       if (doc.exists) {
-        fotoImageName = doc.data()?['foto'];
+        final dataFoto = doc.data()?['foto'];
 
-        if (fotoImageName != null) {
+        // Format baru foto|posisi
+        if (dataFoto != null && dataFoto.contains('|')) {
+          final parts = dataFoto.split('|');
+
+          fotoImageName = parts[0];
+
+          _yPosisi = double.tryParse(parts[1]) ?? 0.0;
+
           final dir = await getApplicationDocumentsDirectory();
+
           final file = File('${dir.path}/$fotoImageName');
 
-          if (await file.exists()) {
-            fotoImageFile = file;
-          } else {
-            fotoImageFile = null;
-          }
+          fotoImageFile = await file.exists() ? file : null;
         } else {
+          // Format lama
+          fotoImageName = dataFoto;
+          _yPosisi = 0.0;
           fotoImageFile = null;
         }
       }
 
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     } catch (e) {
-      // jangan logout paksa
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: rednotif,
-          content: Center(child: Text("Gagal memuat data", style: whiteBold)),
-        ),
-      );
+      _showSnack("Gagal memuat data");
     }
   }
 
-  // HAPUS AKUN
+  // Hapus akun
   Future<void> _deleteAccount() async {
     final passwordController = TextEditingController();
 
-    // popup konfirmasi
-    bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: red,
-        title: Text("Konfirmasi Hapus Akun?", style: whiteBold),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Masukkan password untuk konfirmasi hapus akun:",
-              style: whiteReguler,
-            ),
-            const SizedBox(height: 15),
-            Container(
-              width: double.infinity,
-              height: 55,
-              decoration: BoxDecoration(
-                border: Border.all(color: white, width: 2),
-                borderRadius: BorderRadius.circular(15),
+    try {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: red,
+          title: Text("Konfirmasi Hapus Akun?", style: whiteBold),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Masukkan password untuk konfirmasi hapus akun:",
+                style: whiteReguler,
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(14.0),
-                child: TextField(
-                  controller: passwordController,
-                  style: whiteReguler,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: 'Masukan Password',
-                    hintStyle: greyReguler,
-                    border: InputBorder.none,
+              const SizedBox(height: 15),
+              Container(
+                width: double.infinity,
+                height: 55,
+                decoration: BoxDecoration(
+                  border: Border.all(color: white, width: 2),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: TextField(
+                    controller: passwordController,
+                    style: whiteReguler,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: 'Masukan Password',
+                      hintStyle: greyReguler,
+                      border: InputBorder.none,
+                    ),
                   ),
                 ),
               ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text("BATAL", style: whiteReguler),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text("IYA", style: greenBold12),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text("BATAL", style: whiteReguler),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text("IYA", style: greenBold12),
-          ),
-        ],
-      ),
-    );
+      );
 
-    if (confirm == true) {
-      // kalau password kosong
+      if (confirm != true) return;
+
       if (passwordController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: rednotif,
-            content: Center(
-              child: Text("Password wajib diisi", style: whiteBold),
-            ),
-          ),
-        );
+        _showSnack("Password wajib diisi");
         return;
       }
 
-      try {
-        User? currentUser = FirebaseAuth.instance.currentUser;
+      final currentUser = FirebaseAuth.instance.currentUser;
 
-        if (currentUser != null && currentUser.email != null) {
-          // login ulang (biar bisa hapus akun)
-          AuthCredential credential = EmailAuthProvider.credential(
-            email: currentUser.email!,
-            password: passwordController.text.trim(),
-          );
+      if (currentUser == null || currentUser.email == null) {
+        _showSnack("User tidak ditemukan");
+        return;
+      }
 
-          await currentUser.reauthenticateWithCredential(credential);
+      final credential = EmailAuthProvider.credential(
+        email: currentUser.email!,
+        password: passwordController.text.trim(),
+      );
 
-          // hapus data di Firestore
-          await FirebaseFirestore.instance
-              .collection('user')
-              .doc(currentUser.uid)
-              .delete();
+      // Re-auth
+      await currentUser.reauthenticateWithCredential(credential);
 
-          // hapus akun di Firebase Auth
-          await currentUser.delete();
+      // Hapus Firestore
+      await FirebaseFirestore.instance
+          .collection('user')
+          .doc(currentUser.uid)
+          .delete();
+
+      // Hapus Auth
+      await currentUser.delete();
+
+      if (!mounted) return;
+
+      _showSnack("Akun berhasil dihapus", success: true);
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreens()),
+        (route) => false,
+      );
+    } catch (e) {
+      _showSnack("Gagal hapus akun");
+    } finally {
+      passwordController.dispose();
+    }
+  }
+
+  // Build tombol menu reusable
+  Widget _buildButton(IconData icon, String text) {
+    return Container(
+      width: double.infinity,
+      height: 50,
+      decoration: BoxDecoration(
+        color: white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: black),
+          const SizedBox(width: 20),
+          Text(text, style: blackReguler),
+          const Spacer(),
+          Icon(Icons.arrow_right_rounded, size: 20, color: black),
+        ],
+      ),
+    );
+  }
+
+  // Profile section
+  Widget profileimage(BuildContext context, String nama) {
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const Updatescreen()),
+        );
+
+        await _refreshData();
+      },
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: red,
+            child: ClipOval(
+              child: SizedBox.expand(
+                child: fotoImageFile != null
+                    ? Image.file(
+                        fotoImageFile!,
+                        fit: BoxFit.cover,
+                        alignment: Alignment(0, _yPosisi),
+                      )
+                    : Icon(Icons.person, size: 50, color: white),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 20),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(capitalize(nama), style: blackBold),
+              Text(user?.email ?? 'email', style: blackReguler12),
+            ],
+          ),
+
+          const Spacer(),
+
+          Icon(Icons.edit_outlined, size: 20, color: black),
+        ],
+      ),
+    );
+  }
+
+  // Menu body
+  Widget buttonBody() {
+    return Column(
+      children: [
+        InkWell(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const BankScreens()),
+          ),
+          child: _buildButton(Icons.account_balance, 'Tambah Bank'),
+        ),
+
+        const SizedBox(height: 30),
+
+        InkWell(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const KategoriScreens()),
+          ),
+          child: _buildButton(Icons.table_chart, 'Tambah Kategori'),
+        ),
+
+        const SizedBox(height: 30),
+
+        InkWell(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const UnduhLaporanScreens(),
+            ),
+          ),
+          child: _buildButton(Icons.download, 'Unduh Laporan'),
+        ),
+
+        const SizedBox(height: 30),
+
+        InkWell(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ScanStrukScreen()),
+          ),
+          child: _buildButton(Icons.qr_code_scanner, 'Scan'),
+        ),
+
+        const SizedBox(height: 30),
+
+        InkWell(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TentangScreens()),
+          ),
+          child: _buildButton(Icons.perm_device_info, 'Tentang Aplikasi'),
+        ),
+
+        const SizedBox(height: 30),
+
+        InkWell(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const KomentarScreens()),
+          ),
+          child: _buildButton(Icons.help_outline, 'Komentar'),
+        ),
+
+        const SizedBox(height: 30),
+
+        InkWell(
+          onTap: _deleteAccount,
+          child: _buildButton(Icons.delete, 'Hapus Akun'),
+        ),
+      ],
+    );
+  }
+
+  // Logout button
+  Widget butonLogout() {
+    return GestureDetector(
+      onTap: () async {
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: red,
+            title: Text("Logout", style: whiteBold),
+            content: Text("Apakah yakin ingin logout?", style: whiteReguler),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("BATAL", style: whiteBold),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("IYA", style: greenBold15),
+              ),
+            ],
+          ),
+        );
+
+        if (confirm != true) return;
+
+        try {
+          await AuthService().signOut();
 
           if (!mounted) return;
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: greennotif,
-              content: Center(
-                child: Text("Akun berhasil dihapus", style: whiteBold),
-              ),
-            ),
-          );
+          _showSnack("Berhasil logout", success: true);
 
-          // kembali ke login
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const LoginScreens()),
             (route) => false,
           );
+        } catch (e) {
+          _showSnack("Gagal logout");
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: rednotif,
-            content: Center(child: Text("Gagal hapus akun", style: whiteBold)),
-          ),
-        );
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _refreshData();
+      },
+      child: Container(
+        width: double.infinity,
+        height: 50,
+        decoration: BoxDecoration(
+          color: red,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout, size: 20, color: white),
+            const SizedBox(width: 10),
+            Text('Logout', style: whiteBold),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -228,203 +439,18 @@ class _ProfileScreensState extends State<ProfileScreens> {
               child: Column(
                 children: [
                   profileimage(context, nama),
+
                   const SizedBox(height: 30),
+
                   buttonBody(),
+
                   const SizedBox(height: 80),
+
                   butonLogout(),
                 ],
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  // PROFILE
-  Widget profileimage(BuildContext context, String nama) {
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => Updatescreen()),
-        );
-
-        //REFRESH LANGSUNG DATA
-        await _refreshData();
-      },
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: red,
-            backgroundImage: fotoImageFile != null
-                ? FileImage(fotoImageFile!)
-                : null,
-            child: fotoImageFile == null
-                ? Icon(Icons.person, size: 50, color: white)
-                : null,
-          ),
-          const SizedBox(width: 20),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(capitalize(nama), style: blackBold),
-              Text(user?.email ?? 'email', style: blackReguler12),
-            ],
-          ),
-          const Spacer(),
-          Icon(Icons.edit_outlined, size: 20, color: black),
-        ],
-      ),
-    );
-  }
-
-  // Widget Button Body
-  Widget buttonBody() {
-    return Column(
-      children: [
-        InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => BankScreens()),
-            );
-          },
-          child: _buildButton(Icons.account_balance, 'Tambah Bank'),
-        ),
-        const SizedBox(height: 30),
-        InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => KategoriScreens()),
-            );
-          },
-          child: _buildButton(Icons.table_chart, 'Tambah Kategori'),
-        ),
-        const SizedBox(height: 30),
-        InkResponse(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => UnduhLaporanScreens()),
-            );
-          },
-          child: _buildButton(Icons.download, 'Unduh Laporan'),
-        ),
-        const SizedBox(height: 30),
-        InkResponse(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ScanStrukScreen()),
-            );
-          },
-          child: _buildButton(Icons.download, 'Scan'),
-        ),
-        const SizedBox(height: 30),
-        InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => TentangScreens()),
-            );
-          },
-          child: _buildButton(Icons.perm_device_info, 'Tentang Aplikasi'),
-        ),
-        const SizedBox(height: 30),
-        InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => KomentarScreens()),
-            );
-          },
-          child: _buildButton(Icons.help_outline, 'Komentar'),
-        ),
-        const SizedBox(height: 30),
-        InkWell(
-          onTap: _deleteAccount,
-          child: _buildButton(Icons.delete, 'Hapus Akun'),
-        ),
-      ],
-    );
-  }
-
-  // Widget Build Button
-  Widget _buildButton(IconData icon, String text) {
-    return Container(
-      width: double.infinity,
-      height: 50,
-      decoration: BoxDecoration(
-        color: white,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: black),
-          const SizedBox(width: 20),
-          Text(text, style: blackReguler),
-          const Spacer(),
-          Icon(Icons.arrow_right_rounded, size: 20, color: black),
-        ],
-      ),
-    );
-  }
-
-  // Logout
-  Widget butonLogout() {
-    return GestureDetector(
-      onTap: () async {
-        bool? confirm = await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: red,
-            title: Text("Logout", style: whiteBold),
-            content: Text("Apakah yakin ingin logout?", style: whiteReguler),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text("BATAL", style: whiteBold),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text("IYA", style: greenBold15),
-              ),
-            ],
-          ),
-        );
-
-        if (confirm == true) {
-          await AuthService().signOut();
-
-          if (!mounted) return;
-
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text("Berhasil logout")));
-
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const LoginScreens()),
-            (route) => false,
-          );
-        }
-      },
-      child: Container(
-        width: double.infinity,
-        height: 50,
-        decoration: BoxDecoration(
-          color: red,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.logout, size: 20, color: white),
-            const SizedBox(width: 10),
-            Text('Logout', style: whiteBold),
-          ],
         ),
       ),
     );
