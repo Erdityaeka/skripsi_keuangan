@@ -14,10 +14,17 @@ class GrafikScreens extends StatefulWidget {
 }
 
 class _GrafikScreensState extends State<GrafikScreens> {
-  // Menyimpan bulan saat dipilih
+  // Bulan aktif
   DateTime _focusedMonth = DateTime.now();
+
+  // Mode tampilan
   String _viewMode = "Bulanan";
+
+  // Minggu aktif
   int _selectedWeek = 1;
+
+  // Hari aktif
+  DateTime _selectedDay = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +44,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
             return const Center(child: CircularProgressIndicator());
           }
 
+          // Semua data transaksi user
           final all = snapshot.data!.docs.map((doc) {
             return TransaksiModel.fromMap(
               doc.id,
@@ -44,7 +52,9 @@ class _GrafikScreensState extends State<GrafikScreens> {
             );
           }).toList();
 
-          // Filter Bulan
+          // =============================
+          // FILTER BULANAN
+          // =============================
           List<TransaksiModel> month = all.where((tx) {
             return tx.tanggal.month == _focusedMonth.month &&
                 tx.tanggal.year == _focusedMonth.year;
@@ -52,6 +62,20 @@ class _GrafikScreensState extends State<GrafikScreens> {
 
           List<TransaksiModel> finalFiltered = month;
 
+          // =============================
+          // FILTER HARIAN
+          // =============================
+          if (_viewMode == "Harian") {
+            finalFiltered = month.where((tx) {
+              return tx.tanggal.day == _selectedDay.day &&
+                  tx.tanggal.month == _selectedDay.month &&
+                  tx.tanggal.year == _selectedDay.year;
+            }).toList();
+          }
+
+          // =============================
+          // FILTER MINGGUAN
+          // =============================
           if (_viewMode == "Mingguan") {
             finalFiltered = month.where((tx) {
               int d = tx.tanggal.day;
@@ -63,7 +87,10 @@ class _GrafikScreensState extends State<GrafikScreens> {
             }).toList();
           }
 
+          // Urutkan terbaru
           finalFiltered.sort((a, b) => b.tanggal.compareTo(a.tanggal));
+
+          // Ambil 3 transaksi terbaru
           final displayData = finalFiltered.take(3).toList();
 
           double pemasukan = 0;
@@ -77,184 +104,40 @@ class _GrafikScreensState extends State<GrafikScreens> {
             }
           }
 
-          double total = pemasukan + pengeluaran;
+          final total = pemasukan + pengeluaran;
 
           final currencyFormatter = NumberFormat.currency(
             locale: 'id',
-            symbol: 'Rp',
+            symbol: 'Rp.',
             decimalDigits: 0,
           );
 
           return SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.only(right: 20, left: 20, top: 30),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildFilterBulanan(),
                   const SizedBox(height: 15),
+                  if (_viewMode == "Harian") _buildFilterHarian(),
                   if (_viewMode == "Mingguan") _buildFilterMingguan(),
-                  const SizedBox(height: 25),
 
-                  if (total == 0)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 100),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.leaderboard,
-                            size: 80,
-                            color: Colors.grey[300],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "Tidak ada data pada periode ini",
-                            style: greyReguler,
-                          ),
-                        ],
-                      ),
-                    )
-                  else ...[
-                    Container(
-                      height: 280,
-                      decoration: BoxDecoration(
-                        color: red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // UI GRAFIK
-                          PieChart(
-                            PieChartData(
-                              sectionsSpace: 8,
-                              centerSpaceRadius: 75,
-                              sections: [
-                                PieChartSectionData(
-                                  value: pemasukan,
-                                  color: green,
-                                  title: "",
-                                  radius: 20,
-                                  badgeWidget: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(10),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: green.withOpacity(0.1),
-                                          blurRadius: 4,
-                                        ),
-                                      ],
-                                      border: Border.all(
-                                        color: green.withOpacity(0.2),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      "Masuk",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: green,
-                                      ),
-                                    ),
-                                  ),
-                                  badgePositionPercentageOffset: 1.5,
-                                ),
-                                PieChartSectionData(
-                                  value: pengeluaran,
-                                  color: yellow,
-                                  title: "",
-                                  radius: 20,
-                                  badgeWidget: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(10),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: yellow.withOpacity(0.1),
-                                          blurRadius: 4,
-                                        ),
-                                      ],
-                                      border: Border.all(
-                                        color: yellow.withOpacity(0.2),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      "Keluar",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: yellow,
-                                      ),
-                                    ),
-                                  ),
-                                  badgePositionPercentageOffset: 1.5,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text("SELISIH", style: whiteBold),
-                              const SizedBox(height: 4),
-                              Text(
-                                currencyFormatter.format(
-                                  pemasukan - pengeluaran,
-                                ),
-                                style: whiteBold,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                  Center(
+                    child: _buildGrafikContent(
+                      total,
+                      pemasukan,
+                      pengeluaran,
+                      displayData,
+                      currencyFormatter,
                     ),
+                  ),
+                  SizedBox(height: 20),
+                  _datasaldo(pemasukan, pengeluaran),
 
-                    const SizedBox(height: 40),
-
-                    Row(
-                      children: [
-                        _dataTotalTransaksi(
-                          "Pemasukan",
-                          pemasukan,
-                          green,
-                          Icons.call_made,
-                        ),
-                        const SizedBox(width: 16),
-                        _dataTotalTransaksi(
-                          "Pengeluaran",
-                          pengeluaran,
-                          yellow,
-                          Icons.call_received,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Daftar Transaksi",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3436),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-
-                    _dataTransaksiList(displayData, currencyFormatter),
-                    const SizedBox(height: 30),
-                  ],
+                  const SizedBox(height: 15),
+                  _dataTransaksiList(displayData, currencyFormatter),
                 ],
               ),
             ),
@@ -313,7 +196,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
                 iconEnabledColor: grey,
                 style: greyReguler,
 
-                items: ["Mingguan", "Bulanan"]
+                items: ["Harian", "Mingguan", "Bulanan"]
                     .map(
                       (s) => DropdownMenuItem(
                         value: s,
@@ -321,7 +204,18 @@ class _GrafikScreensState extends State<GrafikScreens> {
                       ),
                     )
                     .toList(),
-                onChanged: (val) => setState(() => _viewMode = val!),
+                onChanged: (val) {
+                  setState(() {
+                    _viewMode = val!;
+
+                    // Saat masuk harian,
+                    // langsung pilih hari ini
+                    if (_viewMode == "Harian") {
+                      _selectedDay = DateTime.now();
+                      _focusedMonth = DateTime.now();
+                    }
+                  });
+                },
               ),
             ],
           ),
@@ -335,6 +229,72 @@ class _GrafikScreensState extends State<GrafikScreens> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // UI Widget Harian
+  Widget _buildFilterHarian() {
+    final int daysInMonth = DateTime(
+      _focusedMonth.year,
+      _focusedMonth.month + 1,
+      0,
+    ).day;
+
+    final ScrollController controller = ScrollController(
+      initialScrollOffset: ((_selectedDay.day - 1) * 78).toDouble(),
+    );
+
+    return SizedBox(
+      height: 75,
+      child: ListView(
+        controller: controller,
+        scrollDirection: Axis.horizontal,
+        children: List.generate(daysInMonth, (index) {
+          final int day = index + 1;
+
+          final DateTime currentDate = DateTime(
+            _focusedMonth.year,
+            _focusedMonth.month,
+            day,
+          );
+
+          final bool isSelected =
+              _selectedDay.day == currentDate.day &&
+              _selectedDay.month == currentDate.month &&
+              _selectedDay.year == currentDate.year;
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedDay = currentDate;
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 8, top: 4, bottom: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? red : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: red, width: 2),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    day.toString(),
+                    style: isSelected ? whiteBold : blackBold15,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat('MMM').format(currentDate),
+                    style: isSelected ? whiteReguler : blackReguler12,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -371,7 +331,170 @@ class _GrafikScreensState extends State<GrafikScreens> {
     );
   }
 
-  // Data Total Transaksi
+  // KONTEN GRAFIK UTAMA
+  Widget _buildGrafikContent(
+    double total,
+    double pemasukan,
+    double pengeluaran,
+    List<TransaksiModel> displayData,
+    NumberFormat currencyFormatter,
+  ) {
+    if (total == 0) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 280,
+              width: 280,
+              decoration: BoxDecoration(color: red, shape: BoxShape.circle),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("SELISIH", style: whiteBold),
+
+                    const SizedBox(height: 8),
+
+                    Text(
+                      currencyFormatter.format(pemasukan - pengeluaran),
+                      style: whiteBold,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(top: 20),
+      child: Column(
+        children: [
+          Container(
+            height: 280,
+            decoration: BoxDecoration(color: red, shape: BoxShape.circle),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // UI GRAFIK
+                PieChart(
+                  PieChartData(
+                    sectionsSpace: 8,
+                    centerSpaceRadius: 75,
+                    sections: [
+                      PieChartSectionData(
+                        value: pemasukan,
+                        color: green,
+                        title: "",
+                        radius: 20,
+                        badgeWidget: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: green.withOpacity(0.1),
+                                blurRadius: 4,
+                              ),
+                            ],
+                            border: Border.all(color: green.withOpacity(0.2)),
+                          ),
+                          child: Text(
+                            "Masuk",
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: green,
+                            ),
+                          ),
+                        ),
+                        badgePositionPercentageOffset: 1.5,
+                      ),
+                      PieChartSectionData(
+                        value: pengeluaran,
+                        color: yellow,
+                        title: "",
+                        radius: 20,
+                        badgeWidget: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: yellow.withOpacity(0.1),
+                                blurRadius: 4,
+                              ),
+                            ],
+                            border: Border.all(color: yellow.withOpacity(0.2)),
+                          ),
+                          child: Text(
+                            "Keluar",
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: yellow,
+                            ),
+                          ),
+                        ),
+                        badgePositionPercentageOffset: 1.5,
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("SELISIH", style: whiteBold),
+                    const SizedBox(height: 4),
+                    Text(
+                      currencyFormatter.format(pemasukan - pengeluaran),
+                      style: whiteBold,
+                    ),
+                    SizedBox(height: 4),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  // Card Saldo
+  Widget _datasaldo(double pemasukan, double pengeluaran) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _dataTotalTransaksi("Pemasukan", pemasukan, green, Icons.call_made),
+        const SizedBox(width: 16),
+        _dataTotalTransaksi(
+          "Pengeluaran",
+          pengeluaran,
+          yellow,
+          Icons.call_received,
+        ),
+      ],
+    );
+  }
+
+  // CARD TOTAL TRANSAKSI
   Widget _dataTotalTransaksi(
     String label,
     double amount,
@@ -385,13 +508,6 @@ class _GrafikScreensState extends State<GrafikScreens> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: red, width: 3),
-          boxShadow: [
-            BoxShadow(
-              color: black.withOpacity(0.5),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +518,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
             ),
             const SizedBox(height: 12),
             Text(label, style: blackReguler),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
             Text(
               NumberFormat.currency(
                 locale: 'id',
@@ -417,10 +533,21 @@ class _GrafikScreensState extends State<GrafikScreens> {
     );
   }
 
-  // Data Transaksi
+  // LIST TRANSAKSI
   Widget _dataTransaksiList(List<TransaksiModel> list, NumberFormat fmt) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          "Daftar Transaksi",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2D3436),
+          ),
+        ),
+        SizedBox(height: 15),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
