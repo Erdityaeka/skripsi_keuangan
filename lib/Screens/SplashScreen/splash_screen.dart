@@ -13,19 +13,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   @override
-  void initState() {
-    super.initState();
-    Timer(const Duration(seconds: 2), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreens()),
-        );
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
@@ -35,8 +22,6 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Image.asset('images/Icon.png', width: 360, height: 360),
             ),
           ),
-
-          // 🔥 TEXT DI BAWAH
           Padding(
             padding: const EdgeInsets.only(bottom: 20),
             child: Text('V.1.0.0', style: greyReguler),

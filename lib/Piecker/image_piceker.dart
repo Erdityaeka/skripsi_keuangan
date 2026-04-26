@@ -12,35 +12,63 @@ class PickedImage {
 class ImagePickerService {
   final ImagePicker _picker = ImagePicker();
 
-  Future<PickedImage?> pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
+  bool _isPicking = false;
 
-    if (pickedFile != null) {
+  // ================== PICK GALLERY ==================
+  Future<PickedImage?> pickImage() async {
+    if (_isPicking) return null;
+
+    _isPicking = true;
+
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return null;
+
       if (kIsWeb) {
         final bytes = await pickedFile.readAsBytes();
+
         return PickedImage(bytes: bytes);
       } else {
         return PickedImage(file: io.File(pickedFile.path));
       }
+    } catch (e) {
+      debugPrint('Gallery picker error: $e');
+      return null;
+    } finally {
+      _isPicking = false;
     }
-    return null;
   }
 
+  // ================== PICK CAMERA ==================
   Future<PickedImage?> pickImageFromCamera() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.camera,
-    );
+    if (_isPicking) return null;
 
-    if (pickedFile != null) {
+    _isPicking = true;
+
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return null;
+
       if (kIsWeb) {
         final bytes = await pickedFile.readAsBytes();
+
         return PickedImage(bytes: bytes);
       } else {
         return PickedImage(file: io.File(pickedFile.path));
       }
+    } catch (e) {
+      debugPrint('Camera picker error: $e');
+      return null;
+    } finally {
+      _isPicking = false;
     }
-    return null;
   }
 }

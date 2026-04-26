@@ -6,35 +6,29 @@ import 'package:skripsi_keuangan/models/transaction_model.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // final String uid = FirebaseAuth.instance.currentUser!.uid;
-  // SALAH / BERBAHAYA
-  // Jika user belum login atau FirebaseAuth belum siap,
-  // currentUser akan null dan aplikasi akan crash.
-  // Lebih aman pakai getter seperti:
-  String get uid => FirebaseAuth.instance.currentUser!.uid;
+  // UID AMAN
+  String? get uid => FirebaseAuth.instance.currentUser?.uid;
 
-  //KELOLA TRANSAKSI
+  // ================= TRANSAKSI =================
 
   Future<void> addTransaction(TransaksiModel tx) async {
+    if (uid == null) return;
+
     await _db
         .collection('user')
         .doc(uid)
         .collection('transaksi')
         .add(tx.toMap());
-    // PERIKSA
-    // Pastikan di TransaksiModel ada field 'date'
-    // karena di bawah kita pakai orderBy('date')
   }
 
   Stream<List<TransaksiModel>> gettransaksi() {
+    if (uid == null) return const Stream.empty();
+
     return _db
         .collection('user')
         .doc(uid)
         .collection('transaksi')
         .orderBy('tanggal', descending: true)
-        // POTENSI ERROR
-        // Jika field 'date' tidak ada di Firestore dokumen,
-        // query ini akan error.
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
@@ -51,6 +45,8 @@ class FirestoreService {
     String newBank,
     String newTipe,
   ) async {
+    if (uid == null) return;
+
     await _db
         .collection('user')
         .doc(uid)
@@ -66,6 +62,8 @@ class FirestoreService {
   }
 
   Future<void> deleteTransaction(String id) async {
+    if (uid == null) return;
+
     await _db
         .collection('user')
         .doc(uid)
@@ -74,9 +72,11 @@ class FirestoreService {
         .delete();
   }
 
-  // KELOLA KATEGORI
+  // ================= KATEGORI =================
 
   Future<void> addCategory(String kategoriName) async {
+    if (uid == null) return;
+
     await _db.collection('user').doc(uid).collection('kategori').add({
       'nama': kategoriName,
       'createdAt': FieldValue.serverTimestamp(),
@@ -84,22 +84,22 @@ class FirestoreService {
   }
 
   Stream<List<String>> getCategories() {
+    if (uid == null) return const Stream.empty();
+
     return _db
         .collection('user')
         .doc(uid)
         .collection('kategori')
         .snapshots()
         .map(
-          (snapshot) =>
-              snapshot.docs.map((doc) => doc.data()['nama'] as String).toList(),
-          // POTENSI ERROR
-          // Jika dokumen tidak punya field 'nama'
-          // maka cast ke String akan crash
+          (snapshot) => snapshot.docs
+              .map((doc) => (doc.data()['nama'] ?? '').toString())
+              .where((nama) => nama.isNotEmpty)
+              .toList(),
         );
   }
 
   Future<void> deleteCategory(String kategoriName) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
     final snapshot = await _db
@@ -108,15 +108,17 @@ class FirestoreService {
         .collection('kategori')
         .where('nama', isEqualTo: kategoriName)
         .get();
-    // Gunakan doc(kategoriName)
 
     for (var doc in snapshot.docs) {
       await doc.reference.delete();
     }
   }
 
-  //  KELOLA BANK
+  // ================= BANK =================
+
   Future<void> addBank(String bankName) async {
+    if (uid == null) return;
+
     await _db.collection('user').doc(uid).collection('bank').add({
       'nama': bankName,
       'createdAt': FieldValue.serverTimestamp(),
@@ -124,19 +126,22 @@ class FirestoreService {
   }
 
   Stream<List<String>> getBank() {
+    if (uid == null) return const Stream.empty();
+
     return _db
         .collection('user')
         .doc(uid)
         .collection('bank')
         .snapshots()
         .map(
-          (snapshot) =>
-              snapshot.docs.map((doc) => doc.data()['nama'] as String).toList(),
+          (snapshot) => snapshot.docs
+              .map((doc) => (doc.data()['nama'] ?? '').toString())
+              .where((nama) => nama.isNotEmpty)
+              .toList(),
         );
   }
 
   Future<void> deleteBank(String bankName) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
     final snapshot = await _db
@@ -151,34 +156,25 @@ class FirestoreService {
     }
   }
 
-  // KOMENTAR
+  // ================= KOMENTAR =================
+
   Future<void> addComment(String deskripsi) async {
     final user = FirebaseAuth.instance.currentUser;
 
-    if (user == null) {
-      throw Exception("User belum login");
-    }
+    if (user == null) return;
 
     String nama = user.displayName?.split('|')[0] ?? "User";
 
-    try {
-      await _db.collection('komentar').add({
-        'userId': user.uid,
-        'nama': nama,
-        'deskripsi': deskripsi,
-        'tanggal': FieldValue.serverTimestamp(),
-      });
+    await _db.collection('komentar').add({
+      'userId': user.uid,
+      'nama': nama,
+      'deskripsi': deskripsi,
+      'tanggal': FieldValue.serverTimestamp(),
+    });
 
-      await limitKomentar();
-
-      print("Komentar berhasil dikirim");
-    } catch (e) {
-      print("ERROR FIRESTORE: $e");
-      rethrow;
-    }
+    await limitKomentar();
   }
 
-  // GET KOMENTAR
   Stream<List<KomentarModel>> getKomentar() {
     return _db
         .collection('komentar')
@@ -193,7 +189,6 @@ class FirestoreService {
         });
   }
 
-  // LIMIT 20 DATA
   Future<void> limitKomentar() async {
     final snapshot = await _db
         .collection('komentar')
@@ -201,17 +196,14 @@ class FirestoreService {
         .limit(30)
         .get();
 
-    // filter yang punya tanggal saja
     final docs = snapshot.docs
         .where((doc) => doc.data()['tanggal'] != null)
         .toList();
 
     if (docs.length <= 10) return;
 
-    // ambil data lama (setelah 20 terbaru)
     final oldDocs = docs.skip(10);
 
-    // batch delete biar cepat & aman
     final batch = _db.batch();
 
     for (var doc in oldDocs) {

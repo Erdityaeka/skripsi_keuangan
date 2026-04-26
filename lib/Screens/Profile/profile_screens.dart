@@ -10,6 +10,7 @@ import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart'
 import 'package:skripsi_keuangan/Screens/Profile/Komentar/komentar_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Laporan/unduh_laporan_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Tentang/tentang_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/scan/scan_struk_screeen.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
@@ -33,29 +34,14 @@ class _ProfileScreensState extends State<ProfileScreens> {
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  //logout paksa kalau user hilang
-  void _forceLogout() {
-    FirebaseAuth.instance.signOut();
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const LoginScreens()),
-      (route) => false,
-    );
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Sesi habis, login ulang")));
-  }
-
   // AMBIL DATA
+  // ================== PERBAIKI _refreshData ==================
   Future<void> _refreshData() async {
     try {
-      await user?.reload();
       user = FirebaseAuth.instance.currentUser;
 
-      if (user == null) {
-        throw FirebaseAuthException(code: 'user-token-expired');
-      }
+      // JANGAN paksa logout saat startup
+      if (user == null) return;
 
       final doc = await FirebaseFirestore.instance
           .collection('user')
@@ -72,22 +58,20 @@ class _ProfileScreensState extends State<ProfileScreens> {
           final file = File('${dir.path}/$fotoImageName');
 
           if (await file.exists()) {
-            setState(() => fotoImageFile = file);
+            fotoImageFile = file;
           } else {
-            setState(() => fotoImageFile = null);
+            fotoImageFile = null;
           }
         } else {
-          setState(() => fotoImageFile = null);
+          fotoImageFile = null;
         }
       }
 
-      // PAKSA REFRESH UI
       setState(() {});
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-token-expired') {
-        _forceLogout();
-      }
     } catch (e) {
+      // jangan logout paksa
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: rednotif,
@@ -217,16 +201,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
   @override
   void initState() {
     super.initState();
-
-    if (user == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreens()),
-        );
-      });
-    } else {
-      _refreshData();
-    }
+    _refreshData();
   }
 
   @override
@@ -339,6 +314,16 @@ class _ProfileScreensState extends State<ProfileScreens> {
           child: _buildButton(Icons.download, 'Unduh Laporan'),
         ),
         const SizedBox(height: 30),
+        InkResponse(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ScanStrukScreen()),
+            );
+          },
+          child: _buildButton(Icons.download, 'Scan'),
+        ),
+        const SizedBox(height: 30),
         InkWell(
           onTap: () {
             Navigator.push(
@@ -392,7 +377,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
   Widget butonLogout() {
     return GestureDetector(
       onTap: () async {
-        // 🔥 tampilkan dialog dulu
         bool? confirm = await showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -405,25 +389,13 @@ class _ProfileScreensState extends State<ProfileScreens> {
                 child: Text("BATAL", style: whiteBold),
               ),
               TextButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-
-                  await AuthService().signOut();
-
-                  if (!mounted) return;
-
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreens(),
-                    ),
-                    (route) => false,
-                  );
-                },
+                onPressed: () => Navigator.pop(context, true),
                 child: Text("IYA", style: greenBold15),
               ),
             ],
           ),
         );
+
         if (confirm == true) {
           await AuthService().signOut();
 

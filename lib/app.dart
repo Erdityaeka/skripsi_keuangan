@@ -16,7 +16,7 @@ class AppScreen extends StatelessWidget {
       providers: [
         StreamProvider<User?>.value(
           value: AuthService().userChanges,
-          initialData: null,
+          initialData: FirebaseAuth.instance.currentUser,
         ),
       ],
       child: const SplashWrapper(),
@@ -37,25 +37,32 @@ class _SplashWrapperState extends State<SplashWrapper> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 2), () {
+
+    // Tambah waktu agar Firebase sempat restore session
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() => _showSplash = false);
-        splashActive = false; // matikan flag splash setelah selesai
+        splashActive = false;
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<User?>();
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+
+    // Splash tetap tampil
     if (_showSplash) {
       return const SplashScreen();
-    } else {
-      final user = context.watch<User?>();
-      if (user == null) {
-        return const LoginScreens();
-      } else {
-        return const BottomNavigation();
-      }
     }
+
+    // Jika benar-benar belum login
+    if (user == null && firebaseUser == null) {
+      return const LoginScreens();
+    }
+
+    // Jika session masih tersimpan
+    return const BottomNavigation();
   }
 }
