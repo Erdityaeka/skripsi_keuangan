@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:skripsi_keuangan/Piecker/image_piceker.dart';
+import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
+import 'package:skripsi_keuangan/services/ocr_services.dart';
 
 class ScanStrukScreen extends StatefulWidget {
   const ScanStrukScreen({super.key});
@@ -14,383 +14,302 @@ class ScanStrukScreen extends StatefulWidget {
 }
 
 class _ScanStrukScreenState extends State<ScanStrukScreen> {
-  final ImagePickerService _pickerService = ImagePickerService();
-  final FirestoreService _firestoreService = FirestoreService();
+  final OCRService _ocrService = OCRService();
+  final FirestoreService _db = FirestoreService();
+  final ImagePickerService _picker = ImagePickerService();
 
-  PickedImage? selectedImage;
+  File? _imageFile;
+  final _tokoController = TextEditingController();
+  final _nominalController = TextEditingController();
 
-  final TextEditingController judulController = TextEditingController();
-  final TextEditingController nominalController = TextEditingController();
+  String _selectedTipe = 'pengeluaran';
+  String? _selectedKategori;
+  String? _selectedBank;
+  bool _isProcessing = false;
 
-  List<String> bankList = [];
-  String bank = 'Cash';
-
-  bool isLoading = false;
-  bool hasScanned = false;
-
-  @override
-  void initState() {
-    super.initState();
-    loadBankList();
-  }
-
-  void loadBankList() {
-    _firestoreService.getBank().listen((banks) {
-      if (!mounted) return;
+  Future<void> _pickImage(bool fromCamera) async {
+    final res = fromCamera
+        ? await _picker.pickImageFromCamera()
+        : await _picker.pickImage();
+    if (res?.file != null) {
       setState(() {
-        bankList = banks.isNotEmpty ? banks : ['Cash'];
-        bank = bankList.first;
+        _imageFile = res!.file;
+        _tokoController.clear();
+        _nominalController.clear();
       });
-    });
+    }
   }
 
-  // ================== EXTRACT NAMA TOKO ==================
-  String extractStoreName(String text) {
-    final lines = text
-        .split('\n')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-
-    final ignoredKeywords = [
-      'npwp',
-      'invoice',
-      'receipt',
-      'tanggal',
-      'date',
-      'jam',
-      'kasir',
-      'shift',
-      'bon',
-      'jl',
-      'jalan',
-      'tunai',
-      'kembalian',
-      'cash',
-      'ppn',
-      'sms',
-      'kritik',
-      'saran',
-      'total',
-      'subtotal',
-      'grand',
-      'item',
-      'no',
-      'bayar',
-      'change',
-      'pajak',
-      'qty',
-      'menu',
-    ];
-
-    for (final line in lines.take(10)) {
-      final lower = line.toLowerCase();
-      if (ignoredKeywords.any((word) => lower.contains(word))) continue;
-
-      // Prioritaskan huruf kapital penuh
-      final upperRatio =
-          line.replaceAll(RegExp(r'[^A-Z]'), '').length / line.length;
-      if (upperRatio > 0.6 && line.length >= 3 && line.length <= 40) {
-        return line.replaceAll(RegExp(r'[^A-Za-z0-9 &.,-]'), '').trim();
-      }
-    }
-    return '';
-  }
-
-  String extractTotal(String text) {
-    final lines = text
-        .split('\n')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-
-    int? parseAmount(String line) {
-      final matches = RegExp(
-        r'(\d{1,3}(?:[.,]\d{3})+|\d{3,})',
-      ).allMatches(line);
-      if (matches.isEmpty) return null;
-      final raw = matches.last.group(0) ?? '';
-      // normalisasi: buang semua non-digit
-      final cleaned = raw.replaceAll(RegExp(r'[^0-9]'), '');
-      return int.tryParse(cleaned);
-    }
-
-    final forbiddenKeywords = ['tunai', 'cash', 'kembalian', 'change'];
-    final priorityKeywords = [
-      'grand total',
-      'total belanja',
-      'bill',
-      'jumlah bayar',
-      'total belanjaan',
-      'total item',
-    ];
-
-    // 1. Cari baris dengan kata kunci prioritas
-    for (final keyword in priorityKeywords) {
-      for (final line in lines) {
-        final lower = line.toLowerCase();
-        if (forbiddenKeywords.any((k) => lower.contains(k))) continue;
-        if (lower.contains(keyword)) {
-          final amount = parseAmount(line);
-          if (amount != null) return amount.toString();
-        }
-      }
-    }
-
-    // 2. Cari fallback: baris yang mengandung "total" tapi bukan tunai/kembalian
-    for (final line in lines) {
-      final lower = line.toLowerCase();
-      if (forbiddenKeywords.any((k) => lower.contains(k))) continue;
-      if (lower.contains('total')) {
-        final amount = parseAmount(line);
-        if (amount != null) return amount.toString();
-      }
-    }
-
-    // 3. Jika tetap tidak ketemu, return kosong
-    return '';
-  }
-
-  // ================== OCR SCAN ==================
-  Future<void> autoScanStruk() async {
-    if (selectedImage == null || selectedImage!.file == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Gambar tidak valid')));
-      return;
-    }
-    setState(() => isLoading = true);
-    final textRecognizer = TextRecognizer();
+  Future<void> _scanReceipt() async {
+    if (_imageFile == null) return;
+    setState(() => _isProcessing = true);
     try {
-      final inputImage = InputImage.fromFilePath(selectedImage!.file!.path);
-      final recognizedText = await textRecognizer.processImage(inputImage);
-      final fullText = recognizedText.text;
-
-      final hasilJudul = extractStoreName(fullText);
-      final hasilNominal = extractTotal(fullText);
-
-      judulController.text = hasilJudul;
-      nominalController.text = hasilNominal;
-
-      setState(() => hasScanned = true);
-
-      if (hasilJudul.isEmpty || hasilNominal.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sebagian data tidak terbaca, cek manual'),
-          ),
-        );
+      final result = await _ocrService.scanStruk(_imageFile!);
+      if (result != null) {
+        setState(() {
+          _tokoController.text = result['judul'];
+          _nominalController.text = (result['nominal'] as double)
+              .toInt()
+              .toString();
+        });
       }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Gagal membaca struk: $e')));
     } finally {
-      await textRecognizer.close();
-      if (mounted) setState(() => isLoading = false);
+      setState(() => _isProcessing = false);
     }
   }
 
-  Future<void> pickFromGallery() async {
-    final image = await _pickerService.pickImage();
-    if (image != null && mounted) {
-      setState(() {
-        selectedImage = image;
-        hasScanned = false;
-        judulController.clear();
-        nominalController.clear();
-      });
-    }
-  }
-
-  Future<void> pickFromCamera() async {
-    final image = await _pickerService.pickImageFromCamera();
-    if (image != null && mounted) {
-      setState(() {
-        selectedImage = image;
-        hasScanned = false;
-        judulController.clear();
-        nominalController.clear();
-      });
-    }
-  }
-
-  Future<void> simpanTransaksi() async {
-    if (judulController.text.trim().isEmpty ||
-        nominalController.text.trim().isEmpty) {
+  Future<void> _simpanData() async {
+    if (_tokoController.text.isEmpty || _nominalController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Judullll dan nominal wajib diisi')),
+        const SnackBar(content: Text("Nama toko dan nominal wajib diisi!")),
       );
       return;
     }
-    setState(() => isLoading = true);
-    final transaksi = TransaksiModel(
-      id: '',
-      judul: judulController.text.trim(),
-      kategori: 'Belanjaaaaa',
-      bank: bank,
-      nominal: double.tryParse(nominalController.text.trim()) ?? 0,
-      tanggal: DateTime.now(),
-      tipe: 'pengeluaran',
-    );
-    await _firestoreService.addTransaction(transaksi);
-    if (!mounted) return;
-    setState(() => isLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Transaksi berhasil disimpan')),
-    );
-    Navigator.pop(context);
-  }
-
-  Widget buildImagePreview() {
-    if (selectedImage == null) {
-      return Container(
-        height: 220,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Center(child: Text('Belum ada gambar struk')),
-      );
-    }
-    if (kIsWeb && selectedImage!.bytes != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Image.memory(
-          selectedImage!.bytes!,
-          height: 220,
-          width: double.infinity,
-          fit: BoxFit.cover,
-        ),
-      );
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Image.file(
-        File(selectedImage!.file!.path),
-        height: 220,
-        width: double.infinity,
-        fit: BoxFit.cover,
+    await _db.addTransaction(
+      TransaksiModel(
+        id: '',
+        judul: _tokoController.text,
+        nominal: double.tryParse(_nominalController.text) ?? 0,
+        kategori: _selectedKategori ?? 'Lainnya',
+        bank: _selectedBank ?? 'Cash',
+        tipe: _selectedTipe,
+        tanggal: DateTime.now(),
       ),
     );
-  }
-
-  Widget buildFormResult() {
-    return Column(
-      children: [
-        TextField(
-          controller: judulController,
-          decoration: const InputDecoration(
-            labelText: 'Judullll / Nama Toko',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 15),
-        TextField(
-          controller: nominalController,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Nominal Total',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 15),
-        DropdownButtonFormField<String>(
-          value: bank,
-          items: bankList
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
-          onChanged: (val) {
-            if (val != null) {
-              setState(() => bank = val);
-            }
-          },
-          decoration: const InputDecoration(
-            labelText: 'Pilih Bank / Metode',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 15),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Kategori: Belanja'),
-              SizedBox(height: 5),
-              Text('Tipe: Pengeluaran'),
-            ],
-          ),
-        ),
-        const SizedBox(height: 25),
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: isLoading ? null : simpanTransaksi,
-            child: isLoading
-                ? const CircularProgressIndicator()
-                : const Text('Simpan Transaksi'),
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    judulController.dispose();
-    nominalController.dispose();
-    super.dispose();
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan Struk'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text("Scan Struk"),
+        backgroundColor: Colors.blueAccent,
+        foregroundColor: Colors.white,
+      ),
+      // PENTING: Menggunakan SingleChildScrollView agar seluruh halaman bisa di-scroll
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            buildImagePreview(),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: pickFromGallery,
-                    child: const Text('Gallery'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: pickFromCamera,
-                    child: const Text('Camera'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            if (selectedImage != null && !hasScanned)
-              SizedBox(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Pratinjau Struk (Cubit untuk Zoom)",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+
+              // AREA FOTO
+              Container(
+                height: 400, // Tinggi area foto
                 width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : autoScanStruk,
-                  child: isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text('Scan Struk'),
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: _imageFile == null
+                      ? InkWell(
+                          onTap: _showPickerMenu,
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_a_photo,
+                                size: 50,
+                                color: Colors.blueAccent,
+                              ),
+                              Text("Klik untuk Ambil Foto"),
+                            ],
+                          ),
+                        )
+                      : InteractiveViewer(
+                          panEnabled: true,
+                          minScale: 1.0,
+                          maxScale: 4.0,
+                          child: Image.file(_imageFile!, fit: BoxFit.contain),
+                        ),
                 ),
               ),
-            const SizedBox(height: 20),
-            if (hasScanned) buildFormResult(),
+
+              const SizedBox(height: 10),
+              if (_imageFile != null)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _showPickerMenu,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text("Ganti Foto"),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _isProcessing ? null : _scanReceipt,
+                      icon: const Icon(Icons.document_scanner),
+                      label: Text(_isProcessing ? "Scanning..." : "Scan Teks"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+
+              const SizedBox(height: 20),
+              const Text(
+                'Jika ada kesalahan, mohon input manual!',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Divider(height: 30),
+
+              // FORM INPUTAN (IKUT TER-SCROLL)
+              _buildTextField(_tokoController, "Nama Toko", Icons.store),
+              const SizedBox(height: 15),
+              _buildTextField(
+                _nominalController,
+                "Nominal (Rp)",
+                Icons.money,
+                isNumber: true,
+              ),
+              const SizedBox(height: 20),
+
+              const Text("Tipe", style: TextStyle(fontWeight: FontWeight.bold)),
+              DropdownButtonFormField<String>(
+                value: _selectedTipe,
+                items: const [
+                  DropdownMenuItem(
+                    value: 'pengeluaran',
+                    child: Text("Pengeluaran"),
+                  ),
+                  DropdownMenuItem(
+                    value: 'pemasukan',
+                    child: Text("Pemasukan"),
+                  ),
+                ],
+                onChanged: (v) => setState(() => _selectedTipe = v!),
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+              ),
+
+              const SizedBox(height: 15),
+              const Text(
+                "Kategori",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              StreamBuilder<List<String>>(
+                stream: _db.getCategories(),
+                builder: (context, snapshot) {
+                  final list = snapshot.data ?? [];
+                  return DropdownButtonFormField<String>(
+                    hint: const Text("Pilih Kategori"),
+                    value: list.contains(_selectedKategori)
+                        ? _selectedKategori
+                        : null,
+                    items: list
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedKategori = v),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 15),
+              const Text("Bank", style: TextStyle(fontWeight: FontWeight.bold)),
+              StreamBuilder<List<String>>(
+                stream: _db.getBank(),
+                builder: (context, snapshot) {
+                  final list = snapshot.data ?? [];
+                  return DropdownButtonFormField<String>(
+                    hint: const Text("Pilih Bank"),
+                    value: list.contains(_selectedBank) ? _selectedBank : null,
+                    items: list
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedBank = v),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: _simpanData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    "SIMPAN TRANSAKSI",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 40,
+              ), // Ruang tambahan di bawah agar nyaman di-scroll
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    bool isNumber = false,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
+  void _showPickerMenu() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.image),
+              title: const Text("Galeri"),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(false);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text("Kamera"),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(true);
+              },
+            ),
           ],
         ),
       ),
