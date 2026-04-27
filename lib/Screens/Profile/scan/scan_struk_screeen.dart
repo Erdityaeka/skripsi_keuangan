@@ -85,9 +85,9 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
   }
 
   // Scan OCR
+  // Scan OCR
   Future<void> _scanReceipt() async {
     if (_imageFile == null) return;
-
     if (!mounted) return;
 
     setState(() => _isProcessing = true);
@@ -96,12 +96,20 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
       final result = await _ocrService.scanStruk(_imageFile!);
 
       if (result != null && mounted) {
-        setState(() {
-          _tokoController.text = result['judul'] ?? '';
+        final judul = result['judul'] ?? '';
+        final nominal = (result['nominal'] as double? ?? 0).toInt();
 
-          _nominalController.text = (result['nominal'] as double? ?? 0)
-              .toInt()
-              .toString();
+        // --- Validasi hasil OCR (pisah notif) ---
+        if (judul.trim().isEmpty) {
+          _showSnack("Nama toko tidak terbaca dari struk");
+        }
+        if (nominal == 0) {
+          _showSnack("Nominal tidak terbaca dari struk");
+        }
+
+        setState(() {
+          _tokoController.text = judul;
+          _nominalController.text = nominal.toString();
         });
       } else {
         _showSnack("Teks struk tidak terbaca");

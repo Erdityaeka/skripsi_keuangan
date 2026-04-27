@@ -54,31 +54,41 @@ class OCRService {
         }
       }
 
-      // --- LOGIKA NOMINAL (VERSI ASLI) ---
+      // --- LOGIKA NOMINAL ---
       List<TextLine> allLines = [];
-
       for (TextBlock block in recognizedText.blocks) {
         allLines.addAll(block.lines);
       }
 
       for (var line in allLines) {
-        String text = line.text.toUpperCase().replaceAll(' ', '');
+        String normalized = line.text.toLowerCase();
 
-        if (text.contains("TOTAL") ||
-            text.contains("JUMLAH") ||
-            text.contains("HARGAJUAL")) {
-          if (text.contains("ITEM") ||
-              text.contains("QTY") ||
-              text.contains("KEMBALI")) {
-            continue;
-          }
+        // Kata kunci utama (positif)
+        bool isTotalKeyword =
+            RegExp(r'grand\s*total').hasMatch(normalized) ||
+            RegExp(r'jumlah\s*bayar').hasMatch(normalized) ||
+            RegExp(r'total\s*belanja').hasMatch(normalized) ||
+            normalized.contains("total") ||
+            normalized.contains("jumlah") ||
+            normalized.contains("harga");
 
+        // Kata kunci yang harus dihindari (negatif)
+        bool isExcluded =
+            normalized.contains("item") ||
+            normalized.contains("qty") ||
+            normalized.contains("kembali") ||
+            normalized.contains("change") ||
+            normalized.contains("tunai") ||
+            normalized.contains("cash");
+
+        if (isTotalKeyword && !isExcluded) {
           double keywordY = line.boundingBox.center.dy;
 
           for (var l in allLines) {
             double diffY = (l.boundingBox.center.dy - keywordY).abs();
 
             if (diffY < 25) {
+              // Ambil angka dengan regex, termasuk format Rp 12.500,00
               String digits = l.text.replaceAll(RegExp(r'[^0-9]'), '');
 
               if (digits.isNotEmpty) {
