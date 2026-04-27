@@ -27,43 +27,58 @@ class _AiScreenState extends State<AiScreen> {
     decimalDigits: 0,
   );
 
-  // Mendeteksi Topik Untuk AI
   bool isFinanceQuestion(String text) {
     text = text.toLowerCase();
-
     return text.contains("saldo") ||
         text.contains("uang") ||
         text.contains("keuangan") ||
         text.contains("boros") ||
         text.contains("hemat") ||
         text.contains("pengeluaran") ||
-        text.contains("pemasukan");
+        text.contains("pemasukan") ||
+        text.contains("transaksi");
   }
 
-  // Mengambil Nilai Transaksi
+  bool isDateQuestion(String text) {
+    text = text.toLowerCase();
+    return text.contains("tanggal") ||
+        text.contains("hari apa") ||
+        text.contains("bulan apa") ||
+        text.contains("hari ini") ||
+        text.contains("sekarang");
+  }
+
   Future<String> _getFinancialContext() async {
     final user = FirebaseAuth.instance.currentUser;
+    String detailTransaksi = "";
+
     if (user == null) return "user_not_login";
 
     final list = (await transaksiService.gettransaksi().first)
         .take(20)
         .toList();
-
     if (list.isEmpty) return "DATA_KOSONG";
 
     double masuk = 0;
     double keluar = 0;
-
     Map<String, double> perBulan = {};
 
     for (var t in list) {
       final nominal = t.nominal;
       final tipe = (t.tipe).toLowerCase();
 
-      // Format Bulan
-      final tanggal = t.tanggal.toLocal();
-      final bulan = DateFormat('MMMM yyyy', 'id_ID').format(tanggal);
+      detailTransaksi +=
+          """
+Tanggal: ${DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(t.tanggal)}
+Judul: ${t.judul}
+Kategori: ${t.kategori}
+Bank: ${t.bank}
+Nominal: ${rupiah.format(t.nominal)}
+Tipe: ${t.tipe}
 
+""";
+
+      final bulan = DateFormat('MMMM yyyy', 'id_ID').format(t.tanggal);
       perBulan.putIfAbsent(bulan, () => 0);
 
       if (tipe == "pemasukan") {
@@ -77,32 +92,39 @@ class _AiScreenState extends State<AiScreen> {
 
     String detailBulan = "";
     perBulan.forEach((bulan, saldo) {
-      detailBulan += "$bulan: $saldo\n";
+      detailBulan += "$bulan: ${rupiah.format(saldo)}\n";
     });
 
     return """
 Data keuangan pengguna:
 
-Total pemasukan: $masuk
-Total pengeluaran: $keluar
-Saldo: ${masuk - keluar}
+Total pemasukan: ${rupiah.format(masuk)}
+Total pengeluaran: ${rupiah.format(keluar)}
+Saldo: ${rupiah.format(masuk - keluar)}
 
 Saldo per bulan:
 $detailBulan
 
-Tugas:
-- Gunakan data bulan di atas
-- Jika ditanya bulan, jawab sesuai data
-- Jangan menebak bulan di luar data
+Detail transaksi:
+$detailTransaksi
+
+Informasi waktu:
+Hari ini adalah ${DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(DateTime.now())}
+Bulan sekarang adalah ${DateFormat('MMMM yyyy', 'id_ID').format(DateTime.now())}
+
+Tugas untuk AI:
+- Jawab pertanyaan user hanya berdasarkan data di atas
+- Jika ditanya 'saldo saya berapa', jawab dengan saldo bulan sekarang
+- Jika ditanya 'bulan apa sekarang', jawab dengan bulan saat ini
+- Jika ditanya transaksi pada tanggal tertentu, gunakan detail transaksi
+- Jangan menebak data di luar transaksi yang ada
 """;
   }
 
-  // Mengririm Pesan
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
     if (text.isEmpty || _isLoading) return;
 
-    // Anti Spam Prompt
     final now = DateTime.now();
     if (_lastRequest != null &&
         now.difference(_lastRequest!) < const Duration(seconds: 3)) {
@@ -122,10 +144,23 @@ Tugas:
     try {
       String response;
 
-      //  BEDAKAN TOPIK
-      if (isFinanceQuestion(text)) {
+      if (isDateQuestion(text)) {
+        // 🔥 Kalau pertanyaan tentang hari/tanggal sekarang → jawab langsung
+        if (text.contains("hari ini") || text.contains("sekarang")) {
+          response =
+              "Hari ini adalah ${DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(DateTime.now())}";
+        } else {
+          // 🔥 Kalau pertanyaan terkait transaksi tanggal/bulan → kirim ke Gemini
+          String context = await _getFinancialContext();
+          if (context == "DATA_KOSONG") {
+            response =
+                "Belum ada transaksi.\nSilakan isi data terlebih dahulu.";
+          } else {
+            response = await GeminiService.generateText(text, context: context);
+          }
+        }
+      } else if (isFinanceQuestion(text)) {
         String context = await _getFinancialContext();
-
         if (context == "DATA_KOSONG") {
           response = "Belum ada transaksi.\nSilakan isi data terlebih dahulu.";
         } else {
@@ -144,7 +179,6 @@ Tugas:
     }
   }
 
-  // Mengatasi Double Jawaban AI
   void _reply(String text) {
     setState(() {
       _messages.removeLast();
@@ -152,7 +186,6 @@ Tugas:
     });
   }
 
-  // Scroll Akhir
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -165,7 +198,6 @@ Tugas:
     });
   }
 
-  // Fungsi Kirim Prompt
   void _sendQuickPrompt(String text) {
     _textController.text = text;
     _sendMessage();
