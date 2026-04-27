@@ -13,7 +13,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
   final FirestoreService _firestore = FirestoreService();
 
   final List<String> _kategori = [
-    "Makananan",
+    "Makanan",
     "Minuman",
     "Transportasi",
     "Gaji",
@@ -21,6 +21,8 @@ class _KategoriScreensState extends State<KategoriScreens> {
     "Belanja",
     "Tagihan",
     "Hiburan",
+    "Top Up",
+    "Tak Terduga",
   ];
 
   String? _selected;
@@ -34,7 +36,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
 
     try {
       await _firestore.addCategory(_selected!);
-      _showMsg("Berhasil ditambahkan");
+      _showMsg("Kategori Berhasil Ditambahkan");
     } catch (e) {
       _showMsg("Gagal menambahkan");
     }
@@ -110,7 +112,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
 
                 if (!mounted) return;
                 Navigator.pop(context);
-                _showMsg("Berhasil diupdate");
+                _showMsg("Kategori Berhasil Diupdate");
               } catch (e) {
                 _showMsg("Gagal update", isError: true);
               }
@@ -144,7 +146,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
                 await _firestore.deleteCategory(nama);
                 if (!mounted) return;
                 Navigator.pop(context);
-                _showMsg("Berhasil dihapus");
+                _showMsg("Kategori Berhasil Dihapus");
               } catch (e) {
                 _showMsg("Gagal hapus", isError: true);
               }
