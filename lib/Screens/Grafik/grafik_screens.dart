@@ -26,6 +26,12 @@ class _GrafikScreensState extends State<GrafikScreens> {
   // Hari aktif
   DateTime _selectedDay = DateTime.now();
 
+  //  Format Text Kosong
+  String capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -640,7 +646,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
                             ),
                             const SizedBox(height: 5),
                             Text(
-                              tx.kategori.toUpperCase(),
+                              capitalize(tx.kategori),
                               style: redReguler12,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,

@@ -208,7 +208,7 @@ class _BankScreensState extends State<BankScreens> {
                 ),
                 child: ListTile(
                   leading: Icon(Icons.account_balance, color: black),
-                  title: Text(nama, style: blackBold15),
+                  title: Text(nama.toUpperCase(), style: blackBold15),
                   trailing: GestureDetector(
                     onTap: () => _confirmDelete(nama),
                     child: Icon(Icons.delete, color: red),

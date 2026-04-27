@@ -24,6 +24,12 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
   String selectedBank = "semua";
   List<String> allBanks = ["semua"];
 
+  //  Format Text Kosong
+  String capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
   final firestoreService = FirestoreService();
 
   Future<void> _refreshData() async {
@@ -451,21 +457,21 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        tx.judul,
+                                        capitalize(tx.judul),
                                         style: redBold15,
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                       ),
                                       const SizedBox(height: 5),
                                       Text(
-                                        tx.kategori,
+                                        capitalize(tx.kategori),
                                         style: redReguler12,
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                       ),
                                       const SizedBox(height: 5),
                                       Text(
-                                        tx.bank,
+                                        tx.bank.toUpperCase(),
                                         style: redReguler12,
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,

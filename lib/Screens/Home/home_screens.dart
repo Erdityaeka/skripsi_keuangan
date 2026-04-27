@@ -393,14 +393,17 @@ class _HomeScreensState extends State<HomeScreens> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                tx.judul,
+                                capitalize(tx.judul),
                                 style: redBold15,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 5),
-                              Text(tx.kategori, style: redReguler12),
+                              Text(
+                                capitalize(tx.kategori),
+                                style: redReguler12,
+                              ),
                               const SizedBox(height: 5),
-                              Text(tx.bank, style: redReguler12),
+                              Text(tx.bank.toUpperCase(), style: redReguler12),
                             ],
                           ),
                         ),

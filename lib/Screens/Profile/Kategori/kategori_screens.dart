@@ -12,6 +12,12 @@ class KategoriScreens extends StatefulWidget {
 class _KategoriScreensState extends State<KategoriScreens> {
   final FirestoreService _firestore = FirestoreService();
 
+  //  Format Text Kosong
+  String capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
   final List<String> _kategori = [
     "Makanan",
     "Minuman",
@@ -288,7 +294,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
                   ),
                   child: ListTile(
                     leading: Icon(Icons.table_chart, color: black),
-                    title: Text(nama, style: blackBold15),
+                    title: Text(capitalize(nama), style: blackBold15),
                     trailing: GestureDetector(
                       onTap: () => _delete(nama),
                       child: Icon(Icons.delete, color: red),
