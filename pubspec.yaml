@@ -61,7 +61,7 @@ flutter_launcher_icons:
   ios: false
   image_path: "images/iconapp.png"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "images/iconapp.png"
+  adaptive_icon_foreground: "images/transparent.png"
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your

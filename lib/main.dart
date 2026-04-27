@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lottie/lottie.dart';
-import 'package:skripsi_keuangan/app.dart';
+import 'package:skripsi_keuangan/Screens/SplashScreen/splash_screen.dart';
 import 'package:skripsi_keuangan/services/gemini_service.dart';
 import 'firebase_options.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
@@ -100,7 +100,7 @@ class _RootAppState extends State<RootApp> {
           children: [
             child!,
 
-            // ================= OFFLINE =================
+            // OFFLINE
             AnimatedOpacity(
               opacity: isConnected ? 0 : 1,
               duration: const Duration(milliseconds: 300),
@@ -124,7 +124,7 @@ class _RootAppState extends State<RootApp> {
               ),
             ),
 
-            // ================= ONLINE =================
+            // ONLINE
             if (_showOnlineAnim)
               Positioned(
                 top: 300,
@@ -142,7 +142,7 @@ class _RootAppState extends State<RootApp> {
         );
       },
 
-      home: const AppScreen(),
+      home: const SplashScreen(),
     );
   }
 }
