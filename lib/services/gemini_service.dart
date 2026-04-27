@@ -47,18 +47,27 @@ Jawab dengan bahasa sederhana tanpa simbol seperti # atau *.
 
         // HANDLE 429
         if (e.toString().contains("429")) {
-          // Retry dengan delay bertahap
+          // Delay bertahap (3s, 6s, 9s)
           await Future.delayed(Duration(seconds: 3 * (i + 1)));
+
           if (i == maxRetry - 1) {
-            return "Permintaan terlalu sering. Tunggu beberapa detik sebelum mencoba lagi.";
+            // Kalau sudah percobaan terakhir → baru return pesan ke user
+            return "Permintaan terlalu sering. Tunggu beberapa menit sebelum mencoba lagi.";
           }
+
+          // Kalau masih ada kesempatan permintaan → kasih pesan sementara ke log
+          print(
+            "429 terjadi, permintaan ke-${i + 1}. Jika sering muncul, Mohon berkomentar agar developer memperbaikinya.",
+          );
+
+          // Ulangi loop (permintaan)
           continue;
         }
 
         // HANDLE 503/529
         if (e.toString().contains("503") || e.toString().contains("529")) {
           if (i == maxRetry - 1) {
-            return "Server AI sedang oVERLOAD Permintaan. Silakan coba lagi beberapa menit kemudian.";
+            return "Server AI sedang OVERLOAD Permintaan. Silakan coba lagi beberapa menit kemudian.";
           }
           await Future.delayed(Duration(seconds: 3 * (i + 1)));
           continue;
