@@ -26,7 +26,6 @@ class AuthService {
             'foto': fotoFileName,
         };
 
-        // 🔥 TANPA MERGE
         await _db.collection('user').doc(uid).set(data);
       }
 

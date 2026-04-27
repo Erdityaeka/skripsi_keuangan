@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
 
@@ -175,21 +176,33 @@ class _UpdatescreenState extends State<Updatescreen> {
         currentPassword: passwordC.text.trim(),
       );
 
-      if (!mounted) return;
+      if (emailC.text.trim() != user?.email) {
+        notif("Cek email baru untuk verifikasi");
 
+        await FirebaseAuth.instance.signOut();
+
+        if (!mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => LoginScreens()),
+          (route) => false,
+        );
+        return;
+      }
+
+      // Jika hanya nama/foto
       if (res == null) {
-        notif("Berhasil Update", success: true);
-        Navigator.pop(context);
+        notif("Profile berhasil diperbarui", success: true);
+        // ignore: use_build_context_synchronously
+        if (mounted) Navigator.pop(context);
       } else {
-        // Error dari AuthService
         notif(res);
       }
     } catch (e) {
-      notif("Gagal Update");
+      notif("Terjadi kesalahan Update");
     } finally {
-      if (mounted) {
-        setState(() => loading = false);
-      }
+      if (mounted) setState(() => loading = false);
     }
   }
 
