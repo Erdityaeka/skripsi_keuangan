@@ -131,19 +131,15 @@ class _TagihanScreensState extends State<TagihanScreens> {
         child: Icon(Icons.add, color: white),
       ),
 
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(
-            right: 20,
-            left: 20,
-            top: 20,
-            bottom: 20,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_dataTagihan()],
-          ),
+      // BODY
+      body: Padding(
+        padding: const EdgeInsets.only(
+          right: 20,
+          left: 20,
+          top: 20,
+          bottom: 20,
         ),
+        child: SizedBox.expand(child: _dataTagihan()),
       ),
     );
   }
@@ -174,13 +170,29 @@ class _TagihanScreensState extends State<TagihanScreens> {
 
         final tagihans = snapshot.data!;
 
+      
         if (tagihans.isEmpty) {
-          return Center(child: Text("Belum ada tagihan", style: greyReguler));
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Center(
+                    child: Text(
+                      "Belum ada tagihan",
+                      style: greyReguler,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
         }
 
+        // DATA LIST
         return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
           itemCount: tagihans.length,
           itemBuilder: (context, index) {
             return buildTagihanCard(tagihans[index]);
