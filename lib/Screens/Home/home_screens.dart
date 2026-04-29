@@ -2,11 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:skripsi_keuangan/Screens/transaksi/edit_transaksi.dart';
-
 import 'package:skripsi_keuangan/Screens/transaksi/transaksi_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
-
+import 'package:skripsi_keuangan/models/bank_model.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
 
 class HomeScreens extends StatefulWidget {
@@ -17,12 +16,12 @@ class HomeScreens extends StatefulWidget {
 }
 
 class _HomeScreensState extends State<HomeScreens> {
-  // Format Rupiah
   final currency = NumberFormat.currency(
     locale: 'id',
     symbol: 'Rp. ',
     decimalDigits: 0,
   );
+
   final firestoreService = FirestoreService();
 
   String selectedBank = "semua";
@@ -34,13 +33,11 @@ class _HomeScreensState extends State<HomeScreens> {
     setState(() {});
   }
 
-  //  Format Text Kosong
   String capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  // Mengetahui Data Bank Sama
   String normalize(String? val) {
     return (val ?? '').toLowerCase().trim();
   }
@@ -59,62 +56,52 @@ class _HomeScreensState extends State<HomeScreens> {
     return Scaffold(
       appBar: _buildAppbar(context, nama),
 
-      // Mengambil Data Transaksi
       body: StreamBuilder<List<TransaksiModel>>(
         stream: firestoreService.gettransaksi(),
-
         builder: (context, txSnap) {
           if (!txSnap.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
+
           final all = txSnap.data!;
 
-          // Mengambil Data Bank
-          return StreamBuilder<List<String>>(
-            stream: firestoreService.getBank(),
+          return StreamBuilder<List<BankModel>>(
+            stream: firestoreService.getBankModels(),
             builder: (context, bankSnap) {
               if (!bankSnap.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              // Data Bank
               final bankMaster = bankSnap.data!
-                  .map((e) => normalize(e))
+                  .map((e) => normalize(e.nama))
                   .where((e) => e.isNotEmpty)
                   .toSet();
 
-              // Data Bank Dari Transaksi
               final bankFromTx = all
                   .map((tx) => normalize(tx.bank))
                   .where((e) => e.isNotEmpty)
                   .toSet();
 
-              // Menggabungkan Data Bank
               allBanks = [
                 "semua",
                 ...{...bankMaster, ...bankFromTx}.toList()..sort(),
               ];
 
-              // Kondisi Data Bank Tidak Ada Ke Reset
               if (!allBanks.contains(selectedBank)) {
                 selectedBank = "semua";
               }
 
               final current = selectedBank;
 
-              // Filter Data Bank
               final filtered = all.where((tx) {
                 final bank = normalize(tx.bank);
                 return current == "semua" || bank == current;
               }).toList();
 
-              // Mensort Data Terbaru
               filtered.sort((a, b) => b.tanggal.compareTo(a.tanggal));
 
-              // ambil 3 terbaru
               final recent = filtered.take(3).toList();
 
-              // Hitung Transaksi
               double pemasukan = 0;
               double pengeluaran = 0;
 
@@ -140,17 +127,14 @@ class _HomeScreensState extends State<HomeScreens> {
                     ),
                     child: Column(
                       children: [
-                        // Card Saldo
                         cardSaldo(pemasukan, pengeluaran, saldo),
 
                         const SizedBox(height: 20),
 
-                        // DROPDOWN BANK
                         cardBank(),
 
                         const SizedBox(height: 30),
 
-                        // LIST TRANSAKSI
                         listTransaksi(recent),
                       ],
                     ),
@@ -164,8 +148,6 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  // Appbar
-  // ignore: strict_top_level_inference
   PreferredSizeWidget _buildAppbar(context, String nama) {
     return AppBar(
       backgroundColor: whiteBold.color,
@@ -190,7 +172,6 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  // Card Saldo
   Widget cardSaldo(double pemasukan, double pengeluaran, double saldo) {
     return Container(
       width: double.infinity,
@@ -206,10 +187,14 @@ class _HomeScreensState extends State<HomeScreens> {
           children: [
             Text('Pemasukan', style: greenBold15),
             Text(currency.format(pemasukan), style: whiteReguler),
+
             const SizedBox(height: 10),
+
             Text('Pengeluaran', style: yellowBold15),
             Text(currency.format(pengeluaran), style: whiteReguler),
+
             const SizedBox(height: 10),
+
             Row(
               children: [
                 Text('Total', style: whiteBold),
@@ -228,6 +213,7 @@ class _HomeScreensState extends State<HomeScreens> {
                 ),
               ],
             ),
+
             Text(
               _isPasswordVisible ? currency.format(saldo) : '••••••',
               style: whiteReguler,
@@ -238,7 +224,6 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  // Dropdown Bank
   Widget cardBank() {
     return Container(
       width: double.infinity,
@@ -271,7 +256,6 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  // List
   Widget listTransaksi(List<TransaksiModel> list) {
     if (list.isEmpty) {
       return Padding(
@@ -306,6 +290,7 @@ class _HomeScreensState extends State<HomeScreens> {
             ),
           ],
         ),
+
         const SizedBox(height: 20),
 
         ...list.map((tx) {
@@ -334,7 +319,6 @@ class _HomeScreensState extends State<HomeScreens> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // HEADER
                   Padding(
                     padding: const EdgeInsets.only(
                       left: 11,
@@ -345,9 +329,7 @@ class _HomeScreensState extends State<HomeScreens> {
                       children: [
                         Expanded(
                           child: Text(
-                            DateFormat(
-                              'dd MMM yyyy',
-                            ).format(tx.tanggal), // ✅ FIX
+                            DateFormat('dd MMM yyyy').format(tx.tanggal),
                             style: redReguler12,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -363,9 +345,9 @@ class _HomeScreensState extends State<HomeScreens> {
                   ),
 
                   const SizedBox(height: 5),
+
                   Divider(color: red, thickness: 1),
 
-                  // Item Transaksi
                   Padding(
                     padding: const EdgeInsets.all(11.0),
                     child: Row(

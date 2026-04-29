@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:skripsi_keuangan/models/bank_model.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/Screens/transaksi/edit_transaksi.dart';
@@ -57,8 +58,8 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
           final transactions = snapshot.data!;
 
           // Menampilkan Data Bank
-          return StreamBuilder<List<String>>(
-            stream: firestoreService.getBank(),
+          return StreamBuilder<List<BankModel>>(
+            stream: firestoreService.getBankModels(),
 
             builder: (context, bankSnap) {
               if (!bankSnap.hasData) {
@@ -67,7 +68,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
 
               // Data Dari Kolekesi Bank
               final bankMaster = bankSnap.data!
-                  .map((e) => normalize(e))
+                  .map((e) => normalize(e.nama))
                   .where((e) => e.isNotEmpty)
                   .toSet();
 

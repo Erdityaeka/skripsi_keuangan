@@ -4,6 +4,8 @@ import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/formats/currency_input_formatter.dart';
+import 'package:skripsi_keuangan/models/bank_model.dart';
+import 'package:skripsi_keuangan/models/kategori_model.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
 
@@ -247,11 +249,10 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       children: [
         Text('Kategori', style: redReguler15),
         SizedBox(height: 15),
-        StreamBuilder<List<String>>(
-          stream: _firestoreService.getCategories(),
-
+        StreamBuilder<List<KategoriModel>>(
+          stream: _firestoreService.getCategoryModels(),
           builder: (context, snapshot) {
-            final kategori = snapshot.data ?? [];
+            final kategori = snapshot.data ?? <KategoriModel>[];
 
             if (kategori.isEmpty) {
               return _emptyMessage(
@@ -262,6 +263,12 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
                 ),
               );
             }
+
+            if (selectedKategory != null &&
+                !kategori.map((e) => e.nama).contains(selectedKategory)) {
+              selectedKategory = null;
+            }
+
             return Container(
               width: double.infinity,
               height: 55,
@@ -279,7 +286,12 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
                     icon: Icon(Icons.arrow_drop_down, color: black),
                     onChanged: (v) => setState(() => selectedKategory = v),
                     items: kategori
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e.nama,
+                            child: Text(e.nama),
+                          ),
+                        )
                         .toList(),
                   ),
                 ),
@@ -298,11 +310,10 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       children: [
         Text('Bank', style: redReguler15),
         SizedBox(height: 15),
-        StreamBuilder<List<String>>(
-          stream: _firestoreService.getBank(),
-
+        StreamBuilder<List<BankModel>>(
+          stream: _firestoreService.getBankModels(),
           builder: (context, snapshot) {
-            final bank = snapshot.data ?? [];
+            final bank = snapshot.data ?? <BankModel>[];
 
             if (bank.isEmpty) {
               return _emptyMessage(
@@ -314,10 +325,11 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
               );
             }
 
-            // pastikan selectedBank valid
-            if (selectedBank != null && !bank.contains(selectedBank)) {
+            if (selectedBank != null &&
+                !bank.map((e) => e.nama).contains(selectedBank)) {
               selectedBank = null;
             }
+
             return Container(
               width: double.infinity,
               height: 55,
@@ -335,7 +347,12 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
                     icon: Icon(Icons.arrow_drop_down, color: black),
                     onChanged: (v) => setState(() => selectedBank = v),
                     items: bank
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e.nama,
+                            child: Text(e.nama),
+                          ),
+                        )
                         .toList(),
                   ),
                 ),

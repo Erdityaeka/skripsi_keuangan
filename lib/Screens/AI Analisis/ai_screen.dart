@@ -1,193 +1,80 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
-import 'package:skripsi_keuangan/services/firestore_service.dart';
 import 'package:skripsi_keuangan/services/gemini_service.dart';
 
 class AiScreen extends StatefulWidget {
-  const AiScreen({super.key});
+  const AiScreen({Key? key}) : super(key: key);
 
   @override
   State<AiScreen> createState() => _AiScreenState();
 }
 
 class _AiScreenState extends State<AiScreen> {
-  final _messages = <Map<String, dynamic>>[];
-  final _textController = TextEditingController();
-  final _scrollController = ScrollController();
-  final transaksiService = FirestoreService();
+  // CONTROLLER INPUT
+  final TextEditingController _controller = TextEditingController();
 
-  bool _isLoading = false;
-  DateTime? _lastRequest;
+  // SCROLL CHAT
+  final ScrollController _scrollController = ScrollController();
 
-  final rupiah = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
+  // MENYIMPAN SEMUA CHAT
+  final List<Map<String, dynamic>> _messages = [];
 
-  bool isFinanceQuestion(String text) {
-    text = text.toLowerCase();
-    return text.contains("saldo") ||
-        text.contains("uang") ||
-        text.contains("keuangan") ||
-        text.contains("boros") ||
-        text.contains("hemat") ||
-        text.contains("pengeluaran") ||
-        text.contains("pemasukan") ||
-        text.contains("transaksi");
-  }
+  // STATUS LOADING
+  bool _loading = false;
 
-  bool isDateQuestion(String text) {
-    text = text.toLowerCase();
-    return text.contains("tanggal") ||
-        text.contains("hari apa") ||
-        text.contains("bulan apa") ||
-        text.contains("hari ini") ||
-        text.contains("sekarang");
-  }
-
-  Future<String> _getFinancialContext() async {
-    final user = FirebaseAuth.instance.currentUser;
-    String detailTransaksi = "";
-
-    if (user == null) return "user_not_login";
-
-    final list = (await transaksiService.gettransaksi().first)
-        .take(20)
-        .toList();
-    if (list.isEmpty) return "DATA_KOSONG";
-
-    double masuk = 0;
-    double keluar = 0;
-    Map<String, double> perBulan = {};
-
-    for (var t in list) {
-      final nominal = t.nominal;
-      final tipe = (t.tipe).toLowerCase();
-
-      detailTransaksi +=
-          """
-Tanggal: ${DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(t.tanggal)}
-Judul: ${t.judul}
-Kategori: ${t.kategori}
-Bank: ${t.bank}
-Nominal: ${rupiah.format(t.nominal)}
-Tipe: ${t.tipe}
-
-""";
-
-      final bulan = DateFormat('MMMM yyyy', 'id_ID').format(t.tanggal);
-      perBulan.putIfAbsent(bulan, () => 0);
-
-      if (tipe == "pemasukan") {
-        masuk += nominal;
-        perBulan[bulan] = perBulan[bulan]! + nominal;
-      } else {
-        keluar += nominal;
-        perBulan[bulan] = perBulan[bulan]! - nominal;
-      }
-    }
-
-    String detailBulan = "";
-    perBulan.forEach((bulan, saldo) {
-      detailBulan += "$bulan: ${rupiah.format(saldo)}\n";
-    });
-
-    return """
-Data keuangan pengguna:
-
-Total pemasukan: ${rupiah.format(masuk)}
-Total pengeluaran: ${rupiah.format(keluar)}
-Saldo: ${rupiah.format(masuk - keluar)}
-
-Saldo per bulan:
-$detailBulan
-
-Detail transaksi:
-$detailTransaksi
-
-Informasi waktu:
-Hari ini adalah ${DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(DateTime.now())}
-Bulan sekarang adalah ${DateFormat('MMMM yyyy', 'id_ID').format(DateTime.now())}
-
-Tugas untuk AI:
-- Jawab pertanyaan user hanya berdasarkan data di atas
-- Jika ditanya 'saldo saya berapa', jawab dengan saldo bulan sekarang
-- Jika ditanya 'bulan apa sekarang', jawab dengan bulan saat ini
-- Jika ditanya transaksi pada tanggal tertentu, gunakan detail transaksi
-- Jangan menebak data di luar transaksi yang ada
-""";
-  }
-
+  // KIRIM PESAN
   Future<void> _sendMessage() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty || _isLoading) return;
+    final prompt = _controller.text.trim();
 
-    final now = DateTime.now();
-    if (_lastRequest != null &&
-        now.difference(_lastRequest!) < const Duration(seconds: 3)) {
-      return;
-    }
-    _lastRequest = now;
+    if (prompt.isEmpty) return;
 
     setState(() {
-      _isLoading = true;
-      _messages.add({'isUser': true, 'text': text});
-      _messages.add({'isUser': false, 'text': 'loading'});
+      // Tambah pesan user
+      _messages.add({"role": "user", "text": prompt});
+
+      // Aktifkan loading
+      _loading = true;
     });
 
-    _textController.clear();
+    _controller.clear();
     _scrollToBottom();
 
     try {
-      String response;
+      // Delay agar terasa realistis
+      await Future.delayed(const Duration(milliseconds: 700));
 
-      if (isDateQuestion(text)) {
-        // 🔥 Kalau pertanyaan tentang hari/tanggal sekarang → jawab langsung
-        if (text.contains("hari ini") || text.contains("sekarang")) {
-          response =
-              "Hari ini adalah ${DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(DateTime.now())}";
-        } else {
-          // 🔥 Kalau pertanyaan terkait transaksi tanggal/bulan → kirim ke Gemini
-          String context = await _getFinancialContext();
-          if (context == "DATA_KOSONG") {
-            response =
-                "Belum ada transaksi.\nSilakan isi data terlebih dahulu.";
-          } else {
-            response = await GeminiService.generateText(text, context: context);
-          }
-        }
-      } else if (isFinanceQuestion(text)) {
-        String context = await _getFinancialContext();
-        if (context == "DATA_KOSONG") {
-          response = "Belum ada transaksi.\nSilakan isi data terlebih dahulu.";
-        } else {
-          response = await GeminiService.generateText(text, context: context);
-        }
-      } else {
-        response = await GeminiService.generateText(text);
-      }
+      // Ambil jawaban AI / lokal
+      final respons = await GeminiService.ask(prompt);
 
-      _reply(response);
+      setState(() {
+        // Tambah jawaban AI
+        _messages.add({"role": "ai", "text": respons});
+
+        // Matikan loading
+        _loading = false;
+      });
+
+      _scrollToBottom();
     } catch (e) {
-      _reply("AI tidak dapat menjawab sekarang");
-    } finally {
-      _isLoading = false;
+      setState(() {
+        _messages.add({"role": "ai", "text": "Terjadi kesalahan: $e"});
+
+        _loading = false;
+      });
+
       _scrollToBottom();
     }
   }
 
-  void _reply(String text) {
-    setState(() {
-      _messages.removeLast();
-      _messages.add({'isUser': false, 'text': text});
-    });
+  // QUICK PROMPT
+  Future<void> _sendQuickPrompt(String text) async {
+    _controller.text = text;
+    await _sendMessage();
   }
 
+  // AUTO SCROLL KE BAWAH
   void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    Future.delayed(const Duration(milliseconds: 300), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -198,12 +85,14 @@ Tugas untuk AI:
     });
   }
 
-  void _sendQuickPrompt(String text) {
-    _textController.text = text;
-    _sendMessage();
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
-  // Widget UI
+  // BUILD
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -227,6 +116,7 @@ Tugas untuk AI:
     );
   }
 
+  // APPBAR
   PreferredSizeWidget _buildAppbar() {
     return AppBar(
       backgroundColor: Colors.white,
@@ -241,8 +131,9 @@ Tugas untuk AI:
     );
   }
 
-  // Data List Wrap
+  // LIST CHAT
   Widget _list() {
+    // Tampilan awal
     if (_messages.isEmpty) {
       return Center(
         child: Column(
@@ -254,6 +145,8 @@ Tugas untuk AI:
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
+
+            // Tombol cepat
             Wrap(
               spacing: 12,
               runSpacing: 12,
@@ -270,53 +163,74 @@ Tugas untuk AI:
       );
     }
 
-    // Data Pertanyaan
+    // Chat aktif
     return ListView.builder(
       controller: _scrollController,
-      itemCount: _messages.length,
+      itemCount: _messages.length + (_loading ? 1 : 0),
       itemBuilder: (_, i) {
-        bool isUser = _messages[i]['isUser'];
+        // Bubble loading
+        if (_loading && i == _messages.length) {
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        bool isUser = _messages[i]['role'] == 'user';
 
         return Align(
           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
             margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isUser ? red : white,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: _messages[i]['text'] == 'loading'
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(
-                    _messages[i]['text'],
-                    style: isUser ? whiteReguler : blackReguler,
-                  ),
+            child: Text(
+              _messages[i]['text'] ?? '',
+              style: isUser ? whiteReguler : blackReguler,
+            ),
           ),
         );
       },
     );
   }
 
-  // UI Wrap Button
-  Widget _btn(String t) => InkWell(
-    onTap: () => _sendQuickPrompt(t),
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: red, width: 2),
+  // TOMBOL CEPAT
+  Widget _btn(String t) {
+    return InkWell(
+      onTap: () => _sendQuickPrompt(t),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: red, width: 2),
+        ),
+        child: Text(t, style: blackReguler12),
       ),
-      child: Text(t, style: blackReguler12),
-    ),
-  );
+    );
+  }
 
-  // Input Prompt
+  // INPUT USER
   Widget inputPrompt() {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -333,7 +247,7 @@ Tugas untuk AI:
             children: [
               Expanded(
                 child: TextField(
-                  controller: _textController,
+                  controller: _controller,
                   style: blackReguler,
                   maxLines: null,
                   keyboardType: TextInputType.multiline,
@@ -343,11 +257,13 @@ Tugas untuk AI:
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 10, // 🔥 biar tidak mepet
+                      vertical: 10,
                     ),
                   ),
                 ),
               ),
+
+              // Tombol kirim
               IconButton(
                 onPressed: _sendMessage,
                 icon: Icon(Icons.send, color: black),
@@ -357,6 +273,7 @@ Tugas untuk AI:
         ),
 
         const SizedBox(height: 10),
+
         Text('AI ini bisa melakukan kesalahan!', style: blackReguler12),
 
         const SizedBox(height: 10),

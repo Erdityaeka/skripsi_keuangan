@@ -4,26 +4,48 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lottie/lottie.dart';
+
 import 'package:skripsi_keuangan/Screens/SplashScreen/splash_screen.dart';
 import 'package:skripsi_keuangan/services/gemini_service.dart';
+import 'package:skripsi_keuangan/services/notification_service.dart';
+
 import 'firebase_options.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-//GLOBAL
+// GLOBAL
 final messengerKey = GlobalKey<ScaffoldMessengerState>();
-bool splashActive = true;
 
-//MAIN
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // GLOBAL FLUTTER ERROR HANDLER
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint("Flutter Error: ${details.exception}");
+  };
+
   await initializeDateFormatting('id_ID', null);
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   await GeminiService.initialize();
-  runApp(const RootApp());
+
+  // NOTIFICATION ONLY
+  await NotificationService.init();
+
+  // GLOBAL ASYNC ERROR HANDLER
+  runZonedGuarded(
+    () {
+      runApp(const RootApp());
+    },
+    (error, stack) {
+      debugPrint("Global Error: $error");
+    },
+  );
 }
 
-//ROOT APP
+// ROOT APP
 class RootApp extends StatefulWidget {
   const RootApp({super.key});
 
@@ -33,8 +55,8 @@ class RootApp extends StatefulWidget {
 
 class _RootAppState extends State<RootApp> {
   late StreamSubscription<List<ConnectivityResult>> _sub;
-  bool isConnected = true;
 
+  bool isConnected = true;
   bool _showOnlineAnim = false;
 
   @override
@@ -43,14 +65,16 @@ class _RootAppState extends State<RootApp> {
     _initConnection();
   }
 
-  //CEK KONEKSI
+  // INIT CONNECTION
   void _initConnection() async {
     final result = await Connectivity().checkConnectivity();
+
     _updateConnection(result);
 
     _sub = Connectivity().onConnectivityChanged.listen(_updateConnection);
   }
 
+  // UPDATE CONNECTION
   void _updateConnection(List<ConnectivityResult> result) {
     final nowConnected = !result.contains(ConnectivityResult.none);
 
@@ -59,13 +83,14 @@ class _RootAppState extends State<RootApp> {
     setState(() {
       isConnected = nowConnected;
 
-      // Memberi Waktu Animasi Terhubung
       if (nowConnected) {
         _showOnlineAnim = true;
 
         Future.delayed(const Duration(seconds: 3), () {
           if (mounted) {
-            setState(() => _showOnlineAnim = false);
+            setState(() {
+              _showOnlineAnim = false;
+            });
           }
         });
       }
@@ -78,15 +103,19 @@ class _RootAppState extends State<RootApp> {
     super.dispose();
   }
 
-  //WIDGET UI
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+
       scaffoldMessengerKey: messengerKey,
 
+      navigatorKey: NotificationService.navigatorKey,
+
       locale: const Locale('id', 'ID'),
+
       supportedLocales: const [Locale('id', 'ID'), Locale('en', 'US')],
+
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -100,7 +129,7 @@ class _RootAppState extends State<RootApp> {
           children: [
             child!,
 
-            // OFFLINE
+            // OFFLINE SCREEN
             AnimatedOpacity(
               opacity: isConnected ? 0 : 1,
               duration: const Duration(milliseconds: 300),
@@ -109,22 +138,17 @@ class _RootAppState extends State<RootApp> {
                 child: Container(
                   color: Colors.black.withOpacity(0.5),
                   child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Lottie.asset(
-                          "images/animasiinternet.json",
-                          width: 350,
-                          height: 350,
-                        ),
-                      ],
+                    child: Lottie.asset(
+                      "images/animasiinternet.json",
+                      width: 350,
+                      height: 350,
                     ),
                   ),
                 ),
               ),
             ),
 
-            // ONLINE
+            // ONLINE SCREEN
             if (_showOnlineAnim)
               Positioned(
                 top: 300,

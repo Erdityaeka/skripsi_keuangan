@@ -25,7 +25,7 @@ class TransaksiModel {
       'kategori': kategori,
       'bank': bank,
       'nominal': nominal,
-      'tanggal': Timestamp.fromDate(tanggal), // ✅ FIX
+      'tanggal': Timestamp.fromDate(tanggal), 
       'tipe': tipe,
     };
   }

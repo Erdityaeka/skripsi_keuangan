@@ -59,7 +59,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       cancelText: 'Batal',
       confirmText: 'OK',
 
-      // 🔥 INI BAGIAN PENTING
+      // INI BAGIAN PENTING
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -105,7 +105,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     return transactions.where((tx) {
       final date = tx.tanggal.toLocal();
 
-      // 🔥 FIX RANGE TANGGAL (BIAR TIDAK KEFILTER)
+      // FIX RANGE TANGGAL (BIAR TIDAK KEFILTER)
       final start = DateTime(startDate!.year, startDate!.month, startDate!.day);
 
       final end = DateTime(
@@ -232,6 +232,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                   const Spacer(),
 
                   _buildButtonUnduh(),
+                  const SizedBox(height: 50),
                 ],
               ),
             ),

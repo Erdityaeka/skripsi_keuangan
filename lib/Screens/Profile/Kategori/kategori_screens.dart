@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
+import 'package:skripsi_keuangan/models/kategori_model.dart';
 
 class KategoriScreens extends StatefulWidget {
   const KategoriScreens({super.key});
@@ -12,7 +13,6 @@ class KategoriScreens extends StatefulWidget {
 class _KategoriScreensState extends State<KategoriScreens> {
   final FirestoreService _firestore = FirestoreService();
 
-  //  Format Text Kosong
   String capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
@@ -33,18 +33,18 @@ class _KategoriScreensState extends State<KategoriScreens> {
 
   String? _selected;
 
-  //TAMBAH
   Future<void> _add() async {
     if (_selected == null) {
-      _showMsg("Pilih kategori dulu");
+      _showMsg("Pilih kategori dulu", isError: true);
       return;
     }
 
     try {
-      await _firestore.addCategory(_selected!);
+      await _firestore.addCategory(KategoriModel(id: '', nama: _selected!));
+
       _showMsg("Kategori Berhasil Ditambahkan");
     } catch (e) {
-      _showMsg("Gagal menambahkan");
+      _showMsg("Gagal menambahkan", isError: true);
     }
   }
 
@@ -61,9 +61,8 @@ class _KategoriScreensState extends State<KategoriScreens> {
     );
   }
 
-  //EDIT
-  void _editDialog(String oldnama) {
-    final controller = TextEditingController(text: oldnama);
+  void _editDialog(KategoriModel oldData) {
+    final controller = TextEditingController(text: oldData.nama);
 
     showDialog(
       context: context,
@@ -113,10 +112,14 @@ class _KategoriScreensState extends State<KategoriScreens> {
               }
 
               try {
-                await _firestore.deleteCategory(oldnama);
-                await _firestore.addCategory(newnama);
+                await _firestore.deleteCategory(oldData.id);
+
+                await _firestore.addCategory(
+                  KategoriModel(id: '', nama: newnama),
+                );
 
                 if (!mounted) return;
+
                 Navigator.pop(context);
                 _showMsg("Kategori Berhasil Diupdate");
               } catch (e) {
@@ -130,15 +133,14 @@ class _KategoriScreensState extends State<KategoriScreens> {
     );
   }
 
-  //HAPUS
-  void _delete(String nama) {
+  void _delete(KategoriModel data) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: red,
         title: Text("Hapus Kategori?", style: whiteBold),
         content: Text(
-          "Yakin ingin menghapus data kategori '$nama'?",
+          "Yakin ingin menghapus data kategori '${data.nama}'?",
           style: whiteBold,
         ),
         actions: [
@@ -149,8 +151,10 @@ class _KategoriScreensState extends State<KategoriScreens> {
           TextButton(
             onPressed: () async {
               try {
-                await _firestore.deleteCategory(nama);
+                await _firestore.deleteCategory(data.id);
+
                 if (!mounted) return;
+
                 Navigator.pop(context);
                 _showMsg("Kategori Berhasil Dihapus");
               } catch (e) {
@@ -164,9 +168,9 @@ class _KategoriScreensState extends State<KategoriScreens> {
     );
   }
 
-  //SNACKBAR
   void _showMsg(String msg, {bool isError = false}) {
     if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: isError ? rednotif : greennotif,
@@ -264,14 +268,14 @@ class _KategoriScreensState extends State<KategoriScreens> {
   Widget listBank() {
     return Padding(
       padding: const EdgeInsets.all(20),
-      child: StreamBuilder<List<String>>(
-        stream: _firestore.getCategories(),
+      child: StreamBuilder<List<KategoriModel>>(
+        stream: _firestore.getCategoryModels(),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final data = snap.data ?? [];
+          final data = snap.data ?? <KategoriModel>[];
 
           if (data.isEmpty) {
             return Center(
@@ -282,10 +286,10 @@ class _KategoriScreensState extends State<KategoriScreens> {
           return ListView.builder(
             itemCount: data.length,
             itemBuilder: (context, i) {
-              final nama = data[i];
+              final kategori = data[i];
 
               return GestureDetector(
-                onTap: () => _editDialog(nama),
+                onTap: () => _editDialog(kategori),
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
@@ -294,9 +298,9 @@ class _KategoriScreensState extends State<KategoriScreens> {
                   ),
                   child: ListTile(
                     leading: Icon(Icons.table_chart, color: black),
-                    title: Text(capitalize(nama), style: blackBold15),
+                    title: Text(capitalize(kategori.nama), style: blackBold15),
                     trailing: GestureDetector(
-                      onTap: () => _delete(nama),
+                      onTap: () => _delete(kategori),
                       child: Icon(Icons.delete, color: red),
                     ),
                   ),

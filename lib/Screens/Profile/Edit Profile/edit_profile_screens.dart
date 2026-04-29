@@ -406,7 +406,7 @@ class _UpdatescreenState extends State<Updatescreen> {
     return ElevatedButton(
       onPressed: (fotoBaru != null || fotoLama != null) ? hapusFoto : null,
       style: ElevatedButton.styleFrom(
-        backgroundColor: red,
+        backgroundColor: rednotif,
         minimumSize: const Size(double.infinity, 50),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),

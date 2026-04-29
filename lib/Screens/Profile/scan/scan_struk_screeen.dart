@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Piecker/image_piceker.dart';
+import 'package:skripsi_keuangan/models/bank_model.dart';
+import 'package:skripsi_keuangan/models/kategori_model.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
 import 'package:skripsi_keuangan/services/ocr_services.dart';
@@ -217,38 +219,43 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
 
               // Tombol scan
               if (_imageFile != null)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Column(
                   children: [
-                    TextButton.icon(
-                      onPressed: _showPickerMenu,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text("Ganti Foto"),
-                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton.icon(
+                          onPressed: _showPickerMenu,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text("Ganti Foto"),
+                        ),
 
-                    ElevatedButton.icon(
-                      onPressed: _isProcessing ? null : _scanReceipt,
-                      icon: const Icon(Icons.document_scanner),
-                      label: Text(_isProcessing ? "Scanning..." : "Scan Teks"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
+                        ElevatedButton.icon(
+                          onPressed: _isProcessing ? null : _scanReceipt,
+                          icon: const Icon(Icons.document_scanner),
+                          label: Text(
+                            _isProcessing ? "Scanning..." : "Scan Teks",
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Jika ada kesalahan, mohon input manual!',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const Divider(height: 30),
                   ],
                 ),
 
               const SizedBox(height: 20),
-
-              const Text(
-                'Jika ada kesalahan, mohon input manual!',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const Divider(height: 30),
 
               // Input toko
               _buildTextField(_tokoController, "Nama Toko", Icons.store),
@@ -292,18 +299,26 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
 
-              StreamBuilder<List<String>>(
-                stream: _db.getCategories(),
+              // ===============================
+              // DROPDOWN KATEGORI (GANTI FULL)
+              // ===============================
+              StreamBuilder<List<KategoriModel>>(
+                stream: _db.getCategoryModels(),
                 builder: (context, snapshot) {
-                  final list = snapshot.data ?? [];
+                  final list = snapshot.data ?? <KategoriModel>[];
 
                   return DropdownButtonFormField<String>(
                     hint: const Text("Pilih Kategori"),
-                    value: list.contains(_selectedKategori)
+                    value: list.map((e) => e.nama).contains(_selectedKategori)
                         ? _selectedKategori
                         : null,
                     items: list
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e.nama,
+                            child: Text(e.nama),
+                          ),
+                        )
                         .toList(),
                     onChanged: (v) => setState(() => _selectedKategori = v),
                     decoration: const InputDecoration(
@@ -313,21 +328,26 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 },
               ),
 
-              const SizedBox(height: 15),
-
-              // Dropdown bank
-              const Text("Bank", style: TextStyle(fontWeight: FontWeight.bold)),
-
-              StreamBuilder<List<String>>(
-                stream: _db.getBank(),
+              // ===============================
+              // DROPDOWN BANK (GANTI FULL)
+              // ===============================
+              StreamBuilder<List<BankModel>>(
+                stream: _db.getBankModels(),
                 builder: (context, snapshot) {
-                  final list = snapshot.data ?? [];
+                  final list = snapshot.data ?? <BankModel>[];
 
                   return DropdownButtonFormField<String>(
                     hint: const Text("Pilih Bank"),
-                    value: list.contains(_selectedBank) ? _selectedBank : null,
+                    value: list.map((e) => e.nama).contains(_selectedBank)
+                        ? _selectedBank
+                        : null,
                     items: list
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e.nama,
+                            child: Text(e.nama),
+                          ),
+                        )
                         .toList(),
                     onChanged: (v) => setState(() => _selectedBank = v),
                     decoration: const InputDecoration(
@@ -336,7 +356,6 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                   );
                 },
               ),
-
               const SizedBox(height: 30),
 
               // Tombol simpan

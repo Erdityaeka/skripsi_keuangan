@@ -41,7 +41,7 @@ class TentangScreens extends StatelessWidget {
   // Widget Gambar UI
   Widget _buildImage() {
     return Center(
-      child: Image.asset("images/Icon.png", width: 200, height: 200),
+      child: Image.asset("Images/Icon.png", width: 200, height: 200),
     );
   }
 

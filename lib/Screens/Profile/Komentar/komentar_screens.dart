@@ -137,7 +137,7 @@ class _KomentarScreensState extends State<KomentarScreens> {
                           backgroundColor: white,
                           child: ClipOval(
                             child: Lottie.asset(
-                              "images/profilekomentar.json",
+                              "Images/profilekomentar.json",
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,

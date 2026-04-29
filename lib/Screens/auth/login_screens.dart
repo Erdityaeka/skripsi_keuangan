@@ -172,7 +172,7 @@ class _LoginScreensState extends State<LoginScreens> {
     return Column(
       children: [
         const Image(
-          image: AssetImage('images/Icon.png'),
+          image: AssetImage('Images/Icon.png'),
           width: 150,
           height: 150,
         ),
