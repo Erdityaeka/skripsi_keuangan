@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:skripsi_keuangan/Piecker/image_piceker.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/formats/currency_input_formatter.dart';
@@ -274,7 +275,11 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
               const SizedBox(height: 10),
               Text(
                 'Jika ada kesalahan, mohon input manual!',
-                style: TextStyle(color: rednotif, fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(
+                  color: rednotif,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
               ),
               const Divider(height: 30),
             ],
