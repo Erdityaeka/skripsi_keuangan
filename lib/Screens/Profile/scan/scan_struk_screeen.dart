@@ -185,7 +185,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
               const SizedBox(height: 15),
               buttonBank(),
               const SizedBox(height: 30),
-              buttonSimpan(),
+              SafeArea(top: false, child: buttonSimpan()),
               const SizedBox(height: 15),
             ],
           ),
@@ -287,7 +287,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Judul Tagihan', style: blackReguler),
+        Text('Judul Tagihan', style: redReguler15),
         const SizedBox(height: 15),
         Container(
           width: double.infinity,
@@ -309,7 +309,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
           ),
         ),
         const SizedBox(height: 20),
-        Text('Nominal', style: blackReguler),
+        Text('Nominal', style: redReguler15),
         const SizedBox(height: 15),
         Container(
           width: double.infinity,
@@ -351,7 +351,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tipe Transaksi', style: blackReguler),
+        Text('Tipe Transaksi', style: redReguler15),
         const SizedBox(height: 15),
         Container(
           width: double.infinity,
@@ -390,7 +390,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Kategori', style: blackReguler),
+        Text('Kategori', style: redReguler15),
         const SizedBox(height: 15),
         StreamBuilder<List<KategoriModel>>(
           stream: _db.getCategoryModels(),
@@ -446,7 +446,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: blackReguler),
+        Text('Bank', style: redReguler15),
         const SizedBox(height: 15),
         StreamBuilder<List<BankModel>>(
           stream: _db.getBankModels(),
@@ -499,23 +499,28 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
   }
 
   Widget buttonSimpan() {
-    return GestureDetector(
-      onTap: _isLoading ? null : _simpanData,
-      child: Container(
-        width: double.infinity,
-        height: 55,
-        decoration: BoxDecoration(
-          color: red,
-          borderRadius: BorderRadius.circular(15),
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _isLoading ? null : _simpanData,
+          child: Container(
+            width: double.infinity,
+            height: 55,
+            decoration: BoxDecoration(
+              color: red,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Center(
+              child: _isLoading
+                  ? const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    )
+                  : Text('Simpan Tagihan', style: whiteBold),
+            ),
+          ),
         ),
-        child: Center(
-          child: _isLoading
-              ? const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                )
-              : Text('Simpan Tagihan', style: whiteBold),
-        ),
-      ),
+        SizedBox(height: 15),
+      ],
     );
   }
 

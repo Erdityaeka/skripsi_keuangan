@@ -28,7 +28,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     text: "Laporan Keuangan",
   );
 
-  // ================= INIT =================
+  // INIT
   @override
   void initState() {
     super.initState();
@@ -46,7 +46,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     });
   }
 
-  // ================= DATE PICKER =================
+  // DATE PICKER
   Future<void> _pickDate(bool isStart) async {
     final picked = await showDatePicker(
       context: context,
@@ -86,7 +86,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     });
   }
 
-  // ================= BANK LIST =================
+  // BANK LIST
   List<String> get bankList {
     final banks = transactions
         .map((e) => e.bank)
@@ -98,7 +98,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     return ["Semua", ...banks];
   }
 
-  // ================= FILTER (🔥 FIX UTAMA DI SINI) =================
+  // FILTER
   List<TransaksiModel> _getFilteredData() {
     if (startDate == null || endDate == null) return [];
 
@@ -130,7 +130,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     }).toList();
   }
 
-  // ================= VALIDASI =================
+  // VALIDASI
   bool _isValid() {
     if (startDate == null || endDate == null) {
       _showMsg("Pilih tanggal dulu");
@@ -154,7 +154,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
-  // ================= EXPORT =================
+  // EXPORT
   Future<void> _export() async {
     if (!_isValid()) return;
 
@@ -202,7 +202,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     super.dispose();
   }
 
-  // ================= UI =================
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -319,9 +319,8 @@ class _EditTransaksiState extends State<EditTransaksi> {
 
  
 
-// ===============================
-// BUTTON KATEGORI (FULL FIX)
-// ===============================
+
+// BUTTON KATEGORI 
 Widget buttonKategori() {
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
@@ -386,9 +385,8 @@ Widget buttonKategori() {
 }
 
 
-// ===============================
-// BUTTON BANK (FULL FIX)
-// ===============================
+
+// BUTTON BANK 
 Widget buttonBank() {
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
