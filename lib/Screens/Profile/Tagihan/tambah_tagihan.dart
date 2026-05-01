@@ -548,23 +548,28 @@ class _TambahTagihanState extends State<TambahTagihan> {
 
   // SIMPAN
   Widget buttonSimpan() {
-    return GestureDetector(
-      onTap: _isLoading ? null : savetagihan,
-      child: Container(
-        width: double.infinity,
-        height: 55,
-        decoration: BoxDecoration(
-          color: red,
-          borderRadius: BorderRadius.circular(15),
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _isLoading ? null : savetagihan,
+          child: Container(
+            width: double.infinity,
+            height: 55,
+            decoration: BoxDecoration(
+              color: red,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Center(
+              child: _isLoading
+                  ? CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(white),
+                    )
+                  : Text('Simpan Tagihan', style: whiteBold),
+            ),
+          ),
         ),
-        child: Center(
-          child: _isLoading
-              ?  CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(white),
-                )
-              : Text('Simpan Tagihan', style: whiteBold),
-        ),
-      ),
+        const SizedBox(height: 15),
+      ],
     );
   }
 
@@ -594,7 +599,8 @@ class _TambahTagihanState extends State<TambahTagihan> {
               const SizedBox(height: 15),
               buttonJam(),
               const SizedBox(height: 50),
-              buttonSimpan(),
+              SafeArea(top: false, child: buttonSimpan()),
+              const SizedBox(height: 15),
             ],
           ),
         ),
