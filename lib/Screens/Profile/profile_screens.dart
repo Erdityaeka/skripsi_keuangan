@@ -10,7 +10,7 @@ import 'package:skripsi_keuangan/Screens/Profile/Komentar/komentar_screens.dart'
 import 'package:skripsi_keuangan/Screens/Profile/Laporan/unduh_laporan_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Tentang/tentang_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/scan/scan_struk_screeen.dart';
-import 'package:skripsi_keuangan/Screens/Tagihan/tagihan_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Tagihan/tagihan_screens.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';

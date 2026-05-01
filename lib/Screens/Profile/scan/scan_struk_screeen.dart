@@ -254,7 +254,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 children: [
                   TextButton.icon(
                     onPressed: _showPickerMenu,
-                    icon: Icon(Icons.refresh, color: blue),
+                    icon: Icon(Icons.cached, color: blue),
                     label: Text("Ganti Foto", style: blueReguler12),
                   ),
                   ElevatedButton.icon(
@@ -512,7 +512,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
             ),
             child: Center(
               child: _isLoading
-                  ?  CircularProgressIndicator(
+                  ? CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(white),
                     )
                   : Text('Simpan Tagihan', style: whiteBold),

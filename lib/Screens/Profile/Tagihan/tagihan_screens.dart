@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:skripsi_keuangan/Screens/Tagihan/tambah_tagihan.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Tagihan/tambah_tagihan.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/models/tagihan_models.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
