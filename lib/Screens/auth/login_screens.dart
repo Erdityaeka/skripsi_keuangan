@@ -293,8 +293,8 @@ class _LoginScreensState extends State<LoginScreens> {
             ),
             child: Center(
               child: _isLoading
-                  ? const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ?  CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(white),
                     )
                   : Text('Login', style: whiteBold),
             ),

@@ -170,9 +170,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
       decoration: BoxDecoration(
         color: red,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10),
-        ],
+        boxShadow: [BoxShadow(color: black.withOpacity(0.03), blurRadius: 10)],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -280,7 +278,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
               margin: const EdgeInsets.only(right: 8, top: 4, bottom: 4),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? red : Colors.transparent,
+                color: isSelected ? red : white,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: red, width: 2),
               ),
@@ -317,7 +315,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 decoration: BoxDecoration(
-                  color: _selectedWeek == w ? red : Colors.transparent,
+                  color: _selectedWeek == w ? red : white,
                   border: Border.all(color: red),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -404,7 +402,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: white,
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
@@ -436,7 +434,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: white,
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
@@ -511,7 +509,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: red, width: 3),
         ),
@@ -545,14 +543,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Daftar Transaksi",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3436),
-          ),
-        ),
+        Text("Daftar Transaksi", style: redReguler15),
         SizedBox(height: 15),
         ListView.builder(
           shrinkWrap: true,

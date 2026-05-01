@@ -360,7 +360,7 @@ class _SiginScreensState extends State<SiginScreens> {
         ),
         child: Center(
           child: _isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
+              ?  CircularProgressIndicator(color: white)
               : Text('Daftar', style: whiteBold),
         ),
       ),

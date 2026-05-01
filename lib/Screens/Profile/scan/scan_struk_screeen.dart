@@ -512,8 +512,8 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
             ),
             child: Center(
               child: _isLoading
-                  ? const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ?  CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(white),
                     )
                   : Text('Simpan Tagihan', style: whiteBold),
             ),

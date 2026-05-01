@@ -71,7 +71,7 @@ class _KomentarScreensState extends State<KomentarScreens> {
 
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: white,
       elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),

@@ -25,7 +25,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
   String selectedBank = "semua";
   List<String> allBanks = ["semua"];
 
-  //  Format Text Kosong
+  //  Format Text Kapital
   String capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
@@ -513,7 +513,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
           MaterialPageRoute(builder: (_) => TambahTransaksi()),
         );
       },
-      child: const Icon(Icons.add, color: Colors.white),
+      child: Icon(Icons.add, color: white),
     );
   }
 }

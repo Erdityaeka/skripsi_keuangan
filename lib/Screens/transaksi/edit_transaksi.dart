@@ -188,7 +188,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
   // APPBAR
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: white,
       elevation: 0,
       leading: IconButton(
         onPressed: () {
@@ -317,138 +317,130 @@ class _EditTransaksiState extends State<EditTransaksi> {
     );
   }
 
- 
+  // BUTTON KATEGORI
+  Widget buttonKategori() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Kategori', style: redReguler15),
+        SizedBox(height: 15),
+        StreamBuilder<List<KategoriModel>>(
+          stream: _firestoreService.getCategoryModels(),
+          builder: (context, snapshot) {
+            final kategori = snapshot.data ?? <KategoriModel>[];
 
+            if (kategori.isEmpty) {
+              return _emptyMessage(
+                "Kategori kosong",
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const KategoriScreens()),
+                ),
+              );
+            }
 
-// BUTTON KATEGORI 
-Widget buttonKategori() {
-  return Column(
-    mainAxisAlignment: MainAxisAlignment.start,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text('Kategori', style: redReguler15),
-      SizedBox(height: 15),
-      StreamBuilder<List<KategoriModel>>(
-        stream: _firestoreService.getCategoryModels(),
-        builder: (context, snapshot) {
-          final kategori = snapshot.data ?? <KategoriModel>[];
+            if (selectedKategory != null &&
+                !kategori.map((e) => e.nama).contains(selectedKategory)) {
+              selectedKategory = null;
+            }
 
-          if (kategori.isEmpty) {
-            return _emptyMessage(
-              "Kategori kosong",
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const KategoriScreens(),
+            return Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                border: Border.all(color: red, width: 1.5),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedKategory,
+                    dropdownColor: white,
+                    hint: Text('Pilih Kategori', style: blackReguler),
+                    icon: Icon(Icons.arrow_drop_down, color: black),
+                    onChanged: (v) => setState(() => selectedKategory = v),
+                    items: kategori
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e.nama,
+                            child: Text(e.nama),
+                          ),
+                        )
+                        .toList(),
+                  ),
                 ),
               ),
             );
-          }
+          },
+        ),
+      ],
+    );
+  }
 
-          if (selectedKategory != null &&
-              !kategori.map((e) => e.nama).contains(selectedKategory)) {
-            selectedKategory = null;
-          }
+  // BUTTON BANK
+  Widget buttonBank() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Bank', style: redReguler15),
+        SizedBox(height: 15),
+        StreamBuilder<List<BankModel>>(
+          stream: _firestoreService.getBankModels(),
+          builder: (context, snapshot) {
+            final bank = snapshot.data ?? <BankModel>[];
 
-          return Container(
-            width: double.infinity,
-            height: 55,
-            decoration: BoxDecoration(
-              border: Border.all(color: red, width: 1.5),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: selectedKategory,
-                  dropdownColor: white,
-                  hint: Text('Pilih Kategori', style: blackReguler),
-                  icon: Icon(Icons.arrow_drop_down, color: black),
-                  onChanged: (v) => setState(() => selectedKategory = v),
-                  items: kategori
-                      .map(
-                        (e) => DropdownMenuItem<String>(
-                          value: e.nama,
-                          child: Text(e.nama),
-                        ),
-                      )
-                      .toList(),
+            if (bank.isEmpty) {
+              return _emptyMessage(
+                "Bank kosong",
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BankScreens()),
                 ),
+              );
+            }
+
+            if (selectedBank != null &&
+                !bank.map((e) => e.nama).contains(selectedBank)) {
+              selectedBank = null;
+            }
+
+            return Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                border: Border.all(color: red, width: 1.5),
+                borderRadius: BorderRadius.circular(15),
               ),
-            ),
-          );
-        },
-      ),
-    ],
-  );
-}
-
-
-
-// BUTTON BANK 
-Widget buttonBank() {
-  return Column(
-    mainAxisAlignment: MainAxisAlignment.start,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text('Bank', style: redReguler15),
-      SizedBox(height: 15),
-      StreamBuilder<List<BankModel>>(
-        stream: _firestoreService.getBankModels(),
-        builder: (context, snapshot) {
-          final bank = snapshot.data ?? <BankModel>[];
-
-          if (bank.isEmpty) {
-            return _emptyMessage(
-              "Bank kosong",
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const BankScreens(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedBank,
+                    dropdownColor: white,
+                    hint: Text('SEMUA', style: blackReguler),
+                    icon: Icon(Icons.arrow_drop_down, color: black),
+                    onChanged: (v) => setState(() => selectedBank = v),
+                    items: bank
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e.nama,
+                            child: Text(e.nama),
+                          ),
+                        )
+                        .toList(),
+                  ),
                 ),
               ),
             );
-          }
+          },
+        ),
+      ],
+    );
+  }
 
-          if (selectedBank != null &&
-              !bank.map((e) => e.nama).contains(selectedBank)) {
-            selectedBank = null;
-          }
-
-          return Container(
-            width: double.infinity,
-            height: 55,
-            decoration: BoxDecoration(
-              border: Border.all(color: red, width: 1.5),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: selectedBank,
-                  dropdownColor: white,
-                  hint: Text('SEMUA', style: blackReguler),
-                  icon: Icon(Icons.arrow_drop_down, color: black),
-                  onChanged: (v) => setState(() => selectedBank = v),
-                  items: bank
-                      .map(
-                        (e) => DropdownMenuItem<String>(
-                          value: e.nama,
-                          child: Text(e.nama),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    ],
-  );
-}
   // Button Simpan
   Widget buttonSimpan() {
     return GestureDetector(
@@ -461,7 +453,7 @@ Widget buttonBank() {
         ),
         child: Center(
           child: _isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
+              ?  CircularProgressIndicator(color: white)
               : Text('Simpan Transaksi', style: whiteBold),
         ),
       ),
@@ -471,7 +463,7 @@ Widget buttonBank() {
   Widget _emptyMessage(String text, VoidCallback action) {
     return Column(
       children: [
-        Text(text, style: const TextStyle(color: Colors.orange)),
+        Text(text, style: yellowBold12),
         TextButton.icon(
           icon: const Icon(Icons.add),
           label: const Text("Tambah Data"),

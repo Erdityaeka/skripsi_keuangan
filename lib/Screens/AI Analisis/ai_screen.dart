@@ -119,7 +119,7 @@ class _AiScreenState extends State<AiScreen> {
   // APPBAR
   PreferredSizeWidget _buildAppbar() {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: white,
       elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
@@ -221,7 +221,7 @@ class _AiScreenState extends State<AiScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: red, width: 2),
         ),

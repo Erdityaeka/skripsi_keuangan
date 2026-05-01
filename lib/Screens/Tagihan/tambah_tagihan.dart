@@ -252,7 +252,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
   // APPBAR
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: white,
       elevation: 0,
       leading: IconButton(
         onPressed: () {
@@ -559,8 +559,8 @@ class _TambahTagihanState extends State<TambahTagihan> {
         ),
         child: Center(
           child: _isLoading
-              ? const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ?  CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(white),
                 )
               : Text('Simpan Tagihan', style: whiteBold),
         ),

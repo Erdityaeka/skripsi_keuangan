@@ -181,7 +181,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
 
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: white,
       elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
@@ -200,7 +200,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
         color: white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
+            color: grey.withOpacity(0.5),
             blurRadius: 2,
             offset: const Offset(0, 3),
           ),
@@ -235,7 +235,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
                       onChanged: (v) => setState(() => _selected = v),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -256,7 +256,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
                   color: red,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Icon(Icons.add, color: Colors.white),
+                child:  Icon(Icons.add, color: white),
               ),
             ),
           ],

@@ -16,6 +16,12 @@ class TagihanScreens extends StatefulWidget {
 class _TagihanScreensState extends State<TagihanScreens> {
   final firestore = FirestoreService();
 
+  //  Format Text Kapital
+  String capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
   String getStatus(TagihanModels tagihan) {
     final now = DateTime.now();
 
@@ -147,7 +153,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
   // APPBAR
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: white,
       elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
@@ -170,7 +176,6 @@ class _TagihanScreensState extends State<TagihanScreens> {
 
         final tagihans = snapshot.data!;
 
-      
         if (tagihans.isEmpty) {
           return LayoutBuilder(
             builder: (context, constraints) {
@@ -267,12 +272,8 @@ class _TagihanScreensState extends State<TagihanScreens> {
                       color: getStatusIconColor(status),
                       shape: BoxShape.circle,
                     ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.receipt_long,
-                        color: Colors.white,
-                        size: 22,
-                      ),
+                    child: Center(
+                      child: Icon(Icons.receipt_long, color: white, size: 22),
                     ),
                   ),
 
@@ -284,7 +285,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          tagihan.judul,
+                          capitalize(tagihan.judul),
                           style: redBold15,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -293,7 +294,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
                         const SizedBox(height: 6),
 
                         Text(
-                          tagihan.kategori,
+                          capitalize(tagihan.kategori),
                           style: redReguler12,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -301,7 +302,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
                         const SizedBox(height: 4),
 
                         Text(
-                          tagihan.bank,
+                          capitalize(tagihan.bank),
                           style: redReguler12,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -341,10 +342,12 @@ class _TagihanScreensState extends State<TagihanScreens> {
                     width: double.infinity,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: green,
+                      color: greennotif,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Center(child: Text("Bayar", style: whiteBold)),
+                    child: Center(
+                      child: Text("Bayar Tagihan", style: whiteBold),
+                    ),
                   ),
                 ),
 
@@ -359,7 +362,9 @@ class _TagihanScreensState extends State<TagihanScreens> {
                       color: rednotif,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Center(child: Text("Hapus", style: whiteBold)),
+                    child: Center(
+                      child: Text("Hapus Tgihan", style: whiteBold),
+                    ),
                   ),
                 ),
               ],

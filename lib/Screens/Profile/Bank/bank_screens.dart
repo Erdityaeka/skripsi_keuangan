@@ -128,7 +128,7 @@ class _BankScreensState extends State<BankScreens> {
         color: white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
+            color: grey.withOpacity(0.3),
             blurRadius: 4,
             offset: const Offset(0, 3),
           ),
@@ -194,7 +194,7 @@ class _BankScreensState extends State<BankScreens> {
           color: red,
           borderRadius: BorderRadius.circular(15),
         ),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
+        child:  Icon(Icons.add, color: white, size: 28),
       ),
     );
   }

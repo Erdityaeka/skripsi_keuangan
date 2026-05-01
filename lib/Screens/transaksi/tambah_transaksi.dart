@@ -118,7 +118,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
 
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: white,
       elevation: 0,
       leading: IconButton(
         onPressed: () {
@@ -376,8 +376,8 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
         ),
         child: Center(
           child: _isLoading
-              ? const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ? CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(white),
                 )
               : Text('Simpan Transaksi', style: whiteBold),
         ),
@@ -388,7 +388,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
   Widget _emptyMessage(String text, VoidCallback action) {
     return Column(
       children: [
-        Text(text, style: const TextStyle(color: Colors.orange)),
+        Text(text, style: yellowBold12),
         TextButton.icon(
           icon: const Icon(Icons.add),
           label: const Text("Tambah Data"),
