@@ -5,12 +5,9 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lottie/lottie.dart';
-
 import 'package:skripsi_keuangan/Screens/SplashScreen/splash_screen.dart';
 import 'package:skripsi_keuangan/services/gemini_service.dart';
 import 'package:skripsi_keuangan/services/notification_service.dart';
-import 'package:skripsi_keuangan/ui.dart';
-
 import 'firebase_options.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
