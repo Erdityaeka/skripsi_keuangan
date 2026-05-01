@@ -78,23 +78,25 @@ class _LoginScreensState extends State<LoginScreens> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: red,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Text("Reset Password"),
+        title: Text("Reset Password", style: whiteBold),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               "Masukkan email Anda. Kami akan mengirimkan link untuk mengatur ulang password.",
-              style: TextStyle(fontSize: 14),
+              style: whiteReguler,
             ),
             const SizedBox(height: 15),
             TextField(
               controller: resetEmailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: "Email",
+                labelStyle: greyReguler,
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
+                prefixIcon: Icon(Icons.email, color: grey),
               ),
             ),
           ],
@@ -102,7 +104,7 @@ class _LoginScreensState extends State<LoginScreens> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
+            child: Text("Batal", style: whiteBold),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -115,11 +117,14 @@ class _LoginScreensState extends State<LoginScreens> {
 
                 if (error == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "Email reset dikirim! Silakan cek Inbox/Spam.",
+                    SnackBar(
+                      content: Center(
+                        child: Text(
+                          "Email reset dikirim! Silakan cek Inbox/Spam.",
+                          style: whiteBold,
+                        ),
                       ),
-                      backgroundColor: Colors.green,
+                      backgroundColor: greennotif,
                     ),
                   );
                 } else {
@@ -127,7 +132,7 @@ class _LoginScreensState extends State<LoginScreens> {
                 }
               }
             },
-            child: const Text("Kirim"),
+            child: Text("Kirim", style: blackBold15),
           ),
         ],
       ),

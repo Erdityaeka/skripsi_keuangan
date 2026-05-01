@@ -103,7 +103,6 @@ class _TambahTagihanState extends State<TambahTagihan> {
   }
 
   // SIMPAN TAGIHAN
-  // SIMPAN TAGIHAN
   Future<void> savetagihan() async {
     if (judul.text.isEmpty ||
         nominal.text.isEmpty ||

@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:skripsi_keuangan/Piecker/image_piceker.dart';
+import 'package:skripsi_keuangan/Theme/warna_teks.dart';
+import 'package:skripsi_keuangan/formats/currency_input_formatter.dart';
 import 'package:skripsi_keuangan/models/bank_model.dart';
 import 'package:skripsi_keuangan/models/kategori_model.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
@@ -15,43 +18,47 @@ class ScanStrukScreen extends StatefulWidget {
 }
 
 class _ScanStrukScreenState extends State<ScanStrukScreen> {
-  // Service OCR
   final OCRService _ocrService = OCRService();
-
-  // Service database
   final FirestoreService _db = FirestoreService();
-
-  // Service image picker
   final ImagePickerService _picker = ImagePickerService();
 
-  // File gambar struk
   File? _imageFile;
 
-  // Controller input
   final _tokoController = TextEditingController();
   final _nominalController = TextEditingController();
 
-  // Dropdown pilihan
   String _selectedTipe = 'pengeluaran';
   String? _selectedKategori;
   String? _selectedBank;
 
-  // Status loading scan
   bool _isProcessing = false;
+  bool _isLoading = false;
+
+  String formatRupiah(String number) {
+    final value = int.tryParse(number) ?? 0;
+    final text = value.toString();
+    final buffer = StringBuffer();
+
+    for (int i = 0; i < text.length; i++) {
+      int position = text.length - i;
+      buffer.write(text[i]);
+
+      if (position > 1 && position % 3 == 1) {
+        buffer.write('.');
+      }
+    }
+
+    return buffer.toString();
+  }
 
   @override
   void dispose() {
-    // Hindari memory leak
     _tokoController.dispose();
     _nominalController.dispose();
-
-    // Tutup OCR
     _ocrService.dispose();
-
     super.dispose();
   }
 
-  // Notifikasi aman
   void _showSnack(String msg, {bool success = false}) {
     if (!mounted) return;
 
@@ -60,12 +67,11 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
       ..showSnackBar(
         SnackBar(
           content: Text(msg),
-          backgroundColor: success ? Colors.green : Colors.red,
+          backgroundColor: success ? greennotif : rednotif,
         ),
       );
   }
 
-  // Ambil gambar
   Future<void> _pickImage(bool fromCamera) async {
     try {
       final res = fromCamera
@@ -75,8 +81,6 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
       if (res?.file != null && mounted) {
         setState(() {
           _imageFile = res!.file;
-
-          // Reset hasil lama
           _tokoController.clear();
           _nominalController.clear();
         });
@@ -86,8 +90,6 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     }
   }
 
-  // Scan OCR
-  // Scan OCR
   Future<void> _scanReceipt() async {
     if (_imageFile == null) return;
     if (!mounted) return;
@@ -101,7 +103,6 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
         final judul = result['judul'] ?? '';
         final nominal = (result['nominal'] as double? ?? 0).toInt();
 
-        // --- Validasi hasil OCR (pisah notif) ---
         if (judul.trim().isEmpty) {
           _showSnack("Nama toko tidak terbaca dari struk");
         }
@@ -111,7 +112,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
 
         setState(() {
           _tokoController.text = judul;
-          _nominalController.text = nominal.toString();
+          _nominalController.text = formatRupiah(nominal.toString());
         });
       } else {
         _showSnack("Teks struk tidak terbaca");
@@ -125,21 +126,22 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     }
   }
 
-  // Simpan transaksi
   Future<void> _simpanData() async {
-    // Validasi wajib
     if (_tokoController.text.trim().isEmpty ||
         _nominalController.text.trim().isEmpty) {
       _showSnack("Nama toko dan nominal wajib diisi!");
       return;
     }
 
+    setState(() => _isLoading = true);
+
     try {
       await _db.addTransaction(
         TransaksiModel(
           id: '',
           judul: _tokoController.text.trim(),
-          nominal: double.tryParse(_nominalController.text) ?? 0,
+          nominal:
+              double.tryParse(_nominalController.text.replaceAll('.', '')) ?? 0,
           kategori: _selectedKategori ?? 'Lainnya',
           bank: _selectedBank ?? 'Cash',
           tipe: _selectedTipe,
@@ -150,133 +152,222 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
       if (!mounted) return;
 
       _showSnack("Transaksi berhasil disimpan", success: true);
-
       Navigator.pop(context);
     } catch (e) {
       _showSnack("Gagal menyimpan data");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Scan Struk"),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
-      ),
-
-      // Scroll utama
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
+      appBar: _buildAppbar(context),
+      body: Padding(
+        padding: const EdgeInsets.only(right: 20, left: 20),
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Pratinjau Struk (Cubit untuk Zoom)",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-
+              const SizedBox(height: 20),
+              _buildImage(),
               const SizedBox(height: 10),
+              _buildScan(),
+              const SizedBox(height: 15),
+              buttonInput(),
+              const SizedBox(height: 15),
+              buttoTipe(),
+              const SizedBox(height: 15),
+              buttonKategori(),
+              const SizedBox(height: 15),
+              buttonBank(),
+              const SizedBox(height: 30),
+              buttonSimpan(),
+              const SizedBox(height: 15),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-              // Preview gambar
-              Container(
-                height: 400,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.black12,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
-                  child: _imageFile == null
-                      ? InkWell(
-                          onTap: _showPickerMenu,
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_a_photo,
-                                size: 50,
-                                color: Colors.blueAccent,
-                              ),
-                              Text("Klik untuk Ambil Foto"),
-                            ],
-                          ),
-                        )
-                      : InteractiveViewer(
-                          panEnabled: true,
-                          minScale: 1.0,
-                          maxScale: 4.0,
-                          child: Image.file(_imageFile!, fit: BoxFit.contain),
-                        ),
-                ),
-              ),
+  PreferredSizeWidget _buildAppbar(BuildContext context) {
+    return AppBar(
+      backgroundColor: white,
+      elevation: 0,
+      leading: IconButton(
+        onPressed: () => Navigator.pop(context),
+        icon: Icon(Icons.arrow_back, color: red),
+      ),
+      title: Text('Scan Struk', style: redBold20),
+      centerTitle: true,
+      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
+    );
+  }
 
-              const SizedBox(height: 10),
-
-              // Tombol scan
-              if (_imageFile != null)
-                Column(
+  Widget _buildImage() {
+    return Container(
+      width: double.infinity,
+      height: 400,
+      decoration: BoxDecoration(
+        color: red,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: _imageFile == null
+            ? InkWell(
+                onTap: _showPickerMenu,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton.icon(
-                          onPressed: _showPickerMenu,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text("Ganti Foto"),
-                        ),
-
-                        ElevatedButton.icon(
-                          onPressed: _isProcessing ? null : _scanReceipt,
-                          icon: const Icon(Icons.document_scanner),
-                          label: Text(
-                            _isProcessing ? "Scanning..." : "Scan Teks",
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Jika ada kesalahan, mohon input manual!',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Divider(height: 30),
+                    Icon(Icons.add_a_photo, size: 50, color: white),
+                    Text("Klik untuk Ambil Foto", style: whiteReguler),
                   ],
                 ),
-
-              const SizedBox(height: 20),
-
-              // Input toko
-              _buildTextField(_tokoController, "Nama Toko", Icons.store),
-
-              const SizedBox(height: 15),
-
-              // Input nominal
-              _buildTextField(
-                _nominalController,
-                "Nominal (Rp)",
-                Icons.money,
-                isNumber: true,
+              )
+            : InteractiveViewer(
+                panEnabled: true,
+                minScale: 1.0,
+                maxScale: 4.0,
+                child: Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Image.file(_imageFile!, fit: BoxFit.contain),
+                ),
               ),
+      ),
+    );
+  }
 
-              const SizedBox(height: 20),
+  Widget _buildScan() {
+    return Column(
+      children: [
+        if (_imageFile != null)
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton.icon(
+                    onPressed: _showPickerMenu,
+                    icon: Icon(Icons.refresh, color: blue),
+                    label: Text("Ganti Foto", style: blueReguler12),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _isProcessing ? null : _scanReceipt,
+                    icon: Icon(Icons.document_scanner, color: black),
+                    label: Text(
+                      _isProcessing ? "Scanning..." : "Scan Struk",
+                      style: blackReguler,
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: yellow,
+                      foregroundColor: white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Jika ada kesalahan, mohon input manual!',
+                style: TextStyle(color: rednotif, fontWeight: FontWeight.bold),
+              ),
+              const Divider(height: 30),
+            ],
+          ),
+      ],
+    );
+  }
 
-              // Dropdown tipe
-              const Text("Tipe", style: TextStyle(fontWeight: FontWeight.bold)),
+  Widget buttonInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Judul Tagihan', style: blackReguler),
+        const SizedBox(height: 15),
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 14, right: 5),
+            child: TextField(
+              controller: _tokoController,
+              decoration: InputDecoration(
+                hintText: 'Bayar Listrik',
+                hintStyle: greyReguler,
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text('Nominal', style: blackReguler),
+        const SizedBox(height: 15),
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 14),
+                child: Text('Rp.', style: blackReguler),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _nominalController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: '100.000',
+                    hintStyle: greyReguler,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    CurrencyInputFormatter(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-              DropdownButtonFormField<String>(
+  Widget buttoTipe() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Tipe Transaksi', style: blackReguler),
+        const SizedBox(height: 15),
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
                 value: _selectedTipe,
+                dropdownColor: white,
+                icon: Icon(Icons.arrow_drop_down, color: black),
+                onChanged: (v) => setState(() => _selectedTipe = v!),
                 items: const [
                   DropdownMenuItem(
                     value: 'pengeluaran',
@@ -287,28 +378,48 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                     child: Text("Pemasukan"),
                   ),
                 ],
-                onChanged: (v) => setState(() => _selectedTipe = v!),
-                decoration: const InputDecoration(border: OutlineInputBorder()),
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-              const SizedBox(height: 15),
+  Widget buttonKategori() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Kategori', style: blackReguler),
+        const SizedBox(height: 15),
+        StreamBuilder<List<KategoriModel>>(
+          stream: _db.getCategoryModels(),
+          builder: (context, snapshot) {
+            final list = snapshot.data ?? <KategoriModel>[];
 
-              // Dropdown kategori
-              const Text(
-                "Kategori",
-                style: TextStyle(fontWeight: FontWeight.bold),
+            if (list.isEmpty) {
+              return _emptyMessage("Kategori kosong", () {});
+            }
+
+            if (_selectedKategori != null &&
+                !list.map((e) => e.nama).contains(_selectedKategori)) {
+              _selectedKategori = null;
+            }
+
+            return Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                border: Border.all(color: red, width: 1.5),
+                borderRadius: BorderRadius.circular(15),
               ),
-
-              // ===============================
-              // DROPDOWN KATEGORI (GANTI FULL)
-              // ===============================
-              StreamBuilder<List<KategoriModel>>(
-                stream: _db.getCategoryModels(),
-                builder: (context, snapshot) {
-                  final list = snapshot.data ?? <KategoriModel>[];
-
-                  return DropdownButtonFormField<String>(
-                    hint: const Text("Pilih Kategori"),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    dropdownColor: white,
+                    hint: Text('Pilih Kategori', style: blackReguler),
+                    icon: Icon(Icons.arrow_drop_down, color: black),
                     value: list.map((e) => e.nama).contains(_selectedKategori)
                         ? _selectedKategori
                         : null,
@@ -321,23 +432,50 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                         )
                         .toList(),
                     onChanged: (v) => setState(() => _selectedKategori = v),
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                    ),
-                  );
-                },
+                  ),
+                ),
               ),
+            );
+          },
+        ),
+      ],
+    );
+  }
 
-              // ===============================
-              // DROPDOWN BANK (GANTI FULL)
-              // ===============================
-              StreamBuilder<List<BankModel>>(
-                stream: _db.getBankModels(),
-                builder: (context, snapshot) {
-                  final list = snapshot.data ?? <BankModel>[];
+  Widget buttonBank() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Bank', style: blackReguler),
+        const SizedBox(height: 15),
+        StreamBuilder<List<BankModel>>(
+          stream: _db.getBankModels(),
+          builder: (context, snapshot) {
+            final list = snapshot.data ?? <BankModel>[];
 
-                  return DropdownButtonFormField<String>(
-                    hint: const Text("Pilih Bank"),
+            if (list.isEmpty) {
+              return _emptyMessage("Bank kosong", () {});
+            }
+
+            if (_selectedBank != null &&
+                !list.map((e) => e.nama).contains(_selectedBank)) {
+              _selectedBank = null;
+            }
+
+            return Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                border: Border.all(color: red, width: 1.5),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    dropdownColor: white,
+                    hint: Text('Pilih Bank', style: blackReguler),
+                    icon: Icon(Icons.arrow_drop_down, color: black),
                     value: list.map((e) => e.nama).contains(_selectedBank)
                         ? _selectedBank
                         : null,
@@ -350,63 +488,57 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                         )
                         .toList(),
                     onChanged: (v) => setState(() => _selectedBank = v),
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 30),
-
-              // Tombol simpan
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: _simpanData,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    "SIMPAN TRANSAKSI",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ),
               ),
+            );
+          },
+        ),
+      ],
+    );
+  }
 
-              const SizedBox(height: 40),
-            ],
+  Widget buttonSimpan() {
+    return GestureDetector(
+      onTap: _isLoading ? null : _simpanData,
+      child: Container(
+        width: double.infinity,
+        height: 55,
+        decoration: BoxDecoration(
+          color: red,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Center(
+          child: _isLoading
+              ? const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                )
+              : Text('Simpan Tagihan', style: whiteBold),
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyMessage(String text, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 55,
+        decoration: BoxDecoration(
+          border: Border.all(color: rednotif),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: TextStyle(color: rednotif, fontWeight: FontWeight.bold),
           ),
         ),
       ),
     );
   }
 
-  // Widget input reusable
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    bool isNumber = false,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
-      ),
-    );
-  }
-
-  // Bottom sheet pilih kamera / galeri
   void _showPickerMenu() {
     showModalBottomSheet(
       context: context,
@@ -421,7 +553,6 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 _pickImage(false);
               },
             ),
-
             ListTile(
               leading: const Icon(Icons.camera_alt),
               title: const Text("Kamera"),

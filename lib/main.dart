@@ -2,12 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lottie/lottie.dart';
 
 import 'package:skripsi_keuangan/Screens/SplashScreen/splash_screen.dart';
 import 'package:skripsi_keuangan/services/gemini_service.dart';
 import 'package:skripsi_keuangan/services/notification_service.dart';
+import 'package:skripsi_keuangan/ui.dart';
 
 import 'firebase_options.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
@@ -68,33 +70,47 @@ class _RootAppState extends State<RootApp> {
   // INIT CONNECTION
   void _initConnection() async {
     final result = await Connectivity().checkConnectivity();
+    await _updateConnection(result);
 
-    _updateConnection(result);
-
-    _sub = Connectivity().onConnectivityChanged.listen(_updateConnection);
+    _sub = Connectivity().onConnectivityChanged.listen((result) async {
+      await _updateConnection(result);
+    });
   }
 
-  // UPDATE CONNECTION
-  void _updateConnection(List<ConnectivityResult> result) {
-    final nowConnected = !result.contains(ConnectivityResult.none);
+  // UPDATE CONNECTION (REAL INTERNET CHECK)
+  Future<void> _updateConnection(List<ConnectivityResult> result) async {
+    bool hasInternet = false;
 
-    if (nowConnected == isConnected) return;
+    // Jika tidak ada jaringan sama sekali
+    if (result.contains(ConnectivityResult.none)) {
+      hasInternet = false;
+    } else {
+      // Jika ada jaringan, cek internet asli
+      hasInternet = await InternetConnectionChecker().hasConnection;
+    }
+
+    if (hasInternet == isConnected) return;
+
+    if (!mounted) return;
 
     setState(() {
-      isConnected = nowConnected;
+      isConnected = hasInternet;
 
-      if (nowConnected) {
+      if (hasInternet) {
         _showOnlineAnim = true;
-
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted) {
-            setState(() {
-              _showOnlineAnim = false;
-            });
-          }
-        });
       }
     });
+
+    // Hilangkan animasi online setelah 3 detik
+    if (hasInternet) {
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _showOnlineAnim = false;
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -142,6 +158,7 @@ class _RootAppState extends State<RootApp> {
                       "images/animasiinternet.json",
                       width: 350,
                       height: 350,
+                      repeat: true,
                     ),
                   ),
                 ),
@@ -159,6 +176,7 @@ class _RootAppState extends State<RootApp> {
                     "images/internet.json",
                     width: 350,
                     height: 350,
+                    repeat: false,
                   ),
                 ),
               ),
