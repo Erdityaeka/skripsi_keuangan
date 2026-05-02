@@ -15,31 +15,39 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 // GLOBAL
 final messengerKey = GlobalKey<ScaffoldMessengerState>();
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // GLOBAL FLUTTER ERROR HANDLER
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    debugPrint("Flutter Error: ${details.exception}");
-  };
-
-  await initializeDateFormatting('id_ID', null);
-
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  await GeminiService.initialize();
-
-  // NOTIFICATION ONLY
-  await NotificationService.init();
-
-  // GLOBAL ASYNC ERROR HANDLER
+void main() {
   runZonedGuarded(
-    () {
+    () async {
+      // WAJIB DALAM ZONA YANG SAMA
+      WidgetsFlutterBinding.ensureInitialized();
+
+      // GLOBAL FLUTTER ERROR HANDLER
+      FlutterError.onError = (FlutterErrorDetails details) {
+        FlutterError.presentError(details);
+        debugPrint("Flutter Error: ${details.exception}");
+      };
+
+      // FORMAT TANGGAL INDONESIA
+      await initializeDateFormatting('id_ID', null);
+
+      // FIREBASE
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // GEMINI AI
+      await GeminiService.initialize();
+
+      // NOTIFIKASI
+      await NotificationService.init();
+
+      // JALANKAN APP
       runApp(const RootApp());
     },
     (error, stack) {
+      // GLOBAL ASYNC ERROR HANDLER
       debugPrint("Global Error: $error");
+      debugPrint("Stack Trace: $stack");
     },
   );
 }
@@ -64,9 +72,12 @@ class _RootAppState extends State<RootApp> {
     _initConnection();
   }
 
+  // ==========================
   // INIT CONNECTION
+  // ==========================
   void _initConnection() async {
     final result = await Connectivity().checkConnectivity();
+
     await _updateConnection(result);
 
     _sub = Connectivity().onConnectivityChanged.listen((result) async {
@@ -74,18 +85,21 @@ class _RootAppState extends State<RootApp> {
     });
   }
 
-  // UPDATE CONNECTION (REAL INTERNET CHECK)
+  // ==========================
+  // UPDATE INTERNET STATUS
+  // ==========================
   Future<void> _updateConnection(List<ConnectivityResult> result) async {
     bool hasInternet = false;
 
-    // Jika tidak ada jaringan sama sekali
+    // Tidak ada jaringan
     if (result.contains(ConnectivityResult.none)) {
       hasInternet = false;
     } else {
-      // Jika ada jaringan, cek internet asli
+      // Ada jaringan → cek internet asli
       hasInternet = await InternetConnectionChecker().hasConnection;
     }
 
+    // Jika status sama, abaikan
     if (hasInternet == isConnected) return;
 
     if (!mounted) return;
@@ -98,7 +112,7 @@ class _RootAppState extends State<RootApp> {
       }
     });
 
-    // Hilangkan animasi online setelah 3 detik
+    // Sembunyikan animasi online
     if (hasInternet) {
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
@@ -121,10 +135,13 @@ class _RootAppState extends State<RootApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
+      // Global snackbar
       scaffoldMessengerKey: messengerKey,
 
+      // Navigator notifikasi
       navigatorKey: NotificationService.navigatorKey,
 
+      // Bahasa
       locale: const Locale('id', 'ID'),
 
       supportedLocales: const [Locale('id', 'ID'), Locale('en', 'US')],
@@ -135,8 +152,10 @@ class _RootAppState extends State<RootApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
 
+      // Theme
       theme: ThemeData(scaffoldBackgroundColor: white),
 
+      // BUILDER INTERNET OVERLAY
       builder: (context, child) {
         return Stack(
           children: [
@@ -152,7 +171,7 @@ class _RootAppState extends State<RootApp> {
                   color: Colors.black.withOpacity(0.5),
                   child: Center(
                     child: Lottie.asset(
-                      "images/animasiinternet.json",
+                      "Images/animasiinternet.json",
                       width: 350,
                       height: 350,
                       repeat: true,
@@ -170,7 +189,7 @@ class _RootAppState extends State<RootApp> {
                 right: 0,
                 child: Center(
                   child: Lottie.asset(
-                    "images/internet.json",
+                    "Images/internet.json",
                     width: 350,
                     height: 350,
                     repeat: false,
@@ -181,6 +200,7 @@ class _RootAppState extends State<RootApp> {
         );
       },
 
+      // HOME
       home: const SplashScreen(),
     );
   }

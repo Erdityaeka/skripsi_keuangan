@@ -21,6 +21,13 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
   DateTime? startDate;
   DateTime? endDate;
 
+  // FILTER PERIODE
+  String selectedPeriode = "Harian";
+  int selectedWeek = 1;
+  int selectedMonth = DateTime.now().month;
+  int selectedYear = DateTime.now().year;
+
+  // FILTER DATA
   String selectedType = "Semua";
   String selectedBank = "Semua";
 
@@ -37,8 +44,6 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
 
   void _loadData() {
     service.gettransaksi().listen((data) {
-      print("DATA MASUK: ${data.length}");
-
       setState(() {
         transactions = data;
         isLoading = false;
@@ -46,7 +51,31 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     });
   }
 
-  // DATE PICKER
+  // AUTO SET TANGGAL
+  void _setPeriodeTanggal() {
+    // BULANAN
+    if (selectedPeriode == "Bulanan") {
+      startDate = DateTime(selectedYear, selectedMonth, 1);
+
+      endDate = DateTime(selectedYear, selectedMonth + 1, 0, 23, 59, 59);
+    }
+
+    // MINGGUAN
+    if (selectedPeriode == "Mingguan") {
+      startDate = DateTime(
+        selectedYear,
+        selectedMonth,
+        ((selectedWeek - 1) * 7) + 1,
+      );
+
+      // Minggu 4 langsung akhir bulan
+      endDate = selectedWeek == 4
+          ? DateTime(selectedYear, selectedMonth + 1, 0, 23, 59, 59)
+          : startDate!.add(const Duration(days: 6));
+    }
+  }
+
+  // DATE PICKER HARIAN
   Future<void> _pickDate(bool isStart) async {
     final picked = await showDatePicker(
       context: context,
@@ -54,25 +83,21 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
       helpText: 'Pilih Tanggal',
-
-      // opsional (biar full Indonesia)
       cancelText: 'Batal',
       confirmText: 'OK',
-
-      // INI BAGIAN PENTING
+      locale: const Locale('id', 'ID'),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: red, // warna header & tombol
-              onPrimary: white, // warna text di header
-              onSurface: black, // warna tanggal
+              primary: red,
+              onPrimary: white,
+              onSurface: black,
             ),
           ),
           child: child!,
         );
       },
-      locale: const Locale('id', 'ID'),
     );
 
     if (picked == null) return;
@@ -95,17 +120,17 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
         .toList();
 
     banks.sort();
+
     return ["Semua", ...banks];
   }
 
-  // FILTER
+  // FILTER DATA
   List<TransaksiModel> _getFilteredData() {
     if (startDate == null || endDate == null) return [];
 
     return transactions.where((tx) {
       final date = tx.tanggal.toLocal();
 
-      // FIX RANGE TANGGAL (BIAR TIDAK KEFILTER)
       final start = DateTime(startDate!.year, startDate!.month, startDate!.day);
 
       final end = DateTime(
@@ -132,9 +157,13 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
 
   // VALIDASI
   bool _isValid() {
-    if (startDate == null || endDate == null) {
-      _showMsg("Pilih tanggal dulu");
-      return false;
+    if (selectedPeriode == "Harian") {
+      if (startDate == null || endDate == null) {
+        _showMsg("Pilih tanggal dulu");
+        return false;
+      }
+    } else {
+      _setPeriodeTanggal();
     }
 
     if (judulController.text.trim().isEmpty) {
@@ -145,6 +174,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     return true;
   }
 
+  // SNACKBAR
   void _showMsg(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -154,14 +184,12 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
-  // EXPORT
+  // EXPORT PDF
   Future<void> _export() async {
     if (!_isValid()) return;
 
     try {
       final data = _getFilteredData();
-
-      print("FILTERED DATA: ${data.length}");
 
       if (data.isEmpty) {
         _showMsg("Data kosong");
@@ -191,7 +219,6 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
         ),
       );
     } catch (e) {
-      print("ERROR EXPORT: $e");
       _showMsg("Gagal export");
     }
   }
@@ -219,19 +246,31 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
               child: Column(
                 children: [
                   _buildInputJudul(),
+
                   const Divider(height: 30),
-                  _buildTanggal(),
+
+                  _buildPeriode(),
+
+                  const Divider(height: 30),
+
+                  if (selectedPeriode == "Harian") _buildTanggal(),
+
+                  if (selectedPeriode == "Mingguan") _buildMingguan(),
+
+                  if (selectedPeriode == "Bulanan") _buildBulanan(),
 
                   const Divider(height: 30),
 
                   _buildTipe(),
 
                   const SizedBox(height: 10),
+
                   _buildBank(),
 
                   const Spacer(),
 
                   _buildButtonUnduh(),
+
                   const SizedBox(height: 50),
                 ],
               ),
@@ -239,6 +278,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
+  // APPBAR
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
       backgroundColor: white,
@@ -252,10 +292,9 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
-  // Widget UI Judul
+  // INPUT JUDUL
   Widget _buildInputJudul() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Judul Transaksi', style: redReguler15),
@@ -267,15 +306,13 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
             border: Border.all(color: red, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 5.0, left: 14.0),
-              child: TextField(
-                controller: judulController,
-                decoration: InputDecoration(
-                  hintStyle: greyReguler,
-                  border: InputBorder.none,
-                ),
+          child: Padding(
+            padding: const EdgeInsets.only(right: 5, left: 14),
+            child: TextField(
+              controller: judulController,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintStyle: greyReguler,
               ),
             ),
           ),
@@ -284,7 +321,49 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
-  // Widget UI Tanggal
+  // WIDGET PILIH PERIODE
+  Widget _buildPeriode() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Periode', style: redReguler15),
+        SizedBox(height: 15),
+
+        Container(
+          width: double.infinity,
+          height: 55,
+          decoration: BoxDecoration(
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedPeriode,
+                dropdownColor: white,
+                icon: Icon(Icons.arrow_drop_down, color: black),
+
+                onChanged: (val) {
+                  setState(() {
+                    selectedPeriode = val!;
+                  });
+                },
+
+                items: ["Harian", "Mingguan", "Bulanan"]
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // WIDGET TANGGAL HARIAN
   Widget _buildTanggal() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -310,6 +389,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                 ),
               ),
             ),
+
             Expanded(
               child: InkWell(
                 onTap: () => _pickDate(false),
@@ -334,7 +414,191 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
-  // Widget UI Tipe
+  // WIDGET BULANAN SIMPLE
+  Widget _buildBulanan() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Pilih Bulan", style: redReguler15),
+        SizedBox(height: 15),
+        Container(
+          width: double.infinity,
+          height: 55,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: white,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: red, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              // Tombol kiri
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    if (selectedMonth > 1) {
+                      selectedMonth--;
+                    } else {
+                      selectedMonth = 12;
+                      selectedYear--;
+                    }
+                  });
+                },
+                icon: Icon(Icons.chevron_left, color: black),
+              ),
+
+              // Tengah
+              Expanded(
+                child: Center(
+                  child: Text(
+                    DateFormat(
+                      'MMMM yyyy',
+                      'id',
+                    ).format(DateTime(selectedYear, selectedMonth)),
+                    style: blackBold15,
+                  ),
+                ),
+              ),
+
+              // Tombol kanan
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    if (selectedMonth < 12) {
+                      selectedMonth++;
+                    } else {
+                      selectedMonth = 1;
+                      selectedYear++;
+                    }
+                  });
+                },
+                icon: Icon(Icons.chevron_right, color: black),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // WIDGET MINGGUAN FIX
+  Widget _buildMingguan() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Pilih Minggu", style: redReguler15),
+        SizedBox(height: 15),
+        Container(
+          width: double.infinity,
+          height: 70,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: white,
+            border: Border.all(color: red, width: 1.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            children: [
+              // Tombol kiri
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    if (selectedMonth > 1) {
+                      selectedMonth--;
+                    } else {
+                      selectedMonth = 12;
+                      selectedYear--;
+                    }
+                  });
+                },
+                icon: Icon(Icons.chevron_left, color: black),
+              ),
+
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        DateFormat(
+                          'MMMM yyyy',
+                          'id',
+                        ).format(DateTime(selectedYear, selectedMonth)),
+                        style: blackBold15,
+                      ),
+
+                      DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          value: selectedWeek,
+                          isDense: true,
+                          dropdownColor: white,
+                          iconEnabledColor: grey,
+                          icon: Icon(Icons.arrow_drop_down, color: black),
+                          style: whiteReguler,
+
+                          selectedItemBuilder: (context) {
+                            return List.generate(4, (index) {
+                              final week = index + 1;
+
+                              return Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  "Minggu ke $week",
+                                  style: blackReguler12,
+                                ),
+                              );
+                            });
+                          },
+
+                          items: List.generate(4, (index) {
+                            final week = index + 1;
+
+                            return DropdownMenuItem(
+                              value: week,
+                              child: Text(
+                                "Minggu ke $week",
+                                style: blackReguler12,
+                              ),
+                            );
+                          }),
+
+                          onChanged: (val) {
+                            setState(() {
+                              selectedWeek = val!;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Tombol kanan
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    if (selectedMonth < 12) {
+                      selectedMonth++;
+                    } else {
+                      selectedMonth = 1;
+                      selectedYear++;
+                    }
+                  });
+                },
+                icon: Icon(Icons.chevron_right, color: black),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // WIDGET TIPE TRANSAKSI
   Widget _buildTipe() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -342,6 +606,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       children: [
         Text('Tipe Transaksi', style: redReguler15),
         SizedBox(height: 15),
+
         Container(
           width: double.infinity,
           height: 55,
@@ -349,6 +614,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
             border: Border.all(color: red, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
+
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButtonHideUnderline(
@@ -356,7 +622,13 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                 value: selectedType,
                 dropdownColor: white,
                 icon: Icon(Icons.arrow_drop_down, color: black),
-                onChanged: (val) => setState(() => selectedType = val!),
+
+                onChanged: (val) {
+                  setState(() {
+                    selectedType = val!;
+                  });
+                },
+
                 items: ["Semua", "Pemasukan", "Pengeluaran"]
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
@@ -368,7 +640,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
-  // Widget UI Bank
+  // WIDGET BANK
   Widget _buildBank() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -376,6 +648,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       children: [
         Text('Bank', style: redReguler15),
         SizedBox(height: 15),
+
         Container(
           width: double.infinity,
           height: 55,
@@ -383,6 +656,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
             border: Border.all(color: red, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
+
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButtonHideUnderline(
@@ -390,7 +664,13 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                 value: selectedBank,
                 dropdownColor: white,
                 icon: Icon(Icons.arrow_drop_down, color: black),
-                onChanged: (val) => setState(() => selectedBank = val!),
+
+                onChanged: (val) {
+                  setState(() {
+                    selectedBank = val!;
+                  });
+                },
+
                 items: bankList
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
@@ -402,7 +682,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
-  // Widget UI Buttun Unduh
+  // BUTTON UNDUH
   Widget _buildButtonUnduh() {
     return InkWell(
       onTap: _export,

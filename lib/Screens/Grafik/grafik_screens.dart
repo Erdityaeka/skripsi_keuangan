@@ -58,9 +58,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
             );
           }).toList();
 
-          // =============================
           // FILTER BULANAN
-          // =============================
           List<TransaksiModel> month = all.where((tx) {
             return tx.tanggal.month == _focusedMonth.month &&
                 tx.tanggal.year == _focusedMonth.year;
@@ -68,9 +66,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
 
           List<TransaksiModel> finalFiltered = month;
 
-          // =============================
           // FILTER HARIAN
-          // =============================
           if (_viewMode == "Harian") {
             finalFiltered = month.where((tx) {
               return tx.tanggal.day == _selectedDay.day &&
@@ -79,9 +75,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
             }).toList();
           }
 
-          // =============================
           // FILTER MINGGUAN
-          // =============================
           if (_viewMode == "Mingguan") {
             finalFiltered = month.where((tx) {
               int d = tx.tanggal.day;
@@ -212,8 +206,6 @@ class _GrafikScreensState extends State<GrafikScreens> {
                   setState(() {
                     _viewMode = val!;
 
-                    // Saat masuk harian,
-                    // langsung pilih hari ini
                     if (_viewMode == "Harian") {
                       _selectedDay = DateTime.now();
                       _focusedMonth = DateTime.now();
