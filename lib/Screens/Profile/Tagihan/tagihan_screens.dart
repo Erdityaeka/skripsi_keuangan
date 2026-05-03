@@ -197,6 +197,31 @@ class _TagihanScreensState extends State<TagihanScreens> {
         }
 
         // DATA LIST
+        tagihans.sort((a, b) {
+          final dateA = DateTime(
+            a.tanggalJatuhTempo.year,
+            a.tanggalJatuhTempo.month,
+            a.tanggalJatuhTempo.day,
+          );
+
+          final dateB = DateTime(
+            b.tanggalJatuhTempo.year,
+            b.tanggalJatuhTempo.month,
+            b.tanggalJatuhTempo.day,
+          );
+
+          // Urut tanggal terdekat dulu
+          final dateCompare = dateA.compareTo(dateB);
+
+          if (dateCompare != 0) {
+            return dateCompare;
+          }
+
+          // Jika tanggal sama,
+          // jam terbaru tampil di atas
+          return b.tanggalJatuhTempo.compareTo(a.tanggalJatuhTempo);
+        });
+
         return ListView.builder(
           itemCount: tagihans.length,
           itemBuilder: (context, index) {
@@ -323,7 +348,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
                   Column(
                     children: [
                       Text(
-                        "Rp ${NumberFormat('#,###').format(tagihan.nominal)}",
+                        "Rp ${NumberFormat('#,###', 'id_ID').format(tagihan.nominal).replaceAll(',', '.')}",
                         style: redBold15,
                       ),
                     ],

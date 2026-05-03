@@ -75,9 +75,7 @@ class FirestoreService {
         .delete();
   }
 
-  //====================================
   // AMBIL SEMUA TRANSAKSI
-  //====================================
   Future<List<TransaksiModel>> getAllTransactions() async {
     try {
       if (uid == null) return [];
@@ -98,9 +96,7 @@ class FirestoreService {
     }
   }
 
-  //====================================
   // SALDO SEKARANG
-  //====================================
   Future<double> getCurrentSaldo() async {
     try {
       final transaksi = await getAllTransactions();
@@ -123,9 +119,7 @@ class FirestoreService {
     }
   }
 
-  //====================================
   // SALDO SAMPAI TANGGAL TERTENTU
-  //====================================
   Future<double> getSaldoUntilDate(DateTime targetDate) async {
     try {
       final transaksi = await getAllTransactions();
@@ -150,9 +144,7 @@ class FirestoreService {
     }
   }
 
-  //====================================
   // SALDO BERDASARKAN BULAN
-  //====================================
   Future<double> getSaldoByMonth(int month, int year) async {
     try {
       final transaksi = await getAllTransactions();
@@ -177,9 +169,7 @@ class FirestoreService {
     }
   }
 
-  //====================================
   // TRANSAKSI BERDASARKAN BULAN
-  //====================================
   Future<List<TransaksiModel>> getTransactionsByMonth(
     int month,
     int year,
@@ -233,9 +223,7 @@ class FirestoreService {
         .delete();
   }
 
-  // =========================
-  // BANK (GANTI BAGIAN LAMA)
-  // =========================
+  // BANK
 
   Future<void> addBank(BankModel bank) async {
     if (uid == null) return;
@@ -394,5 +382,33 @@ class FirestoreService {
         .collection('tagihan')
         .doc(tagihanId)
         .delete();
+  }
+
+  // JUMLAH TAGIHAN TELAT / JATUH TEMPO
+  Stream<int> getJumlahTagihanPenting() {
+    if (uid == null) return const Stream.empty();
+
+    return getTagihan().map((tagihans) {
+      final now = DateTime.now();
+
+      final today = DateTime(now.year, now.month, now.day);
+
+      int total = 0;
+
+      for (var tagihan in tagihans) {
+        final dueDate = DateTime(
+          tagihan.tanggalJatuhTempo.year,
+          tagihan.tanggalJatuhTempo.month,
+          tagihan.tanggalJatuhTempo.day,
+        );
+
+        // TELAT atau HARI INI
+        if (dueDate.isBefore(today) || dueDate == today) {
+          total++;
+        }
+      }
+
+      return total;
+    });
   }
 }

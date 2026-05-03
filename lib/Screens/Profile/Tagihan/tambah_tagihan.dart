@@ -157,8 +157,8 @@ class _TambahTagihanState extends State<TambahTagihan> {
     // notif dikirim 10 menit sebelum jatuh tempo
     // Jika kurang dari / sama dengan 10 menit:
     // notif dikirim tepat waktu
-    final notificationTime = scheduledDate.difference(now).inMinutes > 10
-        ? scheduledDate.subtract(const Duration(minutes: 10))
+    final notificationTime = scheduledDate.difference(now).inMinutes > 5
+        ? scheduledDate.subtract(const Duration(minutes: 15))
         : scheduledDate;
 
     // Bersihkan nominal
@@ -556,7 +556,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
             width: double.infinity,
             height: 55,
             decoration: BoxDecoration(
-              color: red,
+              color: greennotif,
               borderRadius: BorderRadius.circular(15),
             ),
             child: Center(

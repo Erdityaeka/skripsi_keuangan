@@ -1,5 +1,5 @@
 // lib/api_keys.dart
 
 class ApiKeys {
-  static const String geminiApiKey = 'AIzaSyBuHBIVXyNNMS4D0FQ6KXO-PwOupAUKekk';
+  static const String geminiApiKey = 'AIzaSyDxFbnrwdN3Iq5LJpsi9GM9ZHeHvdBC9SA';
 }

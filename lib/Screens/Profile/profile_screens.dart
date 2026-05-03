@@ -14,6 +14,7 @@ import 'package:skripsi_keuangan/Screens/Profile/Tagihan/tagihan_screens.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
+import 'package:skripsi_keuangan/services/firestore_service.dart';
 
 class ProfileScreens extends StatefulWidget {
   const ProfileScreens({super.key});
@@ -23,32 +24,26 @@ class ProfileScreens extends StatefulWidget {
 }
 
 class _ProfileScreensState extends State<ProfileScreens> {
-  // User aktif
   User? user = FirebaseAuth.instance.currentUser;
 
-  // Foto profile
+  final FirestoreService firestore = FirestoreService();
+
   String? fotoImageName;
   File? fotoImageFile;
 
-  // Posisi foto
   double _yPosisi = 0.0;
 
   @override
   void initState() {
     super.initState();
-
-    // Load data awal
     _refreshData();
   }
 
-  // Huruf awal kapital
   String capitalize(String text) {
     if (text.isEmpty) return text;
-
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  // Notifikasi aman
   void _showSnack(String msg, {bool success = false}) {
     if (!mounted) return;
 
@@ -64,7 +59,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
       );
   }
 
-  // Refresh data user
   Future<void> _refreshData() async {
     try {
       user = FirebaseAuth.instance.currentUser;
@@ -81,12 +75,10 @@ class _ProfileScreensState extends State<ProfileScreens> {
       if (doc.exists) {
         final dataFoto = doc.data()?['foto'];
 
-        // Format baru foto|posisi
         if (dataFoto != null && dataFoto.contains('|')) {
           final parts = dataFoto.split('|');
 
           fotoImageName = parts[0];
-
           _yPosisi = double.tryParse(parts[1]) ?? 0.0;
 
           final dir = await getApplicationDocumentsDirectory();
@@ -95,7 +87,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
 
           fotoImageFile = await file.exists() ? file : null;
         } else {
-          // Format lama
           fotoImageName = dataFoto;
           _yPosisi = 0.0;
           fotoImageFile = null;
@@ -110,7 +101,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
     }
   }
 
-  // Hapus akun
   Future<void> _deleteAccount() async {
     final passwordController = TextEditingController();
 
@@ -183,16 +173,13 @@ class _ProfileScreensState extends State<ProfileScreens> {
         password: passwordController.text.trim(),
       );
 
-      // Re-auth
       await currentUser.reauthenticateWithCredential(credential);
 
-      // Hapus Firestore
       await FirebaseFirestore.instance
           .collection('user')
           .doc(currentUser.uid)
           .delete();
 
-      // Hapus Auth
       await currentUser.delete();
 
       if (!mounted) return;
@@ -210,8 +197,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
     }
   }
 
-  // Build tombol menu reusable
-  Widget _buildButton(IconData icon, String text) {
+  Widget _buildButton(IconData icon, String text, {int badgeCount = 0}) {
     return Container(
       width: double.infinity,
       height: 50,
@@ -221,17 +207,55 @@ class _ProfileScreensState extends State<ProfileScreens> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: black),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(icon, size: 20, color: black),
+
+              if (badgeCount > 0)
+                Positioned(
+                  right: -8,
+                  top: -8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: rednotif,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$badgeCount',
+                        style: TextStyle(
+                          color: white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
           const SizedBox(width: 20),
+
           Text(text, style: blackReguler),
+
           const Spacer(),
+
           Icon(Icons.arrow_right_rounded, size: 20, color: black),
         ],
       ),
     );
   }
 
-  // Profile section
   Widget profileimage(BuildContext context, String nama) {
     return GestureDetector(
       onTap: () async {
@@ -278,7 +302,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
-  // Menu body
   Widget buttonBody() {
     return Column(
       children: [
@@ -301,6 +324,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
         ),
 
         const SizedBox(height: 30),
+
         InkWell(
           onTap: () => Navigator.push(
             context,
@@ -310,14 +334,26 @@ class _ProfileScreensState extends State<ProfileScreens> {
           ),
           child: _buildButton(Icons.download, 'Unduh Laporan'),
         ),
+
         const SizedBox(height: 30),
 
-        InkWell(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => TagihanScreens()),
-          ),
-          child: _buildButton(Icons.receipt_long, 'Tagihan'),
+        StreamBuilder<int>(
+          stream: firestore.getJumlahTagihanPenting(),
+          builder: (context, snapshot) {
+            final jumlah = snapshot.data ?? 0;
+
+            return InkWell(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TagihanScreens()),
+              ),
+              child: _buildButton(
+                Icons.receipt_long,
+                'Tagihan',
+                badgeCount: jumlah,
+              ),
+            );
+          },
         ),
 
         const SizedBox(height: 30),
@@ -360,7 +396,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
     );
   }
 
-  // Logout button
   Widget butonLogout() {
     return GestureDetector(
       onTap: () async {
