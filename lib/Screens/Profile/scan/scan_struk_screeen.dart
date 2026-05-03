@@ -67,7 +67,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(msg),
+          content: Center(child: Text(msg, style: whiteBold)),
           backgroundColor: success ? greennotif : rednotif,
         ),
       );

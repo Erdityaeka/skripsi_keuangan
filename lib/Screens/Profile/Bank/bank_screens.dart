@@ -49,17 +49,17 @@ class _BankScreensState extends State<BankScreens> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: white,
+        backgroundColor: redblack,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: Text("Hapus Bank?", style: redBold15),
+        title: Text("Hapus Bank?", style: whiteBold),
         content: Text(
           "Yakin ingin menghapus data bank '${bank.nama}'?",
-          style: blackReguler,
+          style: whiteReguler,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Batal", style: greyReguler),
+            child: Text("Batal", style: whiteBold),
           ),
           TextButton(
             onPressed: () async {
@@ -78,7 +78,7 @@ class _BankScreensState extends State<BankScreens> {
                 ),
               );
             },
-            child: Text("Hapus", style: redBold15),
+            child: Text("Hapus", style: greenBold15),
           ),
         ],
       ),
@@ -194,7 +194,7 @@ class _BankScreensState extends State<BankScreens> {
           color: red,
           borderRadius: BorderRadius.circular(15),
         ),
-        child:  Icon(Icons.add, color: white, size: 28),
+        child: Icon(Icons.add, color: white, size: 28),
       ),
     );
   }

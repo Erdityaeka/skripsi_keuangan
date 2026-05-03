@@ -79,9 +79,9 @@ class _TagihanScreensState extends State<TagihanScreens> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          title: Text("Hapus Tagihan", style: whiteBold),
+          title: Text("Hapus Tagihan?", style: whiteBold),
           content: Text(
-            "Yakin ingin menghapus ${tagihan.judul}?",
+            "Yakin ingin menghapus '${tagihan.judul}'?",
             style: whiteReguler,
           ),
           actions: [

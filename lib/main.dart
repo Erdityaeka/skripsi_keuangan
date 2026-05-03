@@ -72,9 +72,7 @@ class _RootAppState extends State<RootApp> {
     _initConnection();
   }
 
-  // ==========================
   // INIT CONNECTION
-  // ==========================
   void _initConnection() async {
     final result = await Connectivity().checkConnectivity();
 
@@ -85,9 +83,7 @@ class _RootAppState extends State<RootApp> {
     });
   }
 
-  // ==========================
   // UPDATE INTERNET STATUS
-  // ==========================
   Future<void> _updateConnection(List<ConnectivityResult> result) async {
     bool hasInternet = false;
 
@@ -168,7 +164,7 @@ class _RootAppState extends State<RootApp> {
               child: IgnorePointer(
                 ignoring: isConnected,
                 child: Container(
-                  color: Colors.black.withOpacity(0.5),
+                  color: black.withOpacity(0.5),
                   child: Center(
                     child: Lottie.asset(
                       "Images/animasiinternet.json",
