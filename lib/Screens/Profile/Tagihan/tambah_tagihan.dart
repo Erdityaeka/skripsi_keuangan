@@ -153,13 +153,13 @@ class _TambahTagihanState extends State<TambahTagihan> {
       return;
     }
 
-    // Jika lebih dari 10 menit:
-    // notif dikirim 10 menit sebelum jatuh tempo
-    // Jika kurang dari / sama dengan 10 menit:
-    // notif dikirim tepat waktu
-    final notificationTime = scheduledDate.difference(now).inMinutes > 5
-        ? scheduledDate.subtract(const Duration(minutes: 15))
-        : scheduledDate;
+    late DateTime notificationTime;
+
+    if (scheduledDate.difference(now).inMinutes > 15) {
+      notificationTime = scheduledDate.subtract(const Duration(minutes: 15));
+    } else {
+      notificationTime = scheduledDate;
+    }
 
     // Bersihkan nominal
     final cleanNominal = nominal.text

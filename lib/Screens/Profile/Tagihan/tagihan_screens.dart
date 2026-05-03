@@ -198,28 +198,52 @@ class _TagihanScreensState extends State<TagihanScreens> {
 
         // DATA LIST
         tagihans.sort((a, b) {
-          final dateA = DateTime(
-            a.tanggalJatuhTempo.year,
-            a.tanggalJatuhTempo.month,
-            a.tanggalJatuhTempo.day,
-          );
+          String statusA = getStatus(a);
+          String statusB = getStatus(b);
 
-          final dateB = DateTime(
-            b.tanggalJatuhTempo.year,
-            b.tanggalJatuhTempo.month,
-            b.tanggalJatuhTempo.day,
-          );
+          int priorityA;
+          int priorityB;
 
-          // Urut tanggal terdekat dulu
-          final dateCompare = dateA.compareTo(dateB);
+          switch (statusA) {
+            case "TELAT":
+              priorityA = 1;
+              break;
+            case "JATUH TEMPO":
+              priorityA = 2;
+              break;
+            default:
+              priorityA = 3;
+          }
+
+          switch (statusB) {
+            case "TELAT":
+              priorityB = 1;
+              break;
+            case "JATUH TEMPO":
+              priorityB = 2;
+              break;
+            default:
+              priorityB = 3;
+          }
+
+          // STATUS PRIORITAS
+          final statusCompare = priorityA.compareTo(priorityB);
+
+          if (statusCompare != 0) {
+            return statusCompare;
+          }
+
+          // TANGGAL TERLAMA DULU
+          final dateCompare = a.tanggalJatuhTempo.compareTo(
+            b.tanggalJatuhTempo,
+          );
 
           if (dateCompare != 0) {
             return dateCompare;
           }
 
-          // Jika tanggal sama,
-          // jam terbaru tampil di atas
-          return b.tanggalJatuhTempo.compareTo(a.tanggalJatuhTempo);
+          // JAM TERLAMA DULU
+          return a.tanggalJatuhTempo.compareTo(b.tanggalJatuhTempo);
         });
 
         return ListView.builder(
@@ -388,7 +412,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
-                      child: Text("Hapus Tgihan", style: whiteBold),
+                      child: Text("Hapus Tagihan", style: whiteBold),
                     ),
                   ),
                 ),
