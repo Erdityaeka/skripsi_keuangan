@@ -192,7 +192,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       final data = _getFilteredData();
 
       if (data.isEmpty) {
-        _showMsg("Data kosong");
+        _showMsg("Data transaski tidak ditemukan");
         return;
       }
 
