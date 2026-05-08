@@ -371,7 +371,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
         width: double.infinity,
         height: 55,
         decoration: BoxDecoration(
-          color: red,
+          color: greennotif,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Center(

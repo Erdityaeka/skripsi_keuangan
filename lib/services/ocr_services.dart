@@ -23,7 +23,7 @@ class OCRService {
         return null;
       }
 
-      // --- LOGIKA NAMA TOKO UNIVERSAL (TANPA BRAND) ---
+      //  Logika nama toko (TANPA BRAND) 
       // Urutkan blok dari atas ke bawah
       List<TextBlock> sortedBlocks = recognizedText.blocks.toList();
 
@@ -54,7 +54,7 @@ class OCRService {
         }
       }
 
-      // --- LOGIKA NOMINAL ---
+      //  Logika nominal 
       List<TextLine> allLines = [];
       for (TextBlock block in recognizedText.blocks) {
         allLines.addAll(block.lines);

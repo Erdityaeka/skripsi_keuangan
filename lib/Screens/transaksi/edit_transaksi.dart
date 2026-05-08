@@ -448,7 +448,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
       child: Container(
         height: 55,
         decoration: BoxDecoration(
-          color: red,
+          color: greennotif,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Center(

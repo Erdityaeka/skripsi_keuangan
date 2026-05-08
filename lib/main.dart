@@ -151,13 +151,13 @@ class _RootAppState extends State<RootApp> {
       // Theme
       theme: ThemeData(scaffoldBackgroundColor: white),
 
-      // BUILDER INTERNET OVERLAY
+      // Halaman offline/online
       builder: (context, child) {
         return Stack(
           children: [
             child!,
 
-            // OFFLINE SCREEN
+            // Halaman offline muncul saat tidak ada koneksi internet
             AnimatedOpacity(
               opacity: isConnected ? 0 : 1,
               duration: const Duration(milliseconds: 300),
@@ -177,7 +177,7 @@ class _RootAppState extends State<RootApp> {
               ),
             ),
 
-            // ONLINE SCREEN
+            // Halaman online muncul setelah offline
             if (_showOnlineAnim)
               Positioned(
                 top: 300,
@@ -196,7 +196,7 @@ class _RootAppState extends State<RootApp> {
         );
       },
 
-      // HOME
+      // Splash Screen
       home: const SplashScreen(),
     );
   }

@@ -27,7 +27,7 @@ class NotificationService {
     const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings();
 
-    // GLOBAL SETTINGS
+    // Global settings
     const InitializationSettings settings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
@@ -44,7 +44,7 @@ class NotificationService {
       },
     );
 
-    // REQUEST ANDROID 13+
+    // REQUEST NOTIFICATION PERMISSION ANDROID 13+
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -83,7 +83,7 @@ class NotificationService {
     );
   }
 
-  // SCHEDULE NOTIFICATION
+  // Menjadwalkan notifikasi untuk tagihan yang akan datang
   static Future<void> scheduleTagihanNotification({
     required int id,
     required String title,
@@ -124,12 +124,12 @@ class NotificationService {
     );
   }
 
-  // CANCEL NOTIFICATION
+  // Membatalkan notifikasi berdasarkan ID
   static Future<void> cancelNotification(int id) async {
     await flutterLocalNotificationsPlugin.cancel(id: id);
   }
 
-  // CANCEL ALL
+  // Membatalkan semua notifikasi
   static Future<void> cancelAllNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
   }

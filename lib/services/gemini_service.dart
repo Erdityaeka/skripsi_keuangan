@@ -289,7 +289,7 @@ class GeminiService {
     return await _askGemini(cleanPrompt, context: context);
   }
 
-  //  GEMINI ONLY
+  //  GEMINI Itu Aja
   static Future<String> _askGemini(String prompt, {String context = ""}) async {
     final aiCache = AiCacheService();
     final now = DateTime.now();
