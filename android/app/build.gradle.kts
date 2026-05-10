@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.skripsi_keuangan"
+    namespace = "com.uangnote.erditya"
 
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     defaultConfig {
-        applicationId = "com.example.skripsi_keuangan"
+        applicationId = "com.uangnote.erditya"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

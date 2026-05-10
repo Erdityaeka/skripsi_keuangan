@@ -42,18 +42,18 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyDFlLMqP8KpO34bJd6a9KO9sIKJg7mGY5Y',
-    appId: '1:515165052280:web:9e77844826a7153e71fc8d',
+    appId: '1:515165052280:web:a5df26aadbaeaabe71fc8d',
     messagingSenderId: '515165052280',
     projectId: 'keuangan-ce1d6',
     authDomain: 'keuangan-ce1d6.firebaseapp.com',
     databaseURL: 'https://keuangan-ce1d6-default-rtdb.firebaseio.com',
     storageBucket: 'keuangan-ce1d6.firebasestorage.app',
-    measurementId: 'G-T9N8Q6TGZ5',
+    measurementId: 'G-K392WRRPTH',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCTldKdPefI1Sfs2K9NzCpXGh-oaQ23ueY',
-    appId: '1:515165052280:android:1fcf74d9ae91558471fc8d',
+    appId: '1:515165052280:android:9a891c90b1f222e771fc8d',
     messagingSenderId: '515165052280',
     projectId: 'keuangan-ce1d6',
     databaseURL: 'https://keuangan-ce1d6-default-rtdb.firebaseio.com',
@@ -62,32 +62,33 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDCDFC17en7MsMBNvOQYt_oiOBTeAqhw_o',
-    appId: '1:515165052280:ios:bbdfe7f34911acf171fc8d',
+    appId: '1:515165052280:ios:c695bd129280311d71fc8d',
     messagingSenderId: '515165052280',
     projectId: 'keuangan-ce1d6',
     databaseURL: 'https://keuangan-ce1d6-default-rtdb.firebaseio.com',
     storageBucket: 'keuangan-ce1d6.firebasestorage.app',
-    iosBundleId: 'com.example.skripsiKeuangan',
+    iosBundleId: 'com.uangnote.erditya',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDCDFC17en7MsMBNvOQYt_oiOBTeAqhw_o',
-    appId: '1:515165052280:ios:bbdfe7f34911acf171fc8d',
+    appId: '1:515165052280:ios:c695bd129280311d71fc8d',
     messagingSenderId: '515165052280',
     projectId: 'keuangan-ce1d6',
     databaseURL: 'https://keuangan-ce1d6-default-rtdb.firebaseio.com',
     storageBucket: 'keuangan-ce1d6.firebasestorage.app',
-    iosBundleId: 'com.example.skripsiKeuangan',
+    iosBundleId: 'com.uangnote.erditya',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyDFlLMqP8KpO34bJd6a9KO9sIKJg7mGY5Y',
-    appId: '1:515165052280:web:b457e2c0b97ee6fe71fc8d',
+    appId: '1:515165052280:web:72921d53b58479c871fc8d',
     messagingSenderId: '515165052280',
     projectId: 'keuangan-ce1d6',
     authDomain: 'keuangan-ce1d6.firebaseapp.com',
     databaseURL: 'https://keuangan-ce1d6-default-rtdb.firebaseio.com',
     storageBucket: 'keuangan-ce1d6.firebasestorage.app',
-    measurementId: 'G-BMX69Q92E0',
+    measurementId: 'G-D7ZYRJNXN8',
   );
+
 }

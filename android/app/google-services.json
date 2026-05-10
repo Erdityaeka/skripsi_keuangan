@@ -8,9 +8,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:515165052280:android:1fcf74d9ae91558471fc8d",
+        "mobilesdk_app_id": "1:515165052280:android:9a891c90b1f222e771fc8d",
         "android_client_info": {
-          "package_name": "com.example.skripsi_keuangan"
+          "package_name": "com.uangnote.erditya"
         }
       },
       "oauth_client": [],

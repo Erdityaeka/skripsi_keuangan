@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.skripsi_keuangan">
+    package="com.uangnote.erditya">
 
     <!-- Permission internet untuk produksi -->
     <uses-permission android:name="android.permission.INTERNET"/>

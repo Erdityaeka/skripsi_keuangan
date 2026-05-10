@@ -117,7 +117,9 @@ class _ProfileScreensState extends State<ProfileScreens> {
                 "Masukkan password untuk konfirmasi hapus akun:",
                 style: whiteReguler,
               ),
+
               const SizedBox(height: 15),
+
               Container(
                 width: double.infinity,
                 height: 55,
@@ -141,25 +143,29 @@ class _ProfileScreensState extends State<ProfileScreens> {
               ),
             ],
           ),
+
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text("BATAL", style: whiteReguler),
             ),
+
             TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text("IYA", style: greenBold12),
+              onPressed: () {
+                if (passwordController.text.trim().isEmpty) {
+                  _showSnack("Password wajib diisi");
+                  return;
+                }
+
+                Navigator.pop(ctx, true);
+              },
+              child: Text("IYA", style: greenBold15),
             ),
           ],
         ),
       );
 
       if (confirm != true) return;
-
-      if (passwordController.text.trim().isEmpty) {
-        _showSnack("Password wajib diisi");
-        return;
-      }
 
       final currentUser = FirebaseAuth.instance.currentUser;
 
@@ -190,6 +196,12 @@ class _ProfileScreensState extends State<ProfileScreens> {
         MaterialPageRoute(builder: (context) => const LoginScreens()),
         (route) => false,
       );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        _showSnack("Password salah");
+      } else {
+        _showSnack("Gagal hapus akun");
+      }
     } catch (e) {
       _showSnack("Gagal hapus akun");
     } finally {

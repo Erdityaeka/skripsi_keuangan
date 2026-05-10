@@ -1,4 +1,4 @@
-package com.example.skripsi_keuangan
+package com.uangnote.erditya
 
 import io.flutter.embedding.android.FlutterActivity
 
