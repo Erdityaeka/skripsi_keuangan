@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/gemini_service.dart';
 
@@ -119,15 +120,15 @@ class _AiScreenState extends State<AiScreen> {
   // APPBAR
   PreferredSizeWidget _buildAppbar() {
     return AppBar(
-      backgroundColor: white,
+      backgroundColor: putih,
       elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
-        icon: Icon(Icons.arrow_back, color: red),
+        icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('AI Uang Note', style: redBold20),
+      title: Text('AI Uang Note', style: hitamBold20),
       centerTitle: true,
-      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -141,7 +142,7 @@ class _AiScreenState extends State<AiScreen> {
           children: [
             Text(
               'Anda Ingin Bertanya Apa Saat Ini?',
-              style: blackReguler,
+              style: hitamReguler15,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -176,7 +177,7 @@ class _AiScreenState extends State<AiScreen> {
               margin: const EdgeInsets.all(8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: white,
+                color: putih,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -201,12 +202,13 @@ class _AiScreenState extends State<AiScreen> {
             margin: const EdgeInsets.all(8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isUser ? red : white,
+              border: Border.all(color: isUser ? hitam : putih, width: 1.5),
+              color: isUser ? hijauMedium : putih,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               _messages[i]['text'] ?? '',
-              style: isUser ? whiteReguler : blackReguler,
+              style: isUser ? hitamReguler15 : hitamReguler15,
             ),
           ),
         );
@@ -221,11 +223,11 @@ class _AiScreenState extends State<AiScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: white,
+          color: putih,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: red, width: 2),
+          border: Border.all(color: hijauSimpan, width: 2),
         ),
-        child: Text(t, style: blackReguler12),
+        child: Text(t, style: hitamReguler12),
       ),
     );
   }
@@ -239,21 +241,21 @@ class _AiScreenState extends State<AiScreen> {
           height: 80,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: white,
+            color: putih,
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
           ),
           child: Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _controller,
-                  style: blackReguler,
+                  style: hitamReguler15,
                   maxLines: null,
                   keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(
                     hintText: 'Tulis pertanyaan Anda...',
-                    hintStyle: blackReguler,
+                    hintStyle: hitamReguler15,
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -266,7 +268,7 @@ class _AiScreenState extends State<AiScreen> {
               // Tombol kirim
               IconButton(
                 onPressed: _sendMessage,
-                icon: Icon(Icons.send, color: black),
+                icon: Icon(Icons.send, color: hitam),
               ),
             ],
           ),
@@ -274,7 +276,7 @@ class _AiScreenState extends State<AiScreen> {
 
         const SizedBox(height: 10),
 
-        Text('AI ini bisa melakukan kesalahan!', style: blackReguler12),
+        Text('AI ini bisa melakukan kesalahan!', style: merahReguler12),
 
         const SizedBox(height: 10),
       ],

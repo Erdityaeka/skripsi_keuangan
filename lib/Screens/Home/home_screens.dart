@@ -150,7 +150,7 @@ class _HomeScreensState extends State<HomeScreens> {
 
   PreferredSizeWidget _buildAppbar(context, String nama) {
     return AppBar(
-      backgroundColor: whiteBold.color,
+      backgroundColor: putih,
       automaticallyImplyLeading: false,
       title: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -159,16 +159,19 @@ class _HomeScreensState extends State<HomeScreens> {
           children: [
             Row(
               children: [
-                Text('Hi,', style: redBold15),
+                Text('Hi,', style: hitamBold15),
                 const SizedBox(width: 5),
-                Text(capitalize(nama), style: redBold15),
+                Text(capitalize(nama), style: hitamBold15),
+                const SizedBox(width: 5),
+                Text('👋,', style: hitamBold15),
               ],
             ),
-            Text('Selamat datang kembali...', style: redReguler15),
+            const SizedBox(height: 5),
+            Text('Ayo mulai kelola uang dengan baik!', style: hitamBold15),
           ],
         ),
       ),
-      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -177,33 +180,46 @@ class _HomeScreensState extends State<HomeScreens> {
       width: double.infinity,
       height: 230,
       decoration: BoxDecoration(
-        color: redblack,
         borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [hijauTerang, hijauMedium],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: hitam.withOpacity(0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Pemasukan', style: greenBold15),
-            Text(currency.format(pemasukan), style: whiteReguler),
+            Text('Pemasukan', style: hitamBold15),
+            const SizedBox(height: 5),
+            Text(currency.format(pemasukan), style: hijauBold15),
 
             const SizedBox(height: 10),
 
-            Text('Pengeluaran', style: yellowBold15),
-            Text(currency.format(pengeluaran), style: whiteReguler),
+            Text('Pengeluaran', style: hitamBold15),
+            const SizedBox(height: 5),
+            Text(currency.format(pengeluaran), style: merahBold15),
 
             const SizedBox(height: 10),
 
             Row(
               children: [
-                Text('Total', style: whiteBold),
+                Text('Total', style: hitamBold15),
                 IconButton(
                   icon: Icon(
                     _isPasswordVisible
                         ? Icons.visibility
                         : Icons.visibility_off,
-                    color: white,
+                    color: hitam,
                   ),
                   onPressed: () {
                     setState(() {
@@ -216,7 +232,7 @@ class _HomeScreensState extends State<HomeScreens> {
 
             Text(
               _isPasswordVisible ? currency.format(saldo) : '••••••',
-              style: whiteReguler,
+              style: hitamBold15,
             ),
           ],
         ),
@@ -229,7 +245,7 @@ class _HomeScreensState extends State<HomeScreens> {
       width: double.infinity,
       height: 50,
       decoration: BoxDecoration(
-        color: red,
+        color: hijauSimpan,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
@@ -238,8 +254,8 @@ class _HomeScreensState extends State<HomeScreens> {
           child: DropdownButton<String>(
             key: ValueKey(allBanks.length),
             value: selectedBank,
-            dropdownColor: red,
-            icon: Icon(Icons.arrow_drop_down, color: white),
+            dropdownColor: hijauSimpan,
+            icon: Icon(Icons.arrow_drop_down, color: putih),
             onChanged: (value) {
               if (value == null) return;
               setState(() => selectedBank = value);
@@ -247,7 +263,7 @@ class _HomeScreensState extends State<HomeScreens> {
             items: allBanks.map((bank) {
               return DropdownMenuItem(
                 value: bank,
-                child: Text(bank.toUpperCase(), style: whiteReguler),
+                child: Text(bank.toUpperCase(), style: putihReguler15),
               );
             }).toList(),
           ),
@@ -264,7 +280,7 @@ class _HomeScreensState extends State<HomeScreens> {
           selectedBank == "semua"
               ? "Belum ada transaksi"
               : "Belum ada transaksi di Bank '${selectedBank.toUpperCase()}'",
-          style: greyReguler,
+          style: abuReguler15,
         ),
       );
     }
@@ -275,7 +291,7 @@ class _HomeScreensState extends State<HomeScreens> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Transaksi Terbaru', style: redReguler15),
+            Text('Transaksi Terbaru', style: hitamReguler15),
             InkWell(
               onTap: () {
                 Navigator.push(
@@ -286,7 +302,7 @@ class _HomeScreensState extends State<HomeScreens> {
                   ),
                 );
               },
-              child: Text('Lihat Semua', style: blueReguler12),
+              child: Text('Lihat Semua', style: biruReguler12),
             ),
           ],
         ),
@@ -305,16 +321,9 @@ class _HomeScreensState extends State<HomeScreens> {
               margin: const EdgeInsets.only(bottom: 12),
               width: double.infinity,
               decoration: BoxDecoration(
-                color: white,
+                color: putih,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: red, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: black.withOpacity(0.3),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                border: Border.all(color: cardstroke, width: 2),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,15 +339,15 @@ class _HomeScreensState extends State<HomeScreens> {
                         Expanded(
                           child: Text(
                             DateFormat('dd MMM yyyy').format(tx.tanggal),
-                            style: redReguler12,
+                            style: hitamReguler12,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Text(
                           currency.format(tx.nominal),
                           style: tx.tipe == "pemasukan"
-                              ? greenBold12
-                              : yellowBold12,
+                              ? hijauBold12
+                              : merahBold12,
                         ),
                       ],
                     ),
@@ -346,7 +355,7 @@ class _HomeScreensState extends State<HomeScreens> {
 
                   const SizedBox(height: 5),
 
-                  Divider(color: red, thickness: 1),
+                  Divider(color: cardstroke, thickness: 1),
 
                   Padding(
                     padding: const EdgeInsets.all(11.0),
@@ -356,14 +365,16 @@ class _HomeScreensState extends State<HomeScreens> {
                           width: 30,
                           height: 30,
                           decoration: BoxDecoration(
-                            color: tx.tipe == "pemasukan" ? green : yellow,
+                            color: tx.tipe == "pemasukan"
+                                ? hijauPemasukan
+                                : merahPengeluaran,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             tx.tipe == "pemasukan"
                                 ? Icons.call_made
                                 : Icons.call_received,
-                            color: white,
+                            color: putih,
                             size: 18,
                           ),
                         ),
@@ -376,16 +387,19 @@ class _HomeScreensState extends State<HomeScreens> {
                             children: [
                               Text(
                                 capitalize(tx.judul),
-                                style: redBold15,
+                                style: hitamBold15,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 5),
                               Text(
                                 capitalize(tx.kategori),
-                                style: redReguler12,
+                                style: hitamReguler12,
                               ),
                               const SizedBox(height: 5),
-                              Text(tx.bank.toUpperCase(), style: redReguler12),
+                              Text(
+                                tx.bank.toUpperCase(),
+                                style: hitamReguler12,
+                              ),
                             ],
                           ),
                         ),
@@ -393,8 +407,8 @@ class _HomeScreensState extends State<HomeScreens> {
                         Text(
                           currency.format(tx.nominal),
                           style: tx.tipe == "pemasukan"
-                              ? greenBold12
-                              : yellowBold12,
+                              ? hijauBold12
+                              : merahBold12,
                         ),
                       ],
                     ),

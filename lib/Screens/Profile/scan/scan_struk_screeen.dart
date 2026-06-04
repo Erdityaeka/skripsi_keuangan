@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skripsi_keuangan/Piecker/image_piceker.dart';
+
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/formats/currency_input_formatter.dart';
 import 'package:skripsi_keuangan/models/bank_model.dart';
@@ -67,7 +68,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Center(child: Text(msg, style: whiteBold)),
+          content: Center(child: Text(msg, style: putihBold15)),
           backgroundColor: success ? greennotif : rednotif,
         ),
       );
@@ -197,15 +198,15 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
 
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: white,
+      backgroundColor: putih,
       elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
-        icon: Icon(Icons.arrow_back, color: red),
+        icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('Scan Struk', style: redBold20),
+      title: Text('Scan Struk', style: hitamBold20),
       centerTitle: true,
-      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -214,7 +215,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
       width: double.infinity,
       height: 400,
       decoration: BoxDecoration(
-        color: red,
+        color: hijauMedium,
         borderRadius: BorderRadius.circular(15),
       ),
       child: ClipRRect(
@@ -225,8 +226,8 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add_a_photo, size: 50, color: white),
-                    Text("Klik untuk Ambil Foto", style: whiteReguler),
+                    Icon(Icons.add_a_photo, size: 100, color: hitam),
+                    Text("Klik untuk Ambil Foto", style: hitamReguler15),
                   ],
                 ),
               )
@@ -255,33 +256,29 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 children: [
                   TextButton.icon(
                     onPressed: _showPickerMenu,
-                    icon: Icon(Icons.cached, color: blue),
-                    label: Text("Ganti Foto", style: blueReguler12),
+                    icon: Icon(Icons.cached, color: biru),
+                    label: Text("Ganti Foto", style: biruReguler12),
                   ),
                   ElevatedButton.icon(
                     onPressed: _isProcessing ? null : _scanReceipt,
-                    icon: Icon(Icons.document_scanner, color: black),
+                    icon: Icon(Icons.document_scanner, color: putih),
                     label: Text(
                       _isProcessing ? "Scanning..." : "Scan Struk",
-                      style: blackReguler,
+                      style: putihReguler15,
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: yellow,
-                      foregroundColor: white,
+                      backgroundColor: hijauSimpan,
+                      foregroundColor: putih,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               Text(
-                'Jika ada kesalahan, mohon input manual!',
-                style: GoogleFonts.poppins(
-                  color: rednotif,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+                'Jika ada kesalahan, mohon input manual !',
+                style: merahReguler12,
               ),
-              const Divider(height: 30),
+              Divider(color: abu, height: 30),
             ],
           ),
       ],
@@ -292,13 +289,13 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Judul Tagihan', style: redReguler15),
+        Text('Judul Tagihan', style: hitamReguler15),
         const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
@@ -306,28 +303,28 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
             child: TextField(
               controller: _tokoController,
               decoration: InputDecoration(
-                hintText: 'Bayar Listrik',
-                hintStyle: greyReguler,
+                hintText: 'Contoh: Bayar Listrik',
+                hintStyle: abuReguler15,
                 border: InputBorder.none,
               ),
             ),
           ),
         ),
         const SizedBox(height: 20),
-        Text('Nominal', style: redReguler15),
+        Text('Nominal', style: hitamReguler15),
         const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 14),
-                child: Text('Rp.', style: blackReguler),
+                child: Text('Rp.', style: hitamReguler15),
               ),
               Expanded(
                 child: TextField(
@@ -335,7 +332,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     hintText: '100.000',
-                    hintStyle: greyReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                   ),
@@ -356,13 +353,13 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tipe Transaksi', style: redReguler15),
+        Text('Tipe Transaksi', style: hitamReguler15),
         const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
@@ -370,17 +367,17 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _selectedTipe,
-                dropdownColor: white,
-                icon: Icon(Icons.arrow_drop_down, color: black),
+                dropdownColor: putih,
+                icon: Icon(Icons.arrow_drop_down, color: hitam),
                 onChanged: (v) => setState(() => _selectedTipe = v!),
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: 'pengeluaran',
-                    child: Text("Pengeluaran"),
+                    child: Text("Pengeluaran", style: hitamReguler15),
                   ),
                   DropdownMenuItem(
                     value: 'pemasukan',
-                    child: Text("Pemasukan"),
+                    child: Text("Pemasukan", style: hitamReguler15),
                   ),
                 ],
               ),
@@ -395,7 +392,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Kategori', style: redReguler15),
+        Text('Kategori', style: hitamReguler15),
         const SizedBox(height: 15),
         StreamBuilder<List<KategoriModel>>(
           stream: _db.getCategoryModels(),
@@ -415,16 +412,16 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
               width: double.infinity,
               height: 55,
               decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
+                border: Border.all(color: hijauSimpan, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    dropdownColor: white,
-                    hint: Text('Pilih Kategori', style: blackReguler),
-                    icon: Icon(Icons.arrow_drop_down, color: black),
+                    dropdownColor: putih,
+                    hint: Text('Pilih Kategori', style: hitamReguler15),
+                    icon: Icon(Icons.arrow_drop_down, color: hitam),
                     value: list.map((e) => e.nama).contains(_selectedKategori)
                         ? _selectedKategori
                         : null,
@@ -432,7 +429,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                         .map(
                           (e) => DropdownMenuItem<String>(
                             value: e.nama,
-                            child: Text(e.nama),
+                            child: Text(e.nama, style: hitamReguler15),
                           ),
                         )
                         .toList(),
@@ -451,7 +448,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: redReguler15),
+        Text('Bank', style: hitamReguler15),
         const SizedBox(height: 15),
         StreamBuilder<List<BankModel>>(
           stream: _db.getBankModels(),
@@ -471,16 +468,16 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
               width: double.infinity,
               height: 55,
               decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
+                border: Border.all(color: hijauSimpan, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    dropdownColor: white,
-                    hint: Text('Pilih Bank', style: blackReguler),
-                    icon: Icon(Icons.arrow_drop_down, color: black),
+                    dropdownColor: putih,
+                    hint: Text('Pilih Bank', style: hitamReguler15),
+                    icon: Icon(Icons.arrow_drop_down, color: hitam),
                     value: list.map((e) => e.nama).contains(_selectedBank)
                         ? _selectedBank
                         : null,
@@ -488,7 +485,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                         .map(
                           (e) => DropdownMenuItem<String>(
                             value: e.nama,
-                            child: Text(e.nama),
+                            child: Text(e.nama, style: hitamReguler15),
                           ),
                         )
                         .toList(),
@@ -512,15 +509,15 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
             width: double.infinity,
             height: 55,
             decoration: BoxDecoration(
-              color: red,
+              color: hijauSimpan,
               borderRadius: BorderRadius.circular(15),
             ),
             child: Center(
               child: _isLoading
                   ? CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(white),
+                      valueColor: AlwaysStoppedAnimation<Color>(putih),
                     )
-                  : Text('Simpan Tagihan', style: whiteBold),
+                  : Text('Simpan Tagihan', style: putihBold15),
             ),
           ),
         ),
@@ -536,13 +533,13 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
         width: double.infinity,
         height: 55,
         decoration: BoxDecoration(
-          border: Border.all(color: rednotif),
+          border: Border.all(color: hijauSimpan, width: 1.5),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Center(
           child: Text(
             text,
-            style: TextStyle(color: rednotif, fontWeight: FontWeight.bold),
+            style: TextStyle(color: hijauSimpan, fontWeight: FontWeight.bold),
           ),
         ),
       ),
@@ -551,21 +548,22 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
 
   void _showPickerMenu() {
     showModalBottomSheet(
+      backgroundColor: putih,
       context: context,
       builder: (_) => SafeArea(
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text("Galeri"),
+              leading: Icon(Icons.image, color: hitam),
+              title: Text("Galeri", style: hitamReguler15),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(false);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text("Kamera"),
+              leading: Icon(Icons.camera_alt, color: hitam),
+              title: Text("Kamera", style: hitamReguler15),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(true);

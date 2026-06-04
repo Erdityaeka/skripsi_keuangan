@@ -25,32 +25,42 @@ class TransaksiModel {
       'kategori': kategori,
       'bank': bank,
       'nominal': nominal,
-      'tanggal': Timestamp.fromDate(tanggal), 
+      'tanggal': Timestamp.fromDate(tanggal),
       'tipe': tipe,
     };
   }
 
   factory TransaksiModel.fromMap(String id, Map<String, dynamic> map) {
-    final raw = map['tanggal'];
+    final rawTanggal = map['tanggal'];
 
     DateTime tanggal;
 
-    if (raw is Timestamp) {
-      tanggal = raw.toDate(); // ✅ data baru
-    } else if (raw is String) {
-      tanggal = DateTime.tryParse(raw) ?? DateTime.now(); // ✅ data lama
+    if (rawTanggal is Timestamp) {
+      tanggal = rawTanggal.toDate();
+    } else if (rawTanggal is String) {
+      tanggal = DateTime.tryParse(rawTanggal) ?? DateTime.now();
     } else {
       tanggal = DateTime.now();
     }
 
+    double nominal;
+
+    final rawNominal = map['nominal'];
+
+    if (rawNominal is num) {
+      nominal = rawNominal.toDouble();
+    } else {
+      nominal = double.tryParse(rawNominal?.toString() ?? '0') ?? 0;
+    }
+
     return TransaksiModel(
       id: id,
-      judul: map['judul'] ?? '',
-      kategori: map['kategori'] ?? 'Umum',
-      bank: map['bank'] ?? 'Tidak Diketahui',
-      nominal: (map['nominal'] ?? 0).toDouble(),
+      judul: map['judul']?.toString() ?? '',
+      kategori: map['kategori']?.toString() ?? 'Umum',
+      bank: map['bank']?.toString() ?? 'Tidak Diketahui',
+      nominal: nominal,
       tanggal: tanggal,
-      tipe: map['tipe'] ?? 'pemasukan',
+      tipe: map['tipe']?.toString().trim() ?? 'pemasukan',
     );
   }
 }

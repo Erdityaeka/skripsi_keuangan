@@ -67,29 +67,32 @@ class _KategoriScreensState extends State<KategoriScreens> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: red,
-        title: Text(
-          "Ubah jika ingin edit kategori tersebut:",
-          style: whiteReguler,
-        ),
+        backgroundColor: putih,
+        title: Text("Edit Kategori?", style: hitamBold20),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              "Ubah jika ingin edit kategori tersebut:",
+              style: teksdialogBold15,
+            ),
+            const SizedBox(height: 15),
             Container(
               width: double.infinity,
               height: 55,
               decoration: BoxDecoration(
-                border: Border.all(color: white, width: 2),
+                border: Border.all(color: hijauSimpan, width: 2),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(14.0),
                 child: TextField(
                   controller: controller,
-                  style: whiteReguler,
+                  style: hitamReguler15,
                   decoration: InputDecoration(
                     hintText: 'Edit Kategori',
-                    hintStyle: greyReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                   ),
                 ),
@@ -100,33 +103,41 @@ class _KategoriScreensState extends State<KategoriScreens> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Batal", style: whiteBold),
+            child: Text("Batal", style: dialogBatalBold15),
           ),
-          TextButton(
-            onPressed: () async {
-              final newnama = controller.text.trim();
+          Container(
+            width: 100,
+            height: 40,
+            decoration: BoxDecoration(
+              color: hijauSimpan,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextButton(
+              onPressed: () async {
+                final newnama = controller.text.trim();
 
-              if (newnama.isEmpty) {
-                _showMsg("Tidak boleh kosong", isError: true);
-                return;
-              }
+                if (newnama.isEmpty) {
+                  _showMsg("Tidak boleh kosong", isError: true);
+                  return;
+                }
 
-              try {
-                await _firestore.deleteCategory(oldData.id);
+                try {
+                  await _firestore.deleteCategory(oldData.id);
 
-                await _firestore.addCategory(
-                  KategoriModel(id: '', nama: newnama),
-                );
+                  await _firestore.addCategory(
+                    KategoriModel(id: '', nama: newnama),
+                  );
 
-                if (!mounted) return;
+                  if (!mounted) return;
 
-                Navigator.pop(context);
-                _showMsg("Kategori Berhasil Diupdate");
-              } catch (e) {
-                _showMsg("Gagal update", isError: true);
-              }
-            },
-            child: Text("Ubah", style: greenBold15),
+                  Navigator.pop(context);
+                  _showMsg("Kategori Berhasil Diupdate");
+                } catch (e) {
+                  _showMsg("Gagal update", isError: true);
+                }
+              },
+              child: Text("Edit", style: putihBold15),
+            ),
           ),
         ],
       ),
@@ -137,31 +148,39 @@ class _KategoriScreensState extends State<KategoriScreens> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: red,
-        title: Text("Hapus Kategori?", style: whiteBold),
+        backgroundColor: putih,
+        title: Text("Hapus Kategori?", style: hitamBold20),
         content: Text(
           "Yakin ingin menghapus data kategori '${data.nama}'?",
-          style: whiteBold,
+          style: teksdialogBold15,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Batal", style: whiteBold),
+            child: Text("Batal", style: dialogBatalBold15),
           ),
-          TextButton(
-            onPressed: () async {
-              try {
-                await _firestore.deleteCategory(data.id);
+          Container(
+            width: 100,
+            height: 40,
+            decoration: BoxDecoration(
+              color: merahHapus,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextButton(
+              onPressed: () async {
+                try {
+                  await _firestore.deleteCategory(data.id);
 
-                if (!mounted) return;
+                  if (!mounted) return;
 
-                Navigator.pop(context);
-                _showMsg("Kategori Berhasil Dihapus");
-              } catch (e) {
-                _showMsg("Gagal hapus", isError: true);
-              }
-            },
-            child: Text("Hapus", style: greenBold15),
+                  Navigator.pop(context);
+                  _showMsg("Kategori Berhasil Dihapus");
+                } catch (e) {
+                  _showMsg("Gagal hapus", isError: true);
+                }
+              },
+              child: Text("Hapus", style: putihBold15),
+            ),
           ),
         ],
       ),
@@ -174,21 +193,22 @@ class _KategoriScreensState extends State<KategoriScreens> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: isError ? rednotif : greennotif,
-        content: Center(child: Text(msg, style: whiteBold)),
+        content: Center(child: Text(msg, style: putihBold15)),
       ),
     );
   }
 
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: white,
+      backgroundColor: putih,
       elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
-        icon: Icon(Icons.arrow_back, color: red),
+        icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('Kategori', style: redBold20),
+      title: Text('Kategori', style: hitamBold20),
       centerTitle: true,
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -197,15 +217,15 @@ class _KategoriScreensState extends State<KategoriScreens> {
       width: double.infinity,
       height: 150,
       decoration: BoxDecoration(
-        color: white,
+        color: putih,
         boxShadow: [
           BoxShadow(
-            color: grey.withOpacity(0.5),
+            color: abu.withOpacity(0.5),
             blurRadius: 2,
             offset: const Offset(0, 3),
           ),
         ],
-        border: Border(bottom: BorderSide(color: grey)),
+        border: Border(bottom: BorderSide(color: abu)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 30, 20, 0),
@@ -215,18 +235,18 @@ class _KategoriScreensState extends State<KategoriScreens> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Judul Kategori', style: redReguler15),
+                  Text('Judul Kategori', style: hitamReguler15),
                   const SizedBox(height: 15),
                   Container(
                     height: 55,
                     decoration: BoxDecoration(
-                      border: Border.all(color: red, width: 1.5),
+                      border: Border.all(color: hijauSimpan, width: 1.5),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: DropdownButtonFormField<String>(
-                      dropdownColor: white,
+                      dropdownColor: putih,
                       value: _selected,
-                      hint: Text("Pilih kategori", style: greyReguler),
+                      hint: Text("Pilih kategori", style: hitamReguler15),
                       items: _kategori
                           .map(
                             (e) => DropdownMenuItem(value: e, child: Text(e)),
@@ -235,7 +255,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
                       onChanged: (v) => setState(() => _selected = v),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: white,
+                        fillColor: putih,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -253,10 +273,10 @@ class _KategoriScreensState extends State<KategoriScreens> {
                 width: 90,
                 height: 55,
                 decoration: BoxDecoration(
-                  color: red,
+                  color: hijauSimpan,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child:  Icon(Icons.add, color: white),
+                child: Icon(Icons.add, color: putih),
               ),
             ),
           ],
@@ -279,7 +299,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
 
           if (data.isEmpty) {
             return Center(
-              child: Text("Belum ada data kategori", style: greyReguler),
+              child: Text("Belum ada data kategori", style: abuReguler15),
             );
           }
 
@@ -293,15 +313,15 @@ class _KategoriScreensState extends State<KategoriScreens> {
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
-                    border: Border.all(color: red, width: 2),
+                    border: Border.all(color: hijauSimpan, width: 1.5),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: ListTile(
-                    leading: Icon(Icons.table_chart, color: black),
-                    title: Text(capitalize(kategori.nama), style: blackBold15),
+                    leading: Icon(Icons.table_chart, color: hitam),
+                    title: Text(capitalize(kategori.nama), style: hijauBold15),
                     trailing: GestureDetector(
                       onTap: () => _delete(kategori),
-                      child: Icon(Icons.delete, color: red),
+                      child: Icon(Icons.delete, color: merahHapus),
                     ),
                   ),
                 ),

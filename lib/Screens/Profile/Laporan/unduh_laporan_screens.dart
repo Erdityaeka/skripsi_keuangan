@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
@@ -56,7 +57,6 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     // BULANAN
     if (selectedPeriode == "Bulanan") {
       startDate = DateTime(selectedYear, selectedMonth, 1);
-
       endDate = DateTime(selectedYear, selectedMonth + 1, 0, 23, 59, 59);
     }
 
@@ -84,15 +84,15 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       lastDate: DateTime(2100),
       helpText: 'Pilih Tanggal',
       cancelText: 'Batal',
-      confirmText: 'OK',
+      confirmText: 'Pilih Tanggal',
       locale: const Locale('id', 'ID'),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: red,
-              onPrimary: white,
-              onSurface: black,
+              primary: hijauSimpan,
+              onPrimary: putih,
+              onSurface: hitam,
             ),
           ),
           child: child!,
@@ -120,7 +120,6 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
         .toList();
 
     banks.sort();
-
     return ["Semua", ...banks];
   }
 
@@ -130,9 +129,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
 
     return transactions.where((tx) {
       final date = tx.tanggal.toLocal();
-
       final start = DateTime(startDate!.year, startDate!.month, startDate!.day);
-
       final end = DateTime(
         endDate!.year,
         endDate!.month,
@@ -179,7 +176,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: rednotif,
-        content: Center(child: Text(msg, style: whiteBold)),
+        content: Center(child: Text(msg, style: putihBold15)),
       ),
     );
   }
@@ -208,12 +205,48 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text("Berhasil"),
-          content: Text("File disimpan di:\n\n$filePath"),
+          backgroundColor: putih,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Berhasil", style: hitamBold20),
+              const SizedBox(height: 8),
+              Text(
+                "File laporan berhasil dibuat dan disimpan di:",
+                style: teksdialogBold15,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  // Background abu-abu tipis untuk path file
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(filePath, style: hitamBold15),
+              ),
+            ],
+          ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8, right: 8),
+              child: Container(
+                width: 90,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: hijauSimpan,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("Oke", style: putihBold15),
+                ),
+              ),
             ),
           ],
         ),
@@ -229,50 +262,45 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     super.dispose();
   }
 
-  // UI
+  // UI UTAMA
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: putih,
       appBar: _buildAppbar(context),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 30,
-                bottom: 30,
-              ),
-              child: Column(
-                children: [
-                  _buildInputJudul(),
+          : SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 30,
+                  bottom: 30,
+                ),
+                child: Column(
+                  children: [
+                    _buildInputJudul(),
+                    const SizedBox(height: 30),
+                    _buildPeriode(),
+                    const Divider(height: 30),
 
-                  const Divider(height: 30),
+                    if (selectedPeriode == "Harian") _buildTanggal(),
+                    if (selectedPeriode == "Mingguan") _buildMingguan(),
+                    if (selectedPeriode == "Bulanan") _buildBulanan(),
 
-                  _buildPeriode(),
+                    const Divider(height: 30),
+                    _buildTipe(),
+                    const SizedBox(height: 20),
+                    _buildBank(),
 
-                  const Divider(height: 30),
-
-                  if (selectedPeriode == "Harian") _buildTanggal(),
-
-                  if (selectedPeriode == "Mingguan") _buildMingguan(),
-
-                  if (selectedPeriode == "Bulanan") _buildBulanan(),
-
-                  const Divider(height: 30),
-
-                  _buildTipe(),
-
-                  const SizedBox(height: 10),
-
-                  _buildBank(),
-
-                  const Spacer(),
-
-                  _buildButtonUnduh(),
-
-                  const SizedBox(height: 50),
-                ],
+                    // Ganti Spacer() dengan jarak statis yang rapi agar scrollview tidak error
+                    const SizedBox(height: 40),
+                    _buildButtonUnduh(),
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
     );
@@ -281,14 +309,15 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
   // APPBAR
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: white,
+      backgroundColor: putih,
       elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
-        icon: Icon(Icons.arrow_back, color: red),
+        icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('Unduh Laporan', style: redBold20),
+      title: Text('Unduh Laporan', style: hitamBold20),
       centerTitle: true,
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -297,13 +326,13 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Judul Transaksi', style: redReguler15),
-        SizedBox(height: 15),
+        Text('Judul Transaksi', style: hitamReguler15),
+        const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
@@ -312,7 +341,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
               controller: judulController,
               decoration: InputDecoration(
                 border: InputBorder.none,
-                hintStyle: greyReguler,
+                hintStyle: abuReguler15,
               ),
             ),
           ),
@@ -327,33 +356,34 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Periode', style: redReguler15),
-        SizedBox(height: 15),
-
+        Text('Periode', style: hitamReguler15),
+        const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: selectedPeriode,
-                dropdownColor: white,
-                icon: Icon(Icons.arrow_drop_down, color: black),
-
+                dropdownColor: putih,
+                icon: Icon(Icons.arrow_drop_down, color: hitam),
                 onChanged: (val) {
                   setState(() {
                     selectedPeriode = val!;
                   });
                 },
-
                 items: ["Harian", "Mingguan", "Bulanan"]
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .map(
+                      (e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(e, style: hitamReguler15),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -377,32 +407,31 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Dari Tanggal", style: blackReguler12),
+                    Text("Dari Tanggal", style: hitamReguler12),
                     const SizedBox(height: 5),
                     Text(
                       startDate == null
                           ? "Pilih Tanggal"
                           : DateFormat('dd MMM yyyy').format(startDate!),
-                      style: blackBold15,
+                      style: hitamBold15,
                     ),
                   ],
                 ),
               ),
             ),
-
             Expanded(
               child: InkWell(
                 onTap: () => _pickDate(false),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Sampai Tanggal", style: blackReguler12),
+                    Text("Sampai Tanggal", style: hitamReguler12),
                     const SizedBox(height: 5),
                     Text(
                       endDate == null
                           ? "Pilih Tanggal"
                           : DateFormat('dd MMM yyyy').format(endDate!),
-                      style: blackBold15,
+                      style: hitamBold15,
                     ),
                   ],
                 ),
@@ -414,26 +443,25 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
-  // WIDGET BULANAN SIMPLE
+  // WIDGET BULANAN
   Widget _buildBulanan() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Pilih Bulan", style: redReguler15),
-        SizedBox(height: 15),
+        Text("Pilih Bulan", style: hitamReguler15),
+        const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: white,
+            color: putih,
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
           ),
           child: Row(
             children: [
-              // Tombol kiri
               IconButton(
                 onPressed: () {
                   setState(() {
@@ -445,10 +473,8 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                     }
                   });
                 },
-                icon: Icon(Icons.chevron_left, color: black),
+                icon: Icon(Icons.chevron_left, color: hitam),
               ),
-
-              // Tengah
               Expanded(
                 child: Center(
                   child: Text(
@@ -456,12 +482,10 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                       'MMMM yyyy',
                       'id',
                     ).format(DateTime(selectedYear, selectedMonth)),
-                    style: blackBold15,
+                    style: hitamBold15,
                   ),
                 ),
               ),
-
-              // Tombol kanan
               IconButton(
                 onPressed: () {
                   setState(() {
@@ -473,7 +497,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                     }
                   });
                 },
-                icon: Icon(Icons.chevron_right, color: black),
+                icon: Icon(Icons.chevron_right, color: hitam),
               ),
             ],
           ),
@@ -482,26 +506,25 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
-  // WIDGET MINGGUAN FIX
+  // WIDGET MINGGUAN
   Widget _buildMingguan() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Pilih Minggu", style: redReguler15),
-        SizedBox(height: 15),
+        Text("Pilih Minggu", style: hitamReguler15),
+        const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 70,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: white,
-            border: Border.all(color: red, width: 1.5),
+            color: putih,
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
             children: [
-              // Tombol kiri
               IconButton(
                 onPressed: () {
                   setState(() {
@@ -513,9 +536,8 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                     }
                   });
                 },
-                icon: Icon(Icons.chevron_left, color: black),
+                icon: Icon(Icons.chevron_left, color: hitam),
               ),
-
               Expanded(
                 child: Center(
                   child: Column(
@@ -527,44 +549,37 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                           'MMMM yyyy',
                           'id',
                         ).format(DateTime(selectedYear, selectedMonth)),
-                        style: blackBold15,
+                        style: hitamBold15,
                       ),
-
                       DropdownButtonHideUnderline(
                         child: DropdownButton<int>(
                           value: selectedWeek,
                           isDense: true,
-                          dropdownColor: white,
-                          iconEnabledColor: grey,
-                          icon: Icon(Icons.arrow_drop_down, color: black),
-                          style: whiteReguler,
-
+                          dropdownColor: putih,
+                          iconEnabledColor: abu,
+                          icon: Icon(Icons.arrow_drop_down, color: hitam),
                           selectedItemBuilder: (context) {
                             return List.generate(4, (index) {
                               final week = index + 1;
-
                               return Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
                                   "Minggu ke $week",
-                                  style: blackReguler12,
+                                  style: hitamReguler12,
                                 ),
                               );
                             });
                           },
-
                           items: List.generate(4, (index) {
                             final week = index + 1;
-
                             return DropdownMenuItem(
                               value: week,
                               child: Text(
                                 "Minggu ke $week",
-                                style: blackReguler12,
+                                style: hitamReguler12,
                               ),
                             );
                           }),
-
                           onChanged: (val) {
                             setState(() {
                               selectedWeek = val!;
@@ -576,8 +591,6 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                   ),
                 ),
               ),
-
-              // Tombol kanan
               IconButton(
                 onPressed: () {
                   setState(() {
@@ -589,7 +602,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                     }
                   });
                 },
-                icon: Icon(Icons.chevron_right, color: black),
+                icon: Icon(Icons.chevron_right, color: hitam),
               ),
             ],
           ),
@@ -604,31 +617,27 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tipe Transaksi', style: redReguler15),
-        SizedBox(height: 15),
-
+        Text('Tipe Transaksi', style: hitamReguler15),
+        const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: selectedType,
-                dropdownColor: white,
-                icon: Icon(Icons.arrow_drop_down, color: black),
-
+                dropdownColor: putih,
+                icon: Icon(Icons.arrow_drop_down, color: hitam),
                 onChanged: (val) {
                   setState(() {
                     selectedType = val!;
                   });
                 },
-
                 items: ["Semua", "Pemasukan", "Pengeluaran"]
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
@@ -646,31 +655,27 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: redReguler15),
-        SizedBox(height: 15),
-
+        Text('Bank', style: hitamReguler15),
+        const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
-
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: selectedBank,
-                dropdownColor: white,
-                icon: Icon(Icons.arrow_drop_down, color: black),
-
+                dropdownColor: putih,
+                icon: Icon(Icons.arrow_drop_down, color: hitam),
                 onChanged: (val) {
                   setState(() {
                     selectedBank = val!;
                   });
                 },
-
                 items: bankList
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
@@ -690,10 +695,10 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
         width: double.infinity,
         height: 60,
         decoration: BoxDecoration(
-          color: greennotif,
+          color: hijauSimpan,
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Center(child: Text("Unduh Laporan", style: whiteBold)),
+        child: Center(child: Text("Unduh Laporan", style: putihBold15)),
       ),
     );
   }

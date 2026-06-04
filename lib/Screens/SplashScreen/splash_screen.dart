@@ -74,7 +74,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: white,
+      backgroundColor: putih,
       body: Column(
         children: [
           Expanded(
@@ -84,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: 20),
-            child: Text('V.1.0.0', style: greyReguler),
+            child: Text('V.1.0.0', style: abuReguler15),
           ),
         ],
       ),

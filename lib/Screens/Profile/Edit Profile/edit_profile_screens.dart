@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
+
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
 
@@ -140,9 +141,22 @@ class _UpdatescreenState extends State<Updatescreen> {
 
   Future<void> simpan() async {
     // Validasi input
-    if (namaC.text.trim().isEmpty) return notif("Nama harus diisi");
-    if (emailC.text.trim().isEmpty) return notif("Email harus diisi");
-    if (user == null) return notif("User tidak ditemukan");
+    if (namaC.text.trim().isEmpty) {
+      return notif("Nama harus diisi");
+    }
+
+    if (emailC.text.trim().isEmpty) {
+      return notif("Email harus diisi");
+    }
+
+    // TAMBAHAN VALIDASI PASSWORD
+    if (emailC.text.trim() != user?.email && passwordC.text.trim().isEmpty) {
+      return notif("Password wajib diisi untuk ganti email");
+    }
+
+    if (user == null) {
+      return notif("User tidak ditemukan");
+    }
 
     setState(() => loading = true);
 
@@ -176,8 +190,21 @@ class _UpdatescreenState extends State<Updatescreen> {
         currentPassword: passwordC.text.trim(),
       );
 
-      if (emailC.text.trim() != user?.email) {
-        notif("Cek email baru untuk verifikasi");
+      const successEmailMessage =
+          "Cek email baru di alamat email untuk konfirmasi perubahan";
+
+      // Jika email berubah atau password salah
+      if (res != null && res != successEmailMessage) {
+        notif(res);
+        return;
+      }
+
+      // Jika berhasil request ganti email
+      if (res == successEmailMessage) {
+        notif("Cek email baru untuk verifikasi", success: true);
+
+        // Tunggu snackbar tampil
+        await Future.delayed(const Duration(seconds: 2));
 
         await FirebaseAuth.instance.signOut();
 
@@ -188,21 +215,22 @@ class _UpdatescreenState extends State<Updatescreen> {
           MaterialPageRoute(builder: (_) => LoginScreens()),
           (route) => false,
         );
+
         return;
       }
 
       // Jika hanya nama/foto
-      if (res == null) {
-        notif("Profile berhasil diperbarui", success: true);
-        // ignore: use_build_context_synchronously
-        if (mounted) Navigator.pop(context);
-      } else {
-        notif(res);
+      notif("Profile berhasil diperbarui", success: true);
+
+      if (mounted) {
+        Navigator.pop(context);
       }
     } catch (e) {
       notif("Terjadi kesalahan Update");
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted) {
+        setState(() => loading = false);
+      }
     }
   }
 
@@ -214,7 +242,7 @@ class _UpdatescreenState extends State<Updatescreen> {
       ..showSnackBar(
         SnackBar(
           content: Center(
-            child: Text(msg, style: whiteBold, textAlign: TextAlign.center),
+            child: Text(msg, style: putihBold15, textAlign: TextAlign.center),
           ),
           backgroundColor: success ? greennotif : rednotif,
         ),
@@ -224,16 +252,7 @@ class _UpdatescreenState extends State<Updatescreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: white,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Icon(Icons.arrow_back, color: red),
-        ),
-        title: Text('Edit Profile', style: redBold20),
-        centerTitle: true,
-      ),
+      appBar: _builAppbar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -251,6 +270,20 @@ class _UpdatescreenState extends State<Updatescreen> {
     );
   }
 
+  PreferredSizeWidget _builAppbar() {
+    return AppBar(
+      backgroundColor: putih,
+      elevation: 0,
+      leading: IconButton(
+        onPressed: () => Navigator.pop(context),
+        icon: Icon(Icons.arrow_back, color: hitam),
+      ),
+      title: Text('Edit Profile', style: hitamBold20),
+      centerTitle: true,
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
+    );
+  }
+
   Widget image() {
     return Column(
       children: [
@@ -258,7 +291,7 @@ class _UpdatescreenState extends State<Updatescreen> {
           onTap: pilihFoto,
           child: CircleAvatar(
             radius: 50,
-            backgroundColor: red,
+            backgroundColor: hijauMedium,
             child: ClipOval(
               child: SizedBox.expand(
                 child: fotoBaru != null
@@ -273,7 +306,7 @@ class _UpdatescreenState extends State<Updatescreen> {
                               fit: BoxFit.cover,
                               alignment: Alignment(0, _posisifoto),
                             )
-                          : Icon(Icons.person, size: 50, color: white)),
+                          : Icon(Icons.person, size: 50, color: hitam)),
               ),
             ),
           ),
@@ -285,7 +318,8 @@ class _UpdatescreenState extends State<Updatescreen> {
             value: _posisifoto,
             min: -1.0,
             max: 1.0,
-            activeColor: red,
+            activeColor: hijauSimpan,
+            inactiveColor: abu,
             onChanged: (val) {
               if (!mounted) return;
               setState(() => _posisifoto = val);
@@ -301,26 +335,27 @@ class _UpdatescreenState extends State<Updatescreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Input Nama
-        Text('Nama', style: blackReguler),
+        Text('Nama', style: hitamReguler15),
         const SizedBox(height: 10),
         Container(
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Icon(Icons.person, color: grey),
+                child: Icon(Icons.person, color: abu),
               ),
               Expanded(
                 child: TextField(
                   controller: namaC,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Nama',
                     border: InputBorder.none,
+                    hintStyle: abuReguler15,
                   ),
                 ),
               ),
@@ -331,27 +366,28 @@ class _UpdatescreenState extends State<Updatescreen> {
         const SizedBox(height: 15),
 
         // Input Email
-        Text('Email', style: blackReguler),
+        Text('Email', style: hitamReguler15),
         const SizedBox(height: 10),
         Container(
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Icon(Icons.email, color: grey),
+                child: Icon(Icons.email, color: abu),
               ),
               Expanded(
                 child: TextField(
                   controller: emailC,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Email',
                     border: InputBorder.none,
+                    hintStyle: abuReguler15,
                   ),
                 ),
               ),
@@ -362,27 +398,28 @@ class _UpdatescreenState extends State<Updatescreen> {
         const SizedBox(height: 15),
 
         // Input Password
-        Text('Password', style: blackReguler),
+        Text('Password Lama', style: hitamReguler15),
         const SizedBox(height: 10),
         Container(
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Icon(Icons.lock, color: grey),
+                child: Icon(Icons.lock, color: abu),
               ),
               Expanded(
                 child: TextField(
                   controller: passwordC,
                   obscureText: !_isPasswordVisible,
-                  decoration: const InputDecoration(
-                    hintText: 'Password',
+                  decoration: InputDecoration(
+                    hintText: 'Masukan Password Lama',
                     border: InputBorder.none,
+                    hintStyle: abuReguler15,
                   ),
                 ),
               ),
@@ -393,6 +430,7 @@ class _UpdatescreenState extends State<Updatescreen> {
                 },
                 icon: Icon(
                   _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  color: hitam,
                 ),
               ),
             ],
@@ -406,11 +444,11 @@ class _UpdatescreenState extends State<Updatescreen> {
     return ElevatedButton(
       onPressed: (fotoBaru != null || fotoLama != null) ? hapusFoto : null,
       style: ElevatedButton.styleFrom(
-        backgroundColor: rednotif,
+        backgroundColor: merahHapus,
         minimumSize: const Size(double.infinity, 50),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      child: Text("HAPUS FOTO PROFIL", style: whiteBold),
+      child: Text("HAPUS FOTO PROFIL", style: putihBold15),
     );
   }
 
@@ -418,13 +456,13 @@ class _UpdatescreenState extends State<Updatescreen> {
     return ElevatedButton(
       onPressed: loading ? null : simpan,
       style: ElevatedButton.styleFrom(
-        backgroundColor: greennotif,
+        backgroundColor: hijauSimpan,
         minimumSize: const Size(double.infinity, 50),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: loading
-          ? CircularProgressIndicator(color: white)
-          : Text("SIMPAN", style: whiteBold),
+          ? CircularProgressIndicator(color: putih)
+          : Text("SIMPAN", style: putihBold15),
     );
   }
 }

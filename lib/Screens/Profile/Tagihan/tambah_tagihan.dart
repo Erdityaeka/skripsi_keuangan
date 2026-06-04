@@ -58,9 +58,9 @@ class _TambahTagihanState extends State<TambahTagihan> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: red, // Header & tombol utama
-              onPrimary: white, // Text header
-              onSurface: black, // Text tanggal
+              primary: hijauSimpan, // Header & tombol utama
+              onPrimary: putih, // Text header
+              onSurface: hitam, // Text tanggal
             ),
           ),
           child: child!,
@@ -85,9 +85,9 @@ class _TambahTagihanState extends State<TambahTagihan> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: red, // Header & tombol utama
-              onPrimary: white, // Text header
-              onSurface: black, // Text jam
+              primary: hijauSimpan, // Header & tombol utama
+              onPrimary: putih, // Text header
+              onSurface: hitam, // Text jam
             ),
           ),
           child: child!,
@@ -112,7 +112,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
         SnackBar(
           backgroundColor: rednotif,
           content: Center(
-            child: Text("Semua data wajib diisi", style: whiteBold),
+            child: Text("Semua data wajib diisi", style: putihBold15),
           ),
         ),
       );
@@ -145,7 +145,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
           content: Center(
             child: Text(
               "Waktu tagihan harus lebih dari waktu sekarang",
-              style: whiteBold,
+              style: putihBold15,
             ),
           ),
         ),
@@ -180,7 +180,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
         SnackBar(
           backgroundColor: rednotif,
           content: Center(
-            child: Text("Nominal harus lebih dari 0", style: whiteBold),
+            child: Text("Nominal harus lebih dari 0", style: putihBold15),
           ),
         ),
       );
@@ -217,7 +217,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: rednotif,
-          content: Text("Gagal menambahkan tagihan: $e", style: whiteBold),
+          content: Text("Gagal menambahkan tagihan: $e", style: putihBold15),
         ),
       );
       return;
@@ -234,7 +234,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
         backgroundColor: greennotif,
         content: Text(
           "Tagihan berhasil ditambahkan dan notifikasi aktif",
-          style: whiteBold,
+          style: putihBold15,
         ),
       ),
     );
@@ -252,17 +252,17 @@ class _TambahTagihanState extends State<TambahTagihan> {
   // APPBAR
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: white,
+      backgroundColor: putih,
       elevation: 0,
       leading: IconButton(
         onPressed: () {
           Navigator.pop(context);
         },
-        icon: Icon(Icons.arrow_back, color: red),
+        icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('Tambah Tagihan', style: redBold20),
+      title: Text('Tambah Tagihan', style: hitamBold20),
       centerTitle: true,
-      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -274,10 +274,12 @@ class _TambahTagihanState extends State<TambahTagihan> {
         width: double.infinity,
         height: 55,
         decoration: BoxDecoration(
-          border: Border.all(color: red, width: 1.5),
+          border: Border.all(color: hijauSimpan, width: 1.5),
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Center(child: Text("$title (Tambah dulu)", style: greyReguler)),
+        child: Center(
+          child: Text("$title (Tambah dulu data)", style: abuReguler15),
+        ),
       ),
     );
   }
@@ -287,14 +289,14 @@ class _TambahTagihanState extends State<TambahTagihan> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Judul Tagihan', style: redReguler15),
+        Text('Judul Tagihan', style: hitamReguler15),
         const SizedBox(height: 15),
 
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
@@ -303,7 +305,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
               controller: judul,
               decoration: InputDecoration(
                 hintText: 'Contoh: Bayar Listrik',
-                hintStyle: greyReguler,
+                hintStyle: abuReguler15,
                 border: InputBorder.none,
               ),
             ),
@@ -312,21 +314,21 @@ class _TambahTagihanState extends State<TambahTagihan> {
 
         const SizedBox(height: 20),
 
-        Text('Nominal', style: redReguler15),
+        Text('Nominal', style: hitamReguler15),
         const SizedBox(height: 15),
 
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 14),
-                child: Text('Rp.', style: blackReguler),
+                child: Text('Rp.', style: hitamReguler15),
               ),
               Expanded(
                 child: TextField(
@@ -334,7 +336,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     hintText: '100.000',
-                    hintStyle: greyReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                   ),
@@ -356,7 +358,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Kategori', style: redReguler15),
+        Text('Kategori', style: hitamReguler15),
         const SizedBox(height: 15),
 
         StreamBuilder<List<KategoriModel>>(
@@ -383,7 +385,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
               width: double.infinity,
               height: 55,
               decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
+                border: Border.all(color: hijauSimpan, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Padding(
@@ -391,9 +393,9 @@ class _TambahTagihanState extends State<TambahTagihan> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedKategori,
-                    dropdownColor: white,
-                    hint: Text('Pilih Kategori', style: blackReguler),
-                    icon: Icon(Icons.arrow_drop_down, color: black),
+                    dropdownColor: putih,
+                    hint: Text('Pilih Kategori', style: hitamReguler15),
+                    icon: Icon(Icons.arrow_drop_down, color: hitam),
                     onChanged: (v) => setState(() => selectedKategori = v),
                     items: kategori
                         .map(
@@ -418,7 +420,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: redReguler15),
+        Text('Bank', style: hitamReguler15),
         const SizedBox(height: 15),
 
         StreamBuilder<List<BankModel>>(
@@ -445,7 +447,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
               width: double.infinity,
               height: 55,
               decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
+                border: Border.all(color: hijauSimpan, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Padding(
@@ -453,9 +455,9 @@ class _TambahTagihanState extends State<TambahTagihan> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedBank,
-                    dropdownColor: white,
-                    hint: Text('Pilih Bank', style: blackReguler),
-                    icon: Icon(Icons.arrow_drop_down, color: black),
+                    dropdownColor: putih,
+                    hint: Text('Pilih Bank', style: hitamReguler15),
+                    icon: Icon(Icons.arrow_drop_down, color: hitam),
                     onChanged: (v) => setState(() => selectedBank = v),
                     items: bank
                         .map(
@@ -480,7 +482,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tanggal', style: redReguler15),
+        Text('Tanggal', style: hitamReguler15),
         const SizedBox(height: 15),
 
         Row(
@@ -488,7 +490,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
             Expanded(
               child: Text(
                 DateFormat('dd MMM yyyy').format(selectedDate),
-                style: blackReguler,
+                style: hitamReguler15,
               ),
             ),
 
@@ -500,10 +502,10 @@ class _TambahTagihanState extends State<TambahTagihan> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: red,
+                  color: hijauSimpan,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text("Pilih Tanggal", style: whiteReguler),
+                child: Text("Pilih Tanggal", style: putihReguler15),
               ),
             ),
           ],
@@ -517,13 +519,13 @@ class _TambahTagihanState extends State<TambahTagihan> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Jam', style: redReguler15),
+        Text('Jam', style: hitamReguler15),
         const SizedBox(height: 15),
 
         Row(
           children: [
             Expanded(
-              child: Text(selectedTime.format(context), style: blackReguler),
+              child: Text(selectedTime.format(context), style: hitamReguler15),
             ),
 
             GestureDetector(
@@ -534,10 +536,10 @@ class _TambahTagihanState extends State<TambahTagihan> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: red,
+                  color: hijauSimpan,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text("Pilih Jam", style: whiteReguler),
+                child: Text("Pilih Jam", style: putihReguler15),
               ),
             ),
           ],
@@ -556,15 +558,15 @@ class _TambahTagihanState extends State<TambahTagihan> {
             width: double.infinity,
             height: 55,
             decoration: BoxDecoration(
-              color: greennotif,
+              color: hijauSimpan,
               borderRadius: BorderRadius.circular(15),
             ),
             child: Center(
               child: _isLoading
                   ? CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(white),
+                      valueColor: AlwaysStoppedAnimation<Color>(putih),
                     )
-                  : Text('Simpan Tagihan', style: whiteBold),
+                  : Text('Simpan Tagihan', style: putihBold15),
             ),
           ),
         ),

@@ -55,7 +55,9 @@ class _EditTransaksiState extends State<EditTransaksi> {
         selectedBank == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Center(child: Text("Lengkapi semua data", style: whiteBold)),
+          content: Center(
+            child: Text("Lengkapi semua data", style: putihBold15),
+          ),
           backgroundColor: rednotif,
         ),
       );
@@ -84,7 +86,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(
-            child: Text("Transaksi berhasil diupdate", style: whiteBold),
+            child: Text("Transaksi berhasil diupdate", style: putihBold15),
           ),
           backgroundColor: greennotif,
         ),
@@ -96,7 +98,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Center(child: Text("Gagal update: $e", style: whiteBold)),
+          content: Center(child: Text("Gagal update: $e", style: putihBold15)),
           backgroundColor: rednotif,
         ),
       );
@@ -108,51 +110,62 @@ class _EditTransaksiState extends State<EditTransaksi> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: red,
-        title: Text("Hapus Transaksi", style: whiteBold),
-        content: Text("Yakin ingin menghapus data ini?", style: whiteReguler),
+        backgroundColor: putih,
+        title: Text("Hapus Transaksi?", style: hitamBold20),
+        content: Text(
+          "Yakin ingin menghapus data transaksi ini?",
+          style: teksdialogBold15,
+        ),
 
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Batal", style: whiteBold),
+            child: Text("Batal", style: dialogBatalBold15),
           ),
 
-          TextButton(
-            child: Text("Hapus", style: greenBold15),
+          Container(
+            width: 100,
+            height: 40,
+            decoration: BoxDecoration(
+              color: merahHapus,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextButton(
+              child: Text("Hapus", style: putihBold15),
 
-            onPressed: () async {
-              try {
-                await _firestoreService.deleteTransaction(widget.tx.id);
+              onPressed: () async {
+                try {
+                  await _firestoreService.deleteTransaction(widget.tx.id);
 
-                if (!mounted) return;
+                  if (!mounted) return;
 
-                Navigator.pop(context);
-                Navigator.pop(context);
+                  Navigator.pop(context);
+                  Navigator.pop(context);
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Center(
-                      child: Text(
-                        "Transaksi berhasil dihapus",
-                        style: whiteBold,
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Center(
+                        child: Text(
+                          "Transaksi berhasil dihapus",
+                          style: putihBold15,
+                        ),
                       ),
+                      backgroundColor: greennotif,
                     ),
-                    backgroundColor: greennotif,
-                  ),
-                );
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Center(
-                      child: Text("Gagal menghapus: $e", style: whiteBold),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Center(
+                        child: Text("Gagal menghapus: $e", style: putihBold15),
+                      ),
+                      backgroundColor: rednotif,
                     ),
-                    backgroundColor: rednotif,
-                  ),
-                );
-              }
-            },
+                  );
+                }
+              },
+            ),
           ),
         ],
       ),
@@ -188,15 +201,15 @@ class _EditTransaksiState extends State<EditTransaksi> {
   // APPBAR
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: white,
+      backgroundColor: putih,
       elevation: 0,
       leading: IconButton(
         onPressed: () {
           Navigator.pop(context);
         },
-        icon: Icon(Icons.arrow_back, color: red),
+        icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('Edit Transaksi', style: redBold20),
+      title: Text('Edit Transaksi', style: hitamBold20),
       centerTitle: true,
       actions: [
         Padding(
@@ -205,11 +218,11 @@ class _EditTransaksiState extends State<EditTransaksi> {
             onPressed: () {
               _deleteTransaksi();
             },
-            icon: Icon(Icons.delete, color: red),
+            icon: Icon(Icons.delete, color: merahHapus),
           ),
         ),
       ],
-      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -218,12 +231,12 @@ class _EditTransaksiState extends State<EditTransaksi> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Judul Transaksi', style: redReguler15),
+        Text('Judul Transaksi', style: hitamReguler15),
         SizedBox(height: 15),
         Container(
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
@@ -232,33 +245,33 @@ class _EditTransaksiState extends State<EditTransaksi> {
               controller: judul,
               decoration: InputDecoration(
                 hintText: 'Contoh: Mie Ayam',
-                hintStyle: greyReguler,
+                hintStyle: abuReguler15,
                 border: InputBorder.none,
               ),
             ),
           ),
         ),
         SizedBox(height: 15),
-        Text('Nominal', style: redReguler15),
+        Text('Nominal', style: hitamReguler15),
         SizedBox(height: 15),
         Container(
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
             children: [
               Padding(
                 padding: EdgeInsets.only(left: 14),
-                child: Text('Rp.', style: blackReguler),
+                child: Text('Rp.', style: hitamReguler15),
               ),
               Expanded(
                 child: TextField(
                   controller: nominal,
                   decoration: InputDecoration(
                     hintText: '10.000',
-                    hintStyle: greyReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                   ),
                   inputFormatters: [
@@ -281,13 +294,13 @@ class _EditTransaksiState extends State<EditTransaksi> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tipe Transaksi', style: redReguler15),
+        Text('Tipe Transaksi', style: hitamReguler15),
         SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
@@ -295,18 +308,18 @@ class _EditTransaksiState extends State<EditTransaksi> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: selectedType,
-                dropdownColor: white,
-                hint: Text('Pemasukan', style: blackReguler),
-                icon: Icon(Icons.arrow_drop_down, color: black),
+                dropdownColor: putih,
+                hint: Text('Pemasukan', style: hitamReguler15),
+                icon: Icon(Icons.arrow_drop_down, color: hitam),
                 onChanged: (v) => setState(() => selectedType = v!),
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: "pemasukan",
-                    child: Text("Pemasukan"),
+                    child: Text("Pemasukan", style: hitamReguler15),
                   ),
                   DropdownMenuItem(
                     value: "pengeluaran",
-                    child: Text("Pengeluaran"),
+                    child: Text("Pengeluaran", style: hitamReguler15),
                   ),
                 ],
               ),
@@ -323,7 +336,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Kategori', style: redReguler15),
+        Text('Kategori', style: hitamReguler15),
         SizedBox(height: 15),
         StreamBuilder<List<KategoriModel>>(
           stream: _firestoreService.getCategoryModels(),
@@ -349,7 +362,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
               width: double.infinity,
               height: 55,
               decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
+                border: Border.all(color: hijauSimpan, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Padding(
@@ -357,15 +370,15 @@ class _EditTransaksiState extends State<EditTransaksi> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedKategory,
-                    dropdownColor: white,
-                    hint: Text('Pilih Kategori', style: blackReguler),
-                    icon: Icon(Icons.arrow_drop_down, color: black),
+                    dropdownColor: putih,
+                    hint: Text('Pilih Kategori', style: hitamReguler15),
+                    icon: Icon(Icons.arrow_drop_down, color: hitam),
                     onChanged: (v) => setState(() => selectedKategory = v),
                     items: kategori
                         .map(
                           (e) => DropdownMenuItem<String>(
                             value: e.nama,
-                            child: Text(e.nama),
+                            child: Text(e.nama, style: hitamReguler15),
                           ),
                         )
                         .toList(),
@@ -385,7 +398,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: redReguler15),
+        Text('Bank', style: hitamReguler15),
         SizedBox(height: 15),
         StreamBuilder<List<BankModel>>(
           stream: _firestoreService.getBankModels(),
@@ -411,7 +424,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
               width: double.infinity,
               height: 55,
               decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
+                border: Border.all(color: hijauSimpan, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Padding(
@@ -419,15 +432,15 @@ class _EditTransaksiState extends State<EditTransaksi> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedBank,
-                    dropdownColor: white,
-                    hint: Text('SEMUA', style: blackReguler),
-                    icon: Icon(Icons.arrow_drop_down, color: black),
+                    dropdownColor: putih,
+                    hint: Text('SEMUA', style: hitamReguler15),
+                    icon: Icon(Icons.arrow_drop_down, color: hitam),
                     onChanged: (v) => setState(() => selectedBank = v),
                     items: bank
                         .map(
                           (e) => DropdownMenuItem<String>(
                             value: e.nama,
-                            child: Text(e.nama),
+                            child: Text(e.nama, style: hitamReguler15),
                           ),
                         )
                         .toList(),
@@ -448,13 +461,13 @@ class _EditTransaksiState extends State<EditTransaksi> {
       child: Container(
         height: 55,
         decoration: BoxDecoration(
-          color: greennotif,
+          color: hijauSimpan,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Center(
           child: _isLoading
-              ?  CircularProgressIndicator(color: white)
-              : Text('Simpan Transaksi', style: whiteBold),
+              ? CircularProgressIndicator(color: putih)
+              : Text('Simpan Transaksi', style: putihBold15),
         ),
       ),
     );
@@ -463,7 +476,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
   Widget _emptyMessage(String text, VoidCallback action) {
     return Column(
       children: [
-        Text(text, style: yellowBold12),
+        Text(text, style: biruReguler12),
         TextButton.icon(
           icon: const Icon(Icons.add),
           label: const Text("Tambah Data"),

@@ -21,8 +21,8 @@ class _BankScreensState extends State<BankScreens> {
     if (text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: red,
-          content: Center(child: Text("Bank harus diisi", style: whiteBold)),
+          backgroundColor: rednotif,
+          content: Center(child: Text("Bank harus diisi", style: putihBold15)),
         ),
       );
       return;
@@ -38,7 +38,7 @@ class _BankScreensState extends State<BankScreens> {
       SnackBar(
         backgroundColor: greennotif,
         content: Center(
-          child: Text("Bank berhasil ditambahkan", style: whiteBold),
+          child: Text("Bank berhasil ditambahkan", style: putihBold15),
         ),
       ),
     );
@@ -49,36 +49,44 @@ class _BankScreensState extends State<BankScreens> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: redblack,
+        backgroundColor: putih,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: Text("Hapus Bank?", style: whiteBold),
+        title: Text("Hapus Bank?", style: hitamBold20),
         content: Text(
           "Yakin ingin menghapus data bank '${bank.nama}'?",
-          style: whiteReguler,
+          style: teksdialogBold15,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Batal", style: whiteBold),
+            child: Text("Batal", style: dialogBatalBold15),
           ),
-          TextButton(
-            onPressed: () async {
-              await _firestoreService.deleteBank(bank.id);
+          Container(
+            width: 100,
+            height: 40,
+            decoration: BoxDecoration(
+              color: merahHapus,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextButton(
+              onPressed: () async {
+                await _firestoreService.deleteBank(bank.id);
 
-              if (!mounted) return;
+                if (!mounted) return;
 
-              Navigator.pop(context);
+                Navigator.pop(context);
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: greennotif,
-                  content: Center(
-                    child: Text("Bank berhasil dihapus", style: whiteBold),
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: greennotif,
+                    content: Center(
+                      child: Text("Bank berhasil dihapus", style: putihBold15),
+                    ),
                   ),
-                ),
-              );
-            },
-            child: Text("Hapus", style: greenBold15),
+                );
+              },
+              child: Text("Hapus", style: putihBold15),
+            ),
           ),
         ],
       ),
@@ -108,14 +116,15 @@ class _BankScreensState extends State<BankScreens> {
   // APPBAR
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: white,
+      backgroundColor: putih,
       elevation: 0,
       centerTitle: true,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
-        icon: Icon(Icons.arrow_back, color: red),
+        icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('Bank', style: redBold20),
+      title: Text('Bank', style: hitamBold20),
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -125,15 +134,15 @@ class _BankScreensState extends State<BankScreens> {
       width: double.infinity,
       height: 160,
       decoration: BoxDecoration(
-        color: white,
+        color: putih,
         boxShadow: [
           BoxShadow(
-            color: grey.withOpacity(0.3),
+            color: abu.withOpacity(0.3),
             blurRadius: 4,
             offset: const Offset(0, 3),
           ),
         ],
-        border: Border(bottom: BorderSide(color: grey)),
+        border: Border(bottom: BorderSide(color: abu)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 25, 20, 0),
@@ -144,7 +153,7 @@ class _BankScreensState extends State<BankScreens> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Judul Bank', style: redReguler15),
+                  Text('Judul Bank', style: hitamReguler15),
                   const SizedBox(height: 12),
                   _inputField(),
                 ],
@@ -166,7 +175,7 @@ class _BankScreensState extends State<BankScreens> {
     return Container(
       height: 55,
       decoration: BoxDecoration(
-        border: Border.all(color: red, width: 1.5),
+        border: Border.all(color: hijauSimpan, width: 1.5),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Padding(
@@ -175,7 +184,7 @@ class _BankScreensState extends State<BankScreens> {
           controller: _bankController,
           decoration: InputDecoration(
             hintText: 'Masukan nama bank',
-            hintStyle: greyReguler,
+            hintStyle: abuReguler15,
             border: InputBorder.none,
           ),
         ),
@@ -191,10 +200,10 @@ class _BankScreensState extends State<BankScreens> {
         width: 90,
         height: 55,
         decoration: BoxDecoration(
-          color: red,
+          color: hijauSimpan,
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Icon(Icons.add, color: white, size: 28),
+        child: Icon(Icons.add, color: putih, size: 28),
       ),
     );
   }
@@ -214,7 +223,7 @@ class _BankScreensState extends State<BankScreens> {
 
           if (banks.isEmpty) {
             return Center(
-              child: Text("Belum ada data bank", style: greyReguler),
+              child: Text("Belum ada data bank", style: abuReguler15),
             );
           }
 
@@ -226,16 +235,16 @@ class _BankScreensState extends State<BankScreens> {
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: white,
-                  border: Border.all(color: red, width: 2),
+                  color: putih,
+                  border: Border.all(color: hijauSimpan, width: 1.5),
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: ListTile(
-                  leading: Icon(Icons.account_balance, color: black),
-                  title: Text(bank.nama.toUpperCase(), style: blackBold15),
+                  leading: Icon(Icons.account_balance, color: hitam),
+                  title: Text(bank.nama.toUpperCase(), style: hitamBold15),
                   trailing: GestureDetector(
                     onTap: () => _confirmDelete(bank),
-                    child: Icon(Icons.delete, color: red),
+                    child: Icon(Icons.delete, color: merahHapus),
                   ),
                 ),
               );

@@ -67,6 +67,7 @@ class AuthService {
   }
 
   // Update Profile
+  // Update Profile
   Future<String?> updateProfile({
     required String newName,
     String? newfotoFileName,
@@ -79,41 +80,65 @@ class AuthService {
       }
 
       User? user = _auth.currentUser;
-      if (user == null) return "User tidak ditemukan";
+
+      if (user == null) {
+        return "User tidak ditemukan";
+      }
 
       // Update Nama
       await user.updateDisplayName(newName);
 
-      //  Update Email
+      // Update Email
       if (newEmail != null &&
           newEmail.trim().isNotEmpty &&
           newEmail != user.email) {
-        if (currentPassword == null || currentPassword.isEmpty) {
+        // Password wajib diisi
+        if (currentPassword == null || currentPassword.trim().isEmpty) {
           return "Masukkan password untuk mengganti email";
         }
 
         try {
+          // Re-authenticate
           AuthCredential credential = EmailAuthProvider.credential(
             email: user.email!,
-            password: currentPassword,
+            password: currentPassword.trim(),
           );
 
           await user.reauthenticateWithCredential(credential);
 
-          await user.verifyBeforeUpdateEmail(newEmail);
+          // Kirim verifikasi email baru
+          await user.verifyBeforeUpdateEmail(newEmail.trim());
 
-          return "Cek email baru untuk konfirmasi perubahan";
+          return "Cek email baru di alamat email untuk konfirmasi perubahan";
         } on FirebaseAuthException catch (e) {
-          if (e.code == 'wrong-password') {
-            return "Password salah";
+          switch (e.code) {
+            case 'wrong-password':
+            case 'invalid-credential':
+              return "Password salah";
+
+            case 'invalid-email':
+              return "Format email tidak valid";
+
+            case 'email-already-in-use':
+              return "Email sudah digunakan";
+
+            case 'requires-recent-login':
+              return "Silakan login ulang terlebih dahulu";
+
+            case 'too-many-requests':
+              return "Terlalu banyak percobaan, coba lagi nanti";
+
+            case 'network-request-failed':
+              return "Tidak ada koneksi internet";
+
+            default:
+              return e.message ?? "Gagal verifikasi password";
           }
-          return e.message;
         }
       }
 
-      //  Update Firestore
+      // Update Firestore
       await _db.collection('user').doc(user.uid).set({
-        // ignore: use_null_aware_elements
         if (newfotoFileName != null) 'foto': newfotoFileName,
       }, SetOptions(merge: true));
 
@@ -124,10 +149,13 @@ class AuthService {
       switch (e.code) {
         case 'invalid-email':
           return "Format email tidak valid";
+
         case 'email-already-in-use':
           return "Email sudah digunakan";
+
         case 'network-request-failed':
           return "Tidak ada koneksi internet";
+
         default:
           return e.message;
       }

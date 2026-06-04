@@ -9,7 +9,7 @@ import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart'
 import 'package:skripsi_keuangan/Screens/Profile/Komentar/komentar_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Laporan/unduh_laporan_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Tentang/tentang_screens.dart';
-import 'package:skripsi_keuangan/Screens/Profile/scan/scan_struk_screeen.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Scan/scan_struk_screeen.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Tagihan/tagihan_screens.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
@@ -25,12 +25,10 @@ class ProfileScreens extends StatefulWidget {
 
 class _ProfileScreensState extends State<ProfileScreens> {
   User? user = FirebaseAuth.instance.currentUser;
-
   final FirestoreService firestore = FirestoreService();
 
   String? fotoImageName;
   File? fotoImageFile;
-
   double _yPosisi = 0.0;
 
   @override
@@ -53,7 +51,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
         SnackBar(
           backgroundColor: success ? greennotif : rednotif,
           content: Center(
-            child: Text(msg, style: whiteBold, textAlign: TextAlign.center),
+            child: Text(msg, style: putihBold15, textAlign: TextAlign.center),
           ),
         ),
       );
@@ -62,7 +60,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
   Future<void> _refreshData() async {
     try {
       user = FirebaseAuth.instance.currentUser;
-
       if (user == null) return;
 
       final doc = await FirebaseFirestore.instance
@@ -77,14 +74,11 @@ class _ProfileScreensState extends State<ProfileScreens> {
 
         if (dataFoto != null && dataFoto.contains('|')) {
           final parts = dataFoto.split('|');
-
           fotoImageName = parts[0];
           _yPosisi = double.tryParse(parts[1]) ?? 0.0;
 
           final dir = await getApplicationDocumentsDirectory();
-
           final file = File('${dir.path}/$fotoImageName');
-
           fotoImageFile = await file.exists() ? file : null;
         } else {
           fotoImageName = dataFoto;
@@ -101,74 +95,85 @@ class _ProfileScreensState extends State<ProfileScreens> {
     }
   }
 
+  // FUNGSI HAPUS AKUN
   Future<void> _deleteAccount() async {
-    final passwordController = TextEditingController();
+    bool? confirm = false;
+    String inputPassword = '';
 
     try {
-      final confirm = await showDialog<bool>(
+      confirm = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: red,
-          title: Text("Konfirmasi Hapus Akun?", style: whiteBold),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "Masukkan password untuk konfirmasi hapus akun:",
-                style: whiteReguler,
-              ),
+        builder: (ctx) {
+          // Solusi utama: Jadikan controller ini lokal di dalam builder dialog
+          final localController = TextEditingController();
 
-              const SizedBox(height: 15),
-
-              Container(
-                width: double.infinity,
-                height: 55,
-                decoration: BoxDecoration(
-                  border: Border.all(color: white, width: 2),
-                  borderRadius: BorderRadius.circular(15),
+          return AlertDialog(
+            backgroundColor: putih,
+            title: Text("Konfirmasi Hapus Akun?", style: hitamBold15),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Masukkan password untuk konfirmasi hapus akun:",
+                  style: teksdialogBold15,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: TextField(
-                    controller: passwordController,
-                    style: whiteReguler,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: 'Masukan Password',
-                      hintStyle: greyReguler,
-                      border: InputBorder.none,
+                const SizedBox(height: 15),
+                Container(
+                  width: double.infinity,
+                  height: 55,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: hijauSimpan, width: 2),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: TextField(
+                      controller: localController,
+                      style: hitamReguler15,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        hintText: 'Masukan Password',
+                        hintStyle: abuReguler15,
+                        border: InputBorder.none,
+                      ),
                     ),
                   ),
                 ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text("BATAL", style: dialogBatalBold15),
+              ),
+              Container(
+                width: 100,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: merahHapus,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    if (localController.text.trim().isEmpty) {
+                      _showSnack("Password wajib diisi");
+                      return;
+                    }
+                    // Ambil nilainya ke variabel String sebelum dialog ditutup
+                    inputPassword = localController.text.trim();
+                    Navigator.pop(ctx, true);
+                  },
+                  child: Text("Hapus", style: putihBold15),
+                ),
               ),
             ],
-          ),
-
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text("BATAL", style: whiteReguler),
-            ),
-
-            TextButton(
-              onPressed: () {
-                if (passwordController.text.trim().isEmpty) {
-                  _showSnack("Password wajib diisi");
-                  return;
-                }
-
-                Navigator.pop(ctx, true);
-              },
-              child: Text("IYA", style: greenBold15),
-            ),
-          ],
-        ),
+          );
+        },
       );
 
       if (confirm != true) return;
 
       final currentUser = FirebaseAuth.instance.currentUser;
-
       if (currentUser == null || currentUser.email == null) {
         _showSnack("User tidak ditemukan");
         return;
@@ -176,7 +181,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
 
       final credential = EmailAuthProvider.credential(
         email: currentUser.email!,
-        password: passwordController.text.trim(),
+        password: inputPassword,
       );
 
       await currentUser.reauthenticateWithCredential(credential);
@@ -204,8 +209,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
       }
     } catch (e) {
       _showSnack("Gagal hapus akun");
-    } finally {
-      passwordController.dispose();
     }
   }
 
@@ -214,7 +217,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
       width: double.infinity,
       height: 50,
       decoration: BoxDecoration(
-        color: white,
+        color: putih,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -222,8 +225,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Icon(icon, size: 20, color: black),
-
+              Icon(icon, size: 20, color: hitam),
               if (badgeCount > 0)
                 Positioned(
                   right: -8,
@@ -242,27 +244,16 @@ class _ProfileScreensState extends State<ProfileScreens> {
                       minHeight: 18,
                     ),
                     child: Center(
-                      child: Text(
-                        '$badgeCount',
-                        style: TextStyle(
-                          color: white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: Text('$badgeCount', style: putihBold10),
                     ),
                   ),
                 ),
             ],
           ),
-
           const SizedBox(width: 20),
-
-          Text(text, style: blackReguler),
-
+          Text(text, style: hitamReguler15),
           const Spacer(),
-
-          Icon(Icons.arrow_right_rounded, size: 20, color: black),
+          Icon(Icons.arrow_right_rounded, size: 20, color: hitam),
         ],
       ),
     );
@@ -275,14 +266,13 @@ class _ProfileScreensState extends State<ProfileScreens> {
           context,
           MaterialPageRoute(builder: (context) => const Updatescreen()),
         );
-
         await _refreshData();
       },
       child: Row(
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundColor: red,
+            backgroundColor: hijauMedium,
             child: ClipOval(
               child: SizedBox.expand(
                 child: fotoImageFile != null
@@ -291,24 +281,32 @@ class _ProfileScreensState extends State<ProfileScreens> {
                         fit: BoxFit.cover,
                         alignment: Alignment(0, _yPosisi),
                       )
-                    : Icon(Icons.person, size: 50, color: white),
+                    : Icon(Icons.person, size: 50, color: hitam),
               ),
             ),
           ),
-
           const SizedBox(width: 20),
-
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(capitalize(nama), style: blackBold),
-              Text(user?.email ?? 'email', style: blackReguler12),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  capitalize(nama),
+                  style: hitamBold15,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                Text(
+                  user?.email ?? 'email',
+                  style: hitamReguler12,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ],
+            ),
           ),
-
-          const Spacer(),
-
-          Icon(Icons.edit_outlined, size: 20, color: black),
+          const SizedBox(width: 10),
+          Icon(Icons.edit_outlined, size: 20, color: hitam),
         ],
       ),
     );
@@ -324,9 +322,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
           ),
           child: _buildButton(Icons.account_balance, 'Tambah Bank'),
         ),
-
         const SizedBox(height: 30),
-
         InkWell(
           onTap: () => Navigator.push(
             context,
@@ -334,9 +330,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
           ),
           child: _buildButton(Icons.table_chart, 'Tambah Kategori'),
         ),
-
         const SizedBox(height: 30),
-
         InkWell(
           onTap: () => Navigator.push(
             context,
@@ -346,14 +340,11 @@ class _ProfileScreensState extends State<ProfileScreens> {
           ),
           child: _buildButton(Icons.download, 'Unduh Laporan'),
         ),
-
         const SizedBox(height: 30),
-
         StreamBuilder<int>(
           stream: firestore.getJumlahTagihanPenting(),
           builder: (context, snapshot) {
             final jumlah = snapshot.data ?? 0;
-
             return InkWell(
               onTap: () => Navigator.push(
                 context,
@@ -367,9 +358,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
             );
           },
         ),
-
         const SizedBox(height: 30),
-
         InkWell(
           onTap: () => Navigator.push(
             context,
@@ -377,9 +366,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
           ),
           child: _buildButton(Icons.qr_code_scanner, 'Scan Struk'),
         ),
-
         const SizedBox(height: 30),
-
         InkWell(
           onTap: () => Navigator.push(
             context,
@@ -387,9 +374,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
           ),
           child: _buildButton(Icons.perm_device_info, 'Tentang Aplikasi'),
         ),
-
         const SizedBox(height: 30),
-
         InkWell(
           onTap: () => Navigator.push(
             context,
@@ -397,9 +382,7 @@ class _ProfileScreensState extends State<ProfileScreens> {
           ),
           child: _buildButton(Icons.help_outline, 'Komentar'),
         ),
-
         const SizedBox(height: 30),
-
         InkWell(
           onTap: _deleteAccount,
           child: _buildButton(Icons.delete, 'Hapus Akun'),
@@ -414,17 +397,28 @@ class _ProfileScreensState extends State<ProfileScreens> {
         final confirm = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: red,
-            title: Text("Logout", style: whiteBold),
-            content: Text("Apakah yakin ingin logout?", style: whiteReguler),
+            backgroundColor: putih,
+            title: Text("Logout?", style: hitamBold20),
+            content: Text(
+              "Apakah yakin ingin log out?",
+              style: teksdialogBold15,
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text("BATAL", style: whiteBold),
+                child: Text("BATAL", style: dialogBatalBold15),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text("IYA", style: greenBold15),
+              Container(
+                width: 100,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: merahHapus,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text("IYA", style: putihBold15),
+                ),
               ),
             ],
           ),
@@ -434,11 +428,8 @@ class _ProfileScreensState extends State<ProfileScreens> {
 
         try {
           await AuthService().signOut();
-
           if (!mounted) return;
-
           _showSnack("Berhasil logout", success: true);
-
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const LoginScreens()),
             (route) => false,
@@ -451,15 +442,15 @@ class _ProfileScreensState extends State<ProfileScreens> {
         width: double.infinity,
         height: 50,
         decoration: BoxDecoration(
-          color: red,
+          color: hijauSimpan,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout, size: 20, color: white),
+            Icon(Icons.logout, size: 20, color: putih),
             const SizedBox(width: 10),
-            Text('Logout', style: whiteBold),
+            Text('Logout', style: putihBold15),
           ],
         ),
       ),
@@ -469,7 +460,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
   @override
   Widget build(BuildContext context) {
     String displayNama = user?.displayName ?? 'User';
-
     String nama = displayNama.contains('|')
         ? displayNama.split('|')[0]
         : displayNama;
@@ -490,13 +480,9 @@ class _ProfileScreensState extends State<ProfileScreens> {
               child: Column(
                 children: [
                   profileimage(context, nama),
-
                   const SizedBox(height: 30),
-
                   buttonBody(),
-
                   const SizedBox(height: 80),
-
                   butonLogout(),
                 ],
               ),

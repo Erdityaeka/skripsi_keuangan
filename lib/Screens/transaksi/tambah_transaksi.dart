@@ -40,7 +40,9 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
         selectedBank == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Center(child: Text("Lengkapi semua data", style: whiteBold)),
+          content: Center(
+            child: Text("Lengkapi semua data", style: putihBold15),
+          ),
           backgroundColor: rednotif,
         ),
       );
@@ -71,7 +73,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(
-            child: Text("Transaksi berhasil disimpan", style: whiteBold),
+            child: Text("Transaksi berhasil disimpan", style: putihBold15),
           ),
           backgroundColor: greennotif,
         ),
@@ -83,7 +85,9 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Center(child: Text("Gagal menyimpan: $e", style: whiteBold)),
+          content: Center(
+            child: Text("Gagal menyimpan: $e", style: putihBold15),
+          ),
           backgroundColor: rednotif,
         ),
       );
@@ -118,17 +122,17 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
 
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: white,
+      backgroundColor: putih,
       elevation: 0,
       leading: IconButton(
         onPressed: () {
           Navigator.pop(context);
         },
-        icon: Icon(Icons.arrow_back, color: red),
+        icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('Tambah Transaksi', style: redBold20),
+      title: Text('Tambah Transaksi', style: hitamBold20),
       centerTitle: true,
-      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -137,13 +141,13 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Judul Transaksi', style: redReguler15),
+        Text('Judul Transaksi', style: hitamReguler15),
         SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Center(
@@ -153,7 +157,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
                 controller: judul,
                 decoration: InputDecoration(
                   hintText: 'Contoh: Mie Ayam',
-                  hintStyle: greyReguler,
+                  hintStyle: abuReguler15,
                   border: InputBorder.none,
                 ),
               ),
@@ -162,13 +166,13 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
         ),
 
         SizedBox(height: 15),
-        Text('Nominal', style: redReguler15),
+        Text('Nominal', style: hitamReguler15),
         SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
@@ -176,7 +180,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
             children: [
               Padding(
                 padding: EdgeInsets.only(right: 5.0, left: 14.0),
-                child: Text('Rp.', style: blackReguler),
+                child: Text('Rp.', style: hitamReguler15),
               ),
 
               Expanded(
@@ -184,7 +188,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
                   controller: nominal,
                   decoration: InputDecoration(
                     hintText: '10.000',
-                    hintStyle: greyReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                   ),
                   inputFormatters: [
@@ -206,13 +210,13 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tipe Transaksi', style: redReguler15),
+        Text('Tipe Transaksi', style: hitamReguler15),
         SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
@@ -220,18 +224,18 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: selectedType,
-                dropdownColor: white,
-                hint: Text('Pemasukan', style: blackReguler),
-                icon: Icon(Icons.arrow_drop_down, color: black),
+                dropdownColor: putih,
+                hint: Text('Pemasukan', style: hitamReguler15),
+                icon: Icon(Icons.arrow_drop_down, color: hitam),
                 onChanged: (v) => setState(() => selectedType = v!),
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: "pemasukan",
-                    child: Text("Pemasukan"),
+                    child: Text("Pemasukan", style: hitamReguler15),
                   ),
                   DropdownMenuItem(
                     value: "pengeluaran",
-                    child: Text("Pengeluaran"),
+                    child: Text("Pengeluaran", style: hitamReguler15),
                   ),
                 ],
               ),
@@ -247,7 +251,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Kategori', style: redReguler15),
+        Text('Kategori', style: hitamReguler15),
         SizedBox(height: 15),
         StreamBuilder<List<KategoriModel>>(
           stream: _firestoreService.getCategoryModels(),
@@ -273,7 +277,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
               width: double.infinity,
               height: 55,
               decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
+                border: Border.all(color: hijauSimpan, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Padding(
@@ -281,9 +285,9 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedKategory,
-                    dropdownColor: white,
-                    hint: Text('Pilih Kategori', style: blackReguler),
-                    icon: Icon(Icons.arrow_drop_down, color: black),
+                    dropdownColor: putih,
+                    hint: Text('Pilih Kategori', style: hitamReguler15),
+                    icon: Icon(Icons.arrow_drop_down, color: hitam),
                     onChanged: (v) => setState(() => selectedKategory = v),
                     items: kategori
                         .map(
@@ -308,7 +312,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: redReguler15),
+        Text('Bank', style: hitamReguler15),
         SizedBox(height: 15),
         StreamBuilder<List<BankModel>>(
           stream: _firestoreService.getBankModels(),
@@ -334,7 +338,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
               width: double.infinity,
               height: 55,
               decoration: BoxDecoration(
-                border: Border.all(color: red, width: 1.5),
+                border: Border.all(color: hijauSimpan, width: 1.5),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Padding(
@@ -342,9 +346,9 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedBank,
-                    dropdownColor: white,
-                    hint: Text('SEMUA', style: blackReguler),
-                    icon: Icon(Icons.arrow_drop_down, color: black),
+                    dropdownColor: putih,
+                    hint: Text('SEMUA', style: hitamReguler15),
+                    icon: Icon(Icons.arrow_drop_down, color: hitam),
                     onChanged: (v) => setState(() => selectedBank = v),
                     items: bank
                         .map(
@@ -371,15 +375,15 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
         width: double.infinity,
         height: 55,
         decoration: BoxDecoration(
-          color: greennotif,
+          color: hijauSimpan,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Center(
           child: _isLoading
               ? CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(white),
+                  valueColor: AlwaysStoppedAnimation<Color>(putih),
                 )
-              : Text('Simpan Transaksi', style: whiteBold),
+              : Text('Simpan Transaksi', style: putihBold15),
         ),
       ),
     );
@@ -388,7 +392,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
   Widget _emptyMessage(String text, VoidCallback action) {
     return Column(
       children: [
-        Text(text, style: yellowBold12),
+        Text(text, style: biruReguler12),
         TextButton.icon(
           icon: const Icon(Icons.add),
           label: const Text("Tambah Data"),

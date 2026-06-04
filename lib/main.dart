@@ -149,7 +149,7 @@ class _RootAppState extends State<RootApp> {
       ],
 
       // Theme
-      theme: ThemeData(scaffoldBackgroundColor: white),
+      theme: ThemeData(scaffoldBackgroundColor: putih),
 
       // Halaman offline/online
       builder: (context, child) {
@@ -164,7 +164,7 @@ class _RootAppState extends State<RootApp> {
               child: IgnorePointer(
                 ignoring: isConnected,
                 child: Container(
-                  color: black.withOpacity(0.5),
+                  color: hitam.withOpacity(0.5),
                   child: Center(
                     child: Lottie.asset(
                       "Images/animasiinternet.json",

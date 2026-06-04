@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Screens/auth/Sigin_screens.dart';
+
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/navigation/bottom_navigation.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
@@ -28,7 +29,7 @@ class _LoginScreensState extends State<LoginScreens> {
   void _showSnack(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg, textAlign: TextAlign.center, style: whiteBold),
+        content: Text(msg, textAlign: TextAlign.center, style: putihBold15),
         backgroundColor: success ? greennotif : rednotif,
       ),
     );
@@ -78,25 +79,37 @@ class _LoginScreensState extends State<LoginScreens> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: red,
+        backgroundColor: putih,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: Text("Reset Password", style: whiteBold),
+        title: Text("Reset Password?", style: hitamBold20),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               "Masukkan email Anda. Kami akan mengirimkan link untuk mengatur ulang password.",
-              style: whiteReguler,
+              style: teksdialogBold15,
             ),
             const SizedBox(height: 15),
-            TextField(
-              controller: resetEmailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: "Email",
-                labelStyle: greyReguler,
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email, color: grey),
+            Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                border: Border.all(color: hijauSimpan, width: 2),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: TextField(
+                  controller: resetEmailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: putihReguler15,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'Masukan Password',
+                    hintStyle: abuReguler15,
+                    border: InputBorder.none,
+                  ),
+                ),
               ),
             ),
           ],
@@ -104,9 +117,10 @@ class _LoginScreensState extends State<LoginScreens> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Batal", style: whiteBold),
+            child: Text("Batal", style: dialogBatalBold15),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: hijauSimpan),
             onPressed: () async {
               if (resetEmailController.text.isNotEmpty) {
                 String? error = await AuthService().resetPassword(
@@ -121,7 +135,7 @@ class _LoginScreensState extends State<LoginScreens> {
                       content: Center(
                         child: Text(
                           "Email reset dikirim! Silakan cek Inbox/Spam.",
-                          style: whiteBold,
+                          style: putihBold15,
                         ),
                       ),
                       backgroundColor: greennotif,
@@ -132,14 +146,14 @@ class _LoginScreensState extends State<LoginScreens> {
                 }
               }
             },
-            child: Text("Kirim", style: blackBold15),
+            child: Text("Kirim", style: putihBold15),
           ),
         ],
       ),
     );
   }
 
-  //Wisget UI
+  //Widget UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,7 +173,7 @@ class _LoginScreensState extends State<LoginScreens> {
                     Spacer(),
                     InkWell(
                       onTap: _showForgotPasswordDialog,
-                      child: Text('Lupa Password?', style: redReguler15),
+                      child: Text('Lupa Password?', style: hitamReguler15),
                     ),
                   ],
                 ),
@@ -181,8 +195,11 @@ class _LoginScreensState extends State<LoginScreens> {
           width: 150,
           height: 150,
         ),
-        Text('Selamat Datang', style: blackBold),
-        Text('Masuk untuk mengelola keuanganmu', style: blackReguler),
+        Text('Selamat Datang', style: hitamBold20),
+        Text(
+          'Silahkan masuk untuk mengelola keuanganmu',
+          style: hitamReguler15,
+        ),
       ],
     );
   }
@@ -191,13 +208,13 @@ class _LoginScreensState extends State<LoginScreens> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Email Address', style: blackReguler),
+        Text('Email Address', style: hitamReguler15),
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
@@ -205,7 +222,7 @@ class _LoginScreensState extends State<LoginScreens> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(right: 5.0, left: 14.0),
-                child: Icon(Icons.mark_email_unread_rounded, color: grey),
+                child: Icon(Icons.mark_email_unread_rounded, color: abu),
               ),
               SizedBox(width: 5),
               Expanded(
@@ -216,7 +233,7 @@ class _LoginScreensState extends State<LoginScreens> {
                     isCollapsed: true,
                     contentPadding: EdgeInsets.zero,
                     hintText: 'Masukan Email',
-                    hintStyle: greyReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                   ),
                 ),
@@ -226,13 +243,13 @@ class _LoginScreensState extends State<LoginScreens> {
         ),
 
         const SizedBox(height: 20),
-        Text('Password', style: blackReguler),
+        Text('Password', style: hitamReguler15),
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
@@ -240,17 +257,16 @@ class _LoginScreensState extends State<LoginScreens> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(right: 5.0, left: 14.0),
-                child: Icon(Icons.lock_outline_rounded, color: grey),
+                child: Icon(Icons.lock_outline_rounded, color: abu),
               ),
               SizedBox(width: 5),
               Expanded(
                 child: TextField(
                   controller: _passwordController,
                   obscureText: !_isPasswordVisible,
-
                   decoration: InputDecoration(
                     hintText: 'Masukan Password',
-                    hintStyle: greyReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                   ),
                 ),
@@ -268,7 +284,7 @@ class _LoginScreensState extends State<LoginScreens> {
                     _isPasswordVisible
                         ? Icons.visibility_outlined
                         : Icons.visibility_off_outlined,
-                    color: black,
+                    color: hitam,
                   ),
                 ),
               ),
@@ -288,15 +304,15 @@ class _LoginScreensState extends State<LoginScreens> {
             width: double.infinity,
             height: 50,
             decoration: BoxDecoration(
-              color: redBold20.color,
+              color: hijauSimpan,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
               child: _isLoading
-                  ?  CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(white),
+                  ? CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(putih),
                     )
-                  : Text('Login', style: whiteBold),
+                  : Text('Login', style: putihBold15),
             ),
           ),
         ),
@@ -305,7 +321,7 @@ class _LoginScreensState extends State<LoginScreens> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Belum punya akun? ', style: blackReguler),
+            Text('Belum punya akun? ', style: hitamReguler15),
             GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -313,7 +329,7 @@ class _LoginScreensState extends State<LoginScreens> {
                   MaterialPageRoute(builder: (context) => SiginScreens()),
                 );
               },
-              child: Text('Daftar', style: redReguler15),
+              child: Text('Daftar', style: hijauBold15),
             ),
           ],
         ),

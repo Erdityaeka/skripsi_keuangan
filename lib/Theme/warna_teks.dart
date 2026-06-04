@@ -1,106 +1,165 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-Color black = Color(0xFF000000);
-Color white = Color(0xFFFFFFFF);
-Color grey = Color(0xFF999999);
-Color red = Color(0xFF800020);
-Color rednotif = Color(0xFFD50004);
-Color redblack = Color(0xFF5F0018);
-Color green = Color(0xFF1BE400);
-Color greennotif = Color(0xFF0B5F00);
-Color yellow = Color(0xFFFFC506);
-Color blue = Color(0xFF3718E6);
+/// Palet warna utama
+Color hitam = const Color(0xFF0F172A);
+Color putih = const Color(0xFFFFFFFF);
+Color abu = const Color(0xFF9D9D9D);
+Color biru = const Color(0xFF2D93DC);
+Color hijauPemasukan = const Color(0xFF065F46);
+Color merahPengeluaran = const Color(0xFFC2410C);
+Color teksdialog = const Color(0xFF475569);
+Color dialogbatal = const Color(0xFF64748B);
+Color cardstroke = const Color(0xFFE2E8F0);
 
-// Warna hitam
-TextStyle blackBold = GoogleFonts.poppins(
-  color: black,
+// Warna tambahan UI
+Color hijauTerang = const Color(0xFFD1FAE5);
+Color hijauMedium = const Color(0xFFA7F3D0);
+Color hijauSimpan = const Color(0xFF1E6B52);
+Color merahHapus = const Color(0xFFE05638);
+Color bottomTerpilih = const Color(0xFF1E6B52);
+Color bottomTidakTerpilih = const Color(0xFF9D9D9D);
+
+// Warna notif
+
+Color greennotif = Color(0xFF0B5F00);
+Color yellownotif = Color(0xFFFFC506);
+Color rednotif = Color(0xFFD50004);
+
+///  Gaya Teks
+
+// Hitam
+TextStyle hitamBold20 = GoogleFonts.poppins(
+  color: hitam,
   fontSize: 20,
   fontWeight: FontWeight.bold,
 );
-TextStyle blackBold15 = GoogleFonts.poppins(
-  color: black,
+TextStyle hitamBold15 = GoogleFonts.poppins(
+  color: hitam,
   fontSize: 15,
   fontWeight: FontWeight.bold,
 );
-TextStyle blackReguler = GoogleFonts.poppins(
-  color: black,
+TextStyle hitamBold12 = GoogleFonts.poppins(
+  color: hitam,
+  fontSize: 12,
+  fontWeight: FontWeight.bold,
+);
+TextStyle hitamReguler15 = GoogleFonts.poppins(
+  color: hitam,
   fontSize: 15,
   fontWeight: FontWeight.w400,
 );
-TextStyle blackReguler12 = GoogleFonts.poppins(
-  color: black,
+TextStyle hitamReguler12 = GoogleFonts.poppins(
+  color: hitam,
   fontSize: 12,
   fontWeight: FontWeight.w400,
 );
-// Warna putih
-TextStyle whiteBold = GoogleFonts.poppins(
-  color: white,
+
+// Putih
+TextStyle putihBold15 = GoogleFonts.poppins(
+  color: putih,
   fontSize: 15,
   fontWeight: FontWeight.bold,
 );
-TextStyle whiteReguler = GoogleFonts.poppins(
-  color: white,
-  fontSize: 15,
-  fontWeight: FontWeight.w400,
-);
-// Warna abu-abu
-TextStyle greyReguler = GoogleFonts.poppins(
-  color: grey,
-  fontSize: 15,
-  fontWeight: FontWeight.w400,
-);
-// Warna merah
-TextStyle redBold20 = GoogleFonts.poppins(
-  color: red,
-  fontSize: 20,
-  fontWeight: FontWeight.bold,
-);
-TextStyle redBold15 = GoogleFonts.poppins(
-  color: red,
-  fontSize: 15,
-  fontWeight: FontWeight.bold,
-);
-TextStyle redBold14 = GoogleFonts.poppins(
-  color: red,
+TextStyle putihBold14 = GoogleFonts.poppins(
+  color: putih,
   fontSize: 14,
   fontWeight: FontWeight.bold,
 );
-TextStyle redReguler15 = GoogleFonts.poppins(
-  color: red,
+TextStyle putihBold10 = GoogleFonts.poppins(
+  color: putih,
+  fontSize: 10,
+  fontWeight: FontWeight.bold,
+);
+TextStyle putihReguler15 = GoogleFonts.poppins(
+  color: putih,
   fontSize: 15,
   fontWeight: FontWeight.w400,
 );
-TextStyle redReguler12 = GoogleFonts.poppins(
-  color: red,
+TextStyle putihReguler12 = GoogleFonts.poppins(
+  color: putih,
   fontSize: 12,
   fontWeight: FontWeight.w400,
 );
-// Warna hijau
-TextStyle greenBold15 = GoogleFonts.poppins(
-  color: green,
+
+// Abu-abu
+TextStyle abuReguler15 = GoogleFonts.poppins(
+  color: abu,
   fontSize: 15,
-  fontWeight: FontWeight.bold,
+  fontWeight: FontWeight.w400,
 );
-TextStyle greenBold12 = GoogleFonts.poppins(
-  color: green,
-  fontSize: 12,
-  fontWeight: FontWeight.bold,
-);
-// Warna kuning
-TextStyle yellowBold15 = GoogleFonts.poppins(
-  color: yellow,
-  fontSize: 15,
-  fontWeight: FontWeight.bold,
-);
-TextStyle yellowBold12 = GoogleFonts.poppins(
-  color: yellow,
-  fontSize: 12,
-  fontWeight: FontWeight.bold,
-);
-// Warna biru
-TextStyle blueReguler12 = GoogleFonts.poppins(
-  color: blue,
+TextStyle abuReguler12 = GoogleFonts.poppins(
+  color: abu,
   fontSize: 12,
   fontWeight: FontWeight.w400,
+);
+
+// Biru
+TextStyle biruReguler12 = GoogleFonts.poppins(
+  color: biru,
+  fontSize: 12,
+  fontWeight: FontWeight.w400,
+);
+
+// Hijau (Pemasukan)
+TextStyle hijauBold15 = GoogleFonts.poppins(
+  color: hijauPemasukan,
+  fontSize: 15,
+  fontWeight: FontWeight.bold,
+);
+TextStyle hijauBold12 = GoogleFonts.poppins(
+  color: hijauPemasukan,
+  fontSize: 12,
+  fontWeight: FontWeight.bold,
+);
+TextStyle hijauReguler12 = GoogleFonts.poppins(
+  color: hijauPemasukan,
+  fontSize: 12,
+  fontWeight: FontWeight.w400,
+);
+
+// Merah (Pengeluaran)
+TextStyle merahBold15 = GoogleFonts.poppins(
+  color: merahPengeluaran,
+  fontSize: 15,
+  fontWeight: FontWeight.bold,
+);
+TextStyle merahBold12 = GoogleFonts.poppins(
+  color: merahPengeluaran,
+  fontSize: 12,
+  fontWeight: FontWeight.bold,
+);
+TextStyle merahReguler12 = GoogleFonts.poppins(
+  color: merahPengeluaran,
+  fontSize: 12,
+  fontWeight: FontWeight.w400,
+);
+
+// Bottom Navigation
+TextStyle bottomTerpilihBold14 = GoogleFonts.poppins(
+  color: bottomTerpilih,
+  fontSize: 14,
+  fontWeight: FontWeight.bold,
+);
+TextStyle bottomTidakTerpilihBold14 = GoogleFonts.poppins(
+  color: bottomTidakTerpilih,
+  fontSize: 14,
+  fontWeight: FontWeight.bold,
+);
+TextStyle bottomTidakTerpilihReguler15 = GoogleFonts.poppins(
+  color: bottomTidakTerpilih,
+  fontSize: 15,
+  fontWeight: FontWeight.w400,
+);
+
+// Dialog
+TextStyle teksdialogBold15 = GoogleFonts.poppins(
+  color: teksdialog,
+  fontSize: 15,
+  fontWeight: FontWeight.bold,
+);
+TextStyle dialogBatalBold15 = GoogleFonts.poppins(
+  color: dialogbatal,
+  fontSize: 15,
+  fontWeight: FontWeight.bold,
 );

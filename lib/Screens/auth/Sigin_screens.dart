@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
+
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
 
@@ -38,7 +39,7 @@ class _SiginScreensState extends State<SiginScreens> {
   void _showSnack(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Center(child: Text(msg, style: whiteBold)),
+        content: Center(child: Text(msg, style: putihBold15)),
         backgroundColor: success ? greennotif : rednotif,
       ),
     );
@@ -169,7 +170,7 @@ class _SiginScreensState extends State<SiginScreens> {
                           ),
                         );
                       },
-                      child: Text('Sudah punya akun?', style: redReguler15),
+                      child: Text('Sudah punya akun?', style: hitamReguler15),
                     ),
                   ],
                 ),
@@ -190,7 +191,7 @@ class _SiginScreensState extends State<SiginScreens> {
           onTap: _isLoading ? null : _pickImage,
           child: CircleAvatar(
             radius: 50,
-            backgroundColor: red,
+            backgroundColor: hijauTerang,
             child: ClipOval(
               child: SizedBox.expand(
                 child: _pickedImage != null
@@ -199,7 +200,7 @@ class _SiginScreensState extends State<SiginScreens> {
                         fit: BoxFit.cover,
                         alignment: Alignment(0, _yAlignment),
                       )
-                    : Icon(Icons.camera_alt_outlined, size: 50, color: white),
+                    : Icon(Icons.camera_alt_outlined, size: 50, color: hitam),
               ),
             ),
           ),
@@ -210,13 +211,11 @@ class _SiginScreensState extends State<SiginScreens> {
             value: _yAlignment,
             min: -1.0,
             max: 1.0,
-            activeColor: red,
+            activeColor: hijauPemasukan,
+            inactiveColor: abu,
             onChanged: (val) => setState(() => _yAlignment = val),
           ),
-          Text(
-            "Geser posisi foto profil",
-            style: TextStyle(fontSize: 12, color: grey),
-          ),
+          Text("Geser posisi foto profil", style: abuReguler12),
         ],
       ],
     );
@@ -226,13 +225,13 @@ class _SiginScreensState extends State<SiginScreens> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Nama', style: blackReguler),
+        Text('Nama', style: hitamReguler15),
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
@@ -240,7 +239,7 @@ class _SiginScreensState extends State<SiginScreens> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(right: 5.0, left: 14.0),
-                child: Icon(Icons.person, color: grey),
+                child: Icon(Icons.person, color: abu),
               ),
               const SizedBox(width: 5),
               Expanded(
@@ -251,7 +250,7 @@ class _SiginScreensState extends State<SiginScreens> {
                     isCollapsed: true,
                     contentPadding: EdgeInsets.zero,
                     hintText: 'Masukan Nama',
-                    hintStyle: greyReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                   ),
                 ),
@@ -260,13 +259,13 @@ class _SiginScreensState extends State<SiginScreens> {
           ),
         ),
         const SizedBox(height: 20),
-        Text('Email Address', style: blackReguler),
+        Text('Email Address', style: hitamReguler15),
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
@@ -274,7 +273,7 @@ class _SiginScreensState extends State<SiginScreens> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(right: 5.0, left: 14.0),
-                child: Icon(Icons.mark_email_unread_rounded, color: grey),
+                child: Icon(Icons.mark_email_unread_rounded, color: abu),
               ),
               const SizedBox(width: 5),
               Expanded(
@@ -286,7 +285,7 @@ class _SiginScreensState extends State<SiginScreens> {
                     isCollapsed: true,
                     contentPadding: EdgeInsets.zero,
                     hintText: 'Masukan Email',
-                    hintStyle: greyReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                   ),
                 ),
@@ -295,13 +294,13 @@ class _SiginScreensState extends State<SiginScreens> {
           ),
         ),
         const SizedBox(height: 20),
-        Text('Password', style: blackReguler),
+        Text('Password', style: hitamReguler15),
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
           height: 55,
           decoration: BoxDecoration(
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
@@ -309,7 +308,7 @@ class _SiginScreensState extends State<SiginScreens> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(right: 5.0, left: 14.0),
-                child: Icon(Icons.lock_outline_rounded, color: grey),
+                child: Icon(Icons.lock_outline_rounded, color: abu),
               ),
               const SizedBox(width: 5),
               Expanded(
@@ -319,7 +318,7 @@ class _SiginScreensState extends State<SiginScreens> {
                   enabled: !_isLoading,
                   decoration: InputDecoration(
                     hintText: 'Masukan Password',
-                    hintStyle: greyReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                   ),
                 ),
@@ -337,7 +336,7 @@ class _SiginScreensState extends State<SiginScreens> {
                     _isPasswordVisible
                         ? Icons.visibility_outlined
                         : Icons.visibility_off_outlined,
-                    color: black,
+                    color: hitam,
                   ),
                 ),
               ),
@@ -355,13 +354,13 @@ class _SiginScreensState extends State<SiginScreens> {
         width: double.infinity,
         height: 50,
         decoration: BoxDecoration(
-          color: redBold20.color,
+          color: hijauSimpan,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Center(
           child: _isLoading
-              ?  CircularProgressIndicator(color: white)
-              : Text('Daftar', style: whiteBold),
+              ? CircularProgressIndicator(color: putih)
+              : Text('Daftar', style: putihBold15),
         ),
       ),
     );

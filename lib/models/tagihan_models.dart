@@ -17,7 +17,6 @@ class TagihanModels {
     required this.tanggalJatuhTempo,
   });
 
-  // Mengubah data dari Object ke Map (untuk simpan ke Firestore)
   Map<String, dynamic> toMap() {
     return {
       'judul': judul,
@@ -28,15 +27,36 @@ class TagihanModels {
     };
   }
 
-  // Mengubah data dari Map ke Object (untuk ambil dari Firestore)
   factory TagihanModels.fromMap(String id, Map<String, dynamic> map) {
+    final rawTanggal = map['tanggalJatuhTempo'];
+
+    DateTime tanggalJatuhTempo;
+
+    if (rawTanggal is Timestamp) {
+      tanggalJatuhTempo = rawTanggal.toDate();
+    } else if (rawTanggal is String) {
+      tanggalJatuhTempo = DateTime.tryParse(rawTanggal) ?? DateTime.now();
+    } else {
+      tanggalJatuhTempo = DateTime.now();
+    }
+
+    double nominal;
+
+    final rawNominal = map['nominal'];
+
+    if (rawNominal is num) {
+      nominal = rawNominal.toDouble();
+    } else {
+      nominal = double.tryParse(rawNominal?.toString() ?? '0') ?? 0;
+    }
+
     return TagihanModels(
       id: id,
-      judul: map['judul'] ?? '',
-      kategori: map['kategori'] ?? 'Tagihan',
-      bank: map['bank'] ?? '',
-      nominal: (map['nominal'] ?? 0).toDouble(),
-      tanggalJatuhTempo: (map['tanggalJatuhTempo'] as Timestamp).toDate(),
+      judul: map['judul']?.toString() ?? '',
+      kategori: map['kategori']?.toString() ?? 'Tagihan',
+      bank: map['bank']?.toString() ?? '',
+      nominal: nominal,
+      tanggalJatuhTempo: tanggalJatuhTempo,
     );
   }
 }

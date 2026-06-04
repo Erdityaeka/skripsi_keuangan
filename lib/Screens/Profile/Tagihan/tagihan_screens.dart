@@ -47,7 +47,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
       case "TELAT":
         return rednotif;
       case "JATUH TEMPO":
-        return yellow;
+        return yellownotif;
       default:
         return greennotif;
     }
@@ -62,7 +62,10 @@ class _TagihanScreensState extends State<TagihanScreens> {
         SnackBar(
           backgroundColor: greennotif,
           content: Center(
-            child: Text("${tagihan.judul} Berhasil Dibayar", style: whiteBold),
+            child: Text(
+              "${tagihan.judul} Berhasil Dibayar",
+              style: putihBold15,
+            ),
           ),
         ),
       );
@@ -75,27 +78,35 @@ class _TagihanScreensState extends State<TagihanScreens> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: red,
+          backgroundColor: putih,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          title: Text("Hapus Tagihan?", style: whiteBold),
+          title: Text("Hapus Tagihan?", style: hitamBold20),
           content: Text(
-            "Yakin ingin menghapus '${tagihan.judul}'?",
-            style: whiteReguler,
+            "Yakin ingin menghapus data tagihan '${tagihan.judul}'?",
+            style: teksdialogBold15,
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: Text("Batal", style: whiteBold),
+              child: Text("Batal", style: dialogBatalBold15),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-              child: Text("Hapus", style: greenBold15),
+            Container(
+              width: 100,
+              height: 40,
+              decoration: BoxDecoration(
+                color: merahHapus,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+                child: Text("Hapus", style: putihBold15),
+              ),
             ),
           ],
         );
@@ -112,7 +123,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
             content: Center(
               child: Text(
                 "${tagihan.judul} berhasil dihapus",
-                style: whiteBold,
+                style: putihBold15,
               ),
             ),
           ),
@@ -126,7 +137,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
     return Scaffold(
       appBar: _buildAppbar(context),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: red,
+        backgroundColor: hijauSimpan,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         onPressed: () {
           Navigator.push(
@@ -134,7 +145,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
             MaterialPageRoute(builder: (_) => const TambahTagihan()),
           );
         },
-        child: Icon(Icons.add, color: white),
+        child: Icon(Icons.add, color: putih),
       ),
 
       // BODY
@@ -153,15 +164,15 @@ class _TagihanScreensState extends State<TagihanScreens> {
   // APPBAR
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: white,
+      backgroundColor: putih,
       elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
-        icon: Icon(Icons.arrow_back, color: red),
+        icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('Tagihan', style: redBold20),
+      title: Text('Tagihan', style: hitamBold20),
       centerTitle: true,
-      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -186,7 +197,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
                   child: Center(
                     child: Text(
                       "Belum ada tagihan",
-                      style: greyReguler,
+                      style: abuReguler15,
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -264,12 +275,12 @@ class _TagihanScreensState extends State<TagihanScreens> {
       margin: const EdgeInsets.only(bottom: 18),
       width: double.infinity,
       decoration: BoxDecoration(
-        color: white,
+        color: putih,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: red, width: 2),
+        border: Border.all(color: cardstroke, width: 2),
         boxShadow: [
           BoxShadow(
-            color: black.withOpacity(0.15),
+            color: hitam.withOpacity(0.15),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -286,7 +297,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
                 Expanded(
                   child: Text(
                     "Tanggal: ${DateFormat('dd MMM yyyy').format(tagihan.tanggalJatuhTempo)}",
-                    style: blackReguler12,
+                    style: hitamReguler12,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -304,7 +315,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
             ),
           ),
 
-          Divider(color: red, thickness: 1, height: 1),
+          Divider(color: cardstroke, thickness: 1, height: 1),
 
           InkWell(
             borderRadius: BorderRadius.circular(12),
@@ -322,7 +333,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
                       shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: Icon(Icons.receipt_long, color: white, size: 22),
+                      child: Icon(Icons.receipt_long, color: putih, size: 22),
                     ),
                   ),
 
@@ -335,7 +346,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
                       children: [
                         Text(
                           capitalize(tagihan.judul),
-                          style: redBold15,
+                          style: hitamBold15,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
@@ -344,7 +355,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
 
                         Text(
                           capitalize(tagihan.kategori),
-                          style: redReguler12,
+                          style: hitamReguler12,
                           overflow: TextOverflow.ellipsis,
                         ),
 
@@ -352,7 +363,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
 
                         Text(
                           capitalize(tagihan.bank),
-                          style: redReguler12,
+                          style: hitamReguler12,
                           overflow: TextOverflow.ellipsis,
                         ),
 
@@ -360,7 +371,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
 
                         Text(
                           "Jam: ${DateFormat('HH:mm').format(tagihan.tanggalJatuhTempo)}",
-                          style: blackReguler12,
+                          style: hitamReguler12,
                         ),
                       ],
                     ),
@@ -372,8 +383,8 @@ class _TagihanScreensState extends State<TagihanScreens> {
                   Column(
                     children: [
                       Text(
-                        "Rp ${NumberFormat('#,###', 'id_ID').format(tagihan.nominal).replaceAll(',', '.')}",
-                        style: redBold15,
+                        "Rp.${NumberFormat('#,###', 'id_ID').format(tagihan.nominal).replaceAll(',', '.')}",
+                        style: hitamBold15,
                       ),
                     ],
                   ),
@@ -391,11 +402,11 @@ class _TagihanScreensState extends State<TagihanScreens> {
                     width: double.infinity,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: greennotif,
+                      color: hijauSimpan,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
-                      child: Text("Bayar Tagihan", style: whiteBold),
+                      child: Text("Bayar Tagihan", style: putihBold15),
                     ),
                   ),
                 ),
@@ -408,11 +419,11 @@ class _TagihanScreensState extends State<TagihanScreens> {
                     width: double.infinity,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: rednotif,
+                      color: merahHapus,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
-                      child: Text("Hapus Tagihan", style: whiteBold),
+                      child: Text("Hapus Tagihan", style: putihBold15),
                     ),
                   ),
                 ),

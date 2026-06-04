@@ -5,6 +5,7 @@ import 'package:skripsi_keuangan/Screens/Grafik/grafik_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/profile_screens.dart';
 import 'package:skripsi_keuangan/Screens/Home/home_screens.dart';
 import 'package:skripsi_keuangan/Screens/transaksi/transaksi_screens.dart';
+
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
 
@@ -48,7 +49,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
         <BottomNavigationBarItem>[
           const BottomNavigationBarItem(
             icon: Padding(
-              padding: EdgeInsets.only(top: 15),
+              padding: EdgeInsets.only(top: 5),
               child: Icon(Icons.home_filled),
             ),
             label: 'Home',
@@ -56,7 +57,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
 
           const BottomNavigationBarItem(
             icon: Padding(
-              padding: EdgeInsets.only(top: 15),
+              padding: EdgeInsets.only(top: 5),
               child: Icon(Icons.post_add),
             ),
             label: 'Transaksi',
@@ -64,12 +65,15 @@ class _BottomNavigationState extends State<BottomNavigation> {
 
           BottomNavigationBarItem(
             icon: Padding(
-              padding: const EdgeInsets.only(top: 15),
+              padding: const EdgeInsets.only(top: 5),
               child: Container(
                 width: 50,
                 height: 50,
-                decoration: BoxDecoration(color: white, shape: BoxShape.circle),
-                child: Center(child: Text("AI", style: redBold14)),
+                decoration: BoxDecoration(
+                  color: bottomTerpilih,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(child: Text("AI", style: putihBold14)),
               ),
             ),
             label: "",
@@ -77,7 +81,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
 
           const BottomNavigationBarItem(
             icon: Padding(
-              padding: EdgeInsets.only(top: 15),
+              padding: EdgeInsets.only(top: 5),
               child: Icon(Icons.leaderboard),
             ),
             label: 'Grafik',
@@ -90,7 +94,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
                 final jumlah = snapshot.data ?? 0;
 
                 return Padding(
-                  padding: const EdgeInsets.only(top: 15),
+                  padding: const EdgeInsets.only(top: 5),
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -111,14 +115,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
                               minHeight: 18,
                             ),
                             child: Center(
-                              child: Text(
-                                '$jumlah',
-                                style: TextStyle(
-                                  color: white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                              child: Text('$jumlah', style: putihBold10),
                             ),
                           ),
                         ),
@@ -133,26 +130,24 @@ class _BottomNavigationState extends State<BottomNavigation> {
 
     final BottomNavigationBar bottomNavBar = BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
-      backgroundColor: redBold20.color,
+      backgroundColor: putih,
       items: bottomNavBarItems,
       currentIndex: _selectedTabIndex,
-      unselectedItemColor: greyReguler.color,
-      selectedItemColor: white,
+      unselectedItemColor: bottomTidakTerpilih,
+      selectedItemColor: bottomTerpilih,
       onTap: _onNavBarTapped,
-      selectedLabelStyle: GoogleFonts.poppins(
-        fontWeight: FontWeight.bold,
-        fontSize: 14,
-        color: white,
-      ),
-      unselectedLabelStyle: GoogleFonts.poppins(
-        fontSize: 12,
-        color: greyReguler.color,
-      ),
+      selectedLabelStyle: bottomTerpilihBold14,
+      unselectedLabelStyle: bottomTidakTerpilihBold14,
     );
 
     return Scaffold(
       body: listPage[_selectedTabIndex],
-      bottomNavigationBar: bottomNavBar,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: hitam, width: 1)),
+        ),
+        child: bottomNavBar,
+      ),
     );
   }
 }

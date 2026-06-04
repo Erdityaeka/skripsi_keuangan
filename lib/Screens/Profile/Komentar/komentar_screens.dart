@@ -41,7 +41,7 @@ class _KomentarScreensState extends State<KomentarScreens> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: isError ? rednotif : greennotif,
-        content: Center(child: Text(msg, style: whiteBold)),
+        content: Center(child: Text(msg, style: putihBold15)),
       ),
     );
   }
@@ -71,15 +71,15 @@ class _KomentarScreensState extends State<KomentarScreens> {
 
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
-      backgroundColor: white,
+      backgroundColor: putih,
       elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
-        icon: Icon(Icons.arrow_back, color: red),
+        icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('Komentar', style: redBold20),
+      title: Text('Komentar', style: hitamBold20),
       centerTitle: true,
-      flexibleSpace: Container(decoration: BoxDecoration(color: white)),
+      flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
@@ -100,7 +100,7 @@ class _KomentarScreensState extends State<KomentarScreens> {
         final comments = snapshot.data ?? [];
 
         if (comments.isEmpty) {
-          return Center(child: Text("Belum ada komentar", style: greyReguler));
+          return Center(child: Text("Belum ada komentar", style: abuReguler15));
         }
 
         return ListView.builder(
@@ -109,17 +109,17 @@ class _KomentarScreensState extends State<KomentarScreens> {
             final c = comments[index];
 
             return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              padding: const EdgeInsets.symmetric(vertical: 10),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
-                  color: white,
+                  color: putih,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: red, width: 1.5),
+                  border: Border.all(color: hijauSimpan, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: black.withOpacity(0.2),
+                      color: hitam.withOpacity(0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -129,12 +129,11 @@ class _KomentarScreensState extends State<KomentarScreens> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ================= HEADER =================
                     Row(
                       children: [
                         CircleAvatar(
                           radius: 25,
-                          backgroundColor: white,
+                          backgroundColor: putih,
                           child: ClipOval(
                             child: Lottie.asset(
                               "Images/profilekomentar.json",
@@ -151,7 +150,7 @@ class _KomentarScreensState extends State<KomentarScreens> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(c.nama, style: blackBold15),
+                              Text(c.nama, style: hitamBold15),
                               const SizedBox(height: 4),
                               Text(
                                 c.tanggal != null
@@ -160,7 +159,7 @@ class _KomentarScreensState extends State<KomentarScreens> {
                                         "id_ID",
                                       ).format(c.tanggal!)
                                     : "Baru saja",
-                                style: blackReguler12,
+                                style: hitamReguler12,
                               ),
                             ],
                           ),
@@ -170,14 +169,14 @@ class _KomentarScreensState extends State<KomentarScreens> {
 
                     const SizedBox(height: 15),
 
-                    Divider(color: grey, thickness: 1),
+                    Divider(color: abu, thickness: 1),
 
                     const SizedBox(height: 10),
 
-                    // ================= DESKRIPSI =================
+                    //  DESKRIPSI
                     Text(
                       c.deskripsi,
-                      style: blackReguler,
+                      style: hitamReguler15,
                       maxLines: 5,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.justify,
@@ -199,23 +198,23 @@ class _KomentarScreensState extends State<KomentarScreens> {
       children: [
         Container(
           width: double.infinity,
-          height: 80,
+          height: 100,
           decoration: BoxDecoration(
-            color: white,
+            color: putih,
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: red, width: 1.5),
+            border: Border.all(color: hijauSimpan, width: 1.5),
           ),
           child: Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: komentar,
-                  style: blackReguler,
+                  style: hitamReguler15,
                   maxLines: null,
                   keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(
                     hintText: 'Tulis komentar Anda...',
-                    hintStyle: blackReguler,
+                    hintStyle: abuReguler15,
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -226,7 +225,7 @@ class _KomentarScreensState extends State<KomentarScreens> {
               ),
               IconButton(
                 onPressed: kirimKomentar,
-                icon: Icon(Icons.send, color: black),
+                icon: Icon(Icons.send, color: hitam),
               ),
             ],
           ),
