@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:skripsi_keuangan/Screens/AI Analisis/ai_screen.dart';
 import 'package:skripsi_keuangan/Screens/Grafik/grafik_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/profile_screens.dart';
