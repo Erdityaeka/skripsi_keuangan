@@ -112,7 +112,11 @@ class _TambahTagihanState extends State<TambahTagihan> {
         SnackBar(
           backgroundColor: rednotif,
           content: Center(
-            child: Text("Semua data wajib diisi", style: putihBold15),
+            child: Text(
+              "Semua data wajib diisi",
+              style: putihBold15,
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       );
@@ -146,6 +150,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
             child: Text(
               "Waktu tagihan harus lebih dari waktu sekarang",
               style: putihBold15,
+              textAlign: TextAlign.center,
             ),
           ),
         ),
@@ -180,7 +185,11 @@ class _TambahTagihanState extends State<TambahTagihan> {
         SnackBar(
           backgroundColor: rednotif,
           content: Center(
-            child: Text("Nominal harus lebih dari 0", style: putihBold15),
+            child: Text(
+              "Nominal harus lebih dari 0",
+              style: putihBold15,
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       );
@@ -217,7 +226,11 @@ class _TambahTagihanState extends State<TambahTagihan> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: rednotif,
-          content: Text("Gagal menambahkan tagihan: $e", style: putihBold15),
+          content: Text(
+            "Gagal menambahkan tagihan: $e",
+            style: putihBold15,
+            textAlign: TextAlign.center,
+          ),
         ),
       );
       return;
@@ -235,6 +248,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
         content: Text(
           "Tagihan berhasil ditambahkan dan notifikasi aktif",
           style: putihBold15,
+          textAlign: TextAlign.center,
         ),
       ),
     );

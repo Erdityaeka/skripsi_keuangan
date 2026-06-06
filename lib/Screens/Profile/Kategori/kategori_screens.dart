@@ -193,7 +193,9 @@ class _KategoriScreensState extends State<KategoriScreens> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: isError ? rednotif : greennotif,
-        content: Center(child: Text(msg, style: putihBold15)),
+        content: Center(
+          child: Text(msg, style: putihBold15, textAlign: TextAlign.center),
+        ),
       ),
     );
   }

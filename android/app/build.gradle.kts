@@ -11,6 +11,16 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
+    //  KUNCI RILISNYA
+    signingConfigs {
+        create("release") {
+            storeFile = file("upload-keystore.jks")
+            storePassword = "surabaya"
+            keyAlias = "upload"
+            keyPassword = "surabaya"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.uangnote.erditya"
         minSdk = flutter.minSdkVersion
@@ -36,7 +46,8 @@ android {
             isShrinkResources = false
         }
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            // 🔹 2. BARIS INI SUDAH DIGANTI MENGGUNAKAN KUNCI "release"
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
         }
@@ -53,7 +64,7 @@ android {
     }
 }
 
-// 🔹 Tambahan untuk menekan warning compiler
+// Tambahan untuk menekan warning compiler
 tasks.withType<JavaCompile> {
     options.compilerArgs.addAll(listOf(
         "-Xlint:-unchecked",
@@ -63,7 +74,7 @@ tasks.withType<JavaCompile> {
     ))
 }
 
-// 🔹 Suppress Gradle warnings
+// Suppress Gradle warnings
 gradle.projectsEvaluated {
     tasks.withType<JavaCompile> {
         options.compilerArgs.add("-nowarn")
@@ -87,23 +98,25 @@ flutter {
     source = "../.."
 }
 
-// 🔹 Fix untuk APK output path
+// Fix untuk APK & App Bundle output path
 afterEvaluate {
-    tasks.named("assembleDebug").configure {
-        doLast {
-            copy {
-                from("build/outputs/flutter-apk/app-debug.apk")
-                into("../../build/app/outputs/flutter-apk/")
-            }
+    tasks.maybeCreate("assembleDebug").doLast {
+        copy {
+            from("build/outputs/flutter-apk/app-debug.apk")
+            into("../../build/app/outputs/flutter-apk/")
         }
     }
-    
-    tasks.named("assembleRelease").configure {
-        doLast {
-            copy {
-                from("build/outputs/flutter-apk/app-release.apk")
-                into("../../build/app/outputs/flutter-apk/")
-            }
+    tasks.maybeCreate("assembleRelease").doLast {
+        copy {
+            from("build/outputs/flutter-apk/app-release.apk")
+            into("../../build/app/outputs/flutter-apk/")
+        }
+    }
+    // Tambahan aman untuk menyalin bundle jika ada
+    tasks.maybeCreate("bundleRelease").doLast {
+        copy {
+            from("build/outputs/bundle/release/app-release.aab")
+            into("../../build/app/outputs/bundle/release/")
         }
     }
 }

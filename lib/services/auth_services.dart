@@ -171,15 +171,13 @@ class AuthService {
   Future<String?> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      return "Link reset password sudah dikirim";
+      return null; // sukses
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
-        case 'user-not-found':
-          return "Email tidak terdaftar";
         case 'invalid-email':
           return "Format email salah";
         default:
-          return e.message;
+          return "Gagal mengirim email reset password";
       }
     } catch (_) {
       return "Terjadi kesalahan sistem";

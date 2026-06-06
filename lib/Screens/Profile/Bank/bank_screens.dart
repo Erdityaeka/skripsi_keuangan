@@ -22,7 +22,13 @@ class _BankScreensState extends State<BankScreens> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: rednotif,
-          content: Center(child: Text("Bank harus diisi", style: putihBold15)),
+          content: Center(
+            child: Text(
+              "Bank harus diisi",
+              style: putihBold15,
+              textAlign: TextAlign.center,
+            ),
+          ),
         ),
       );
       return;

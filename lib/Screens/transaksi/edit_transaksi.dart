@@ -56,7 +56,11 @@ class _EditTransaksiState extends State<EditTransaksi> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(
-            child: Text("Lengkapi semua data", style: putihBold15),
+            child: Text(
+              "Lengkapi semua data",
+              style: putihBold15,
+              textAlign: TextAlign.center,
+            ),
           ),
           backgroundColor: rednotif,
         ),
@@ -86,7 +90,11 @@ class _EditTransaksiState extends State<EditTransaksi> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(
-            child: Text("Transaksi berhasil diupdate", style: putihBold15),
+            child: Text(
+              "Transaksi berhasil diupdate",
+              style: putihBold15,
+              textAlign: TextAlign.center,
+            ),
           ),
           backgroundColor: greennotif,
         ),
@@ -98,7 +106,13 @@ class _EditTransaksiState extends State<EditTransaksi> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Center(child: Text("Gagal update: $e", style: putihBold15)),
+          content: Center(
+            child: Text(
+              "Gagal update: $e",
+              style: putihBold15,
+              textAlign: TextAlign.center,
+            ),
+          ),
           backgroundColor: rednotif,
         ),
       );
@@ -148,6 +162,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
                         child: Text(
                           "Transaksi berhasil dihapus",
                           style: putihBold15,
+                          textAlign: TextAlign.center,
                         ),
                       ),
                       backgroundColor: greennotif,
@@ -158,7 +173,11 @@ class _EditTransaksiState extends State<EditTransaksi> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Center(
-                        child: Text("Gagal menghapus: $e", style: putihBold15),
+                        child: Text(
+                          "Gagal menghapus: $e",
+                          style: putihBold15,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                       backgroundColor: rednotif,
                     ),

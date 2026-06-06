@@ -2,5 +2,5 @@
 
 class ApiKeys {
   // Masukan API Key Gemini AI kamu di sini
-  static const String geminiApiKey = 'YOUR_GEMINI_API_KEY_HERE';
+  static const String geminiApiKey = '';
 }

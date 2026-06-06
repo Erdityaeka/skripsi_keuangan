@@ -86,7 +86,7 @@ class _LoginScreensState extends State<LoginScreens> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Masukkan email Anda. Kami akan mengirimkan link untuk mengatur ulang password.",
+              "Masukkan email Anda. Kami akan mengirimkan link ke email Anda  lewat spam untuk mengatur ulang password.",
               style: teksdialogBold15,
             ),
             const SizedBox(height: 15),
@@ -102,10 +102,9 @@ class _LoginScreensState extends State<LoginScreens> {
                 child: TextField(
                   controller: resetEmailController,
                   keyboardType: TextInputType.emailAddress,
-                  style: putihReguler15,
-                  obscureText: true,
+                  style: hitamReguler15,
                   decoration: InputDecoration(
-                    hintText: 'Masukan Password',
+                    hintText: 'Masukan Email',
                     hintStyle: abuReguler15,
                     border: InputBorder.none,
                   ),
@@ -122,28 +121,33 @@ class _LoginScreensState extends State<LoginScreens> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: hijauSimpan),
             onPressed: () async {
-              if (resetEmailController.text.isNotEmpty) {
-                String? error = await AuthService().resetPassword(
-                  resetEmailController.text.trim(),
-                );
-                if (!mounted) return;
-                Navigator.pop(context);
+              if (resetEmailController.text.trim().isEmpty) {
+                _showSnack("Email tidak boleh kosong");
+                return;
+              }
 
-                if (error == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Center(
-                        child: Text(
-                          "Email reset dikirim! Silakan cek Inbox/Spam.",
-                          style: putihBold15,
-                        ),
+              String? error = await AuthService().resetPassword(
+                resetEmailController.text.trim(),
+              );
+
+              if (!mounted) return;
+              Navigator.pop(context);
+
+              if (error == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Center(
+                      child: Text(
+                        "Email reset password berhasil dikirim! Silakan cek Inbox/Spam.",
+                        style: putihBold15,
+                        textAlign: TextAlign.center,
                       ),
-                      backgroundColor: greennotif,
                     ),
-                  );
-                } else {
-                  _showSnack(error);
-                }
+                    backgroundColor: greennotif,
+                  ),
+                );
+              } else {
+                _showSnack(error);
               }
             },
             child: Text("Kirim", style: putihBold15),
@@ -188,19 +192,29 @@ class _LoginScreensState extends State<LoginScreens> {
   }
 
   Widget image() {
-    return Column(
-      children: [
-        const Image(
-          image: AssetImage('Images/Icon.png'),
-          width: 150,
-          height: 150,
-        ),
-        Text('Selamat Datang', style: hitamBold20),
-        Text(
-          'Silahkan masuk untuk mengelola keuanganmu',
-          style: hitamReguler15,
-        ),
-      ],
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Image(
+            image: AssetImage('Images/Icon.png'),
+            width: 150,
+            height: 150,
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Selamat Datang',
+            style: hitamBold20,
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            'Silahkan masuk untuk mengelola keuanganmu',
+            style: hitamReguler15,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 

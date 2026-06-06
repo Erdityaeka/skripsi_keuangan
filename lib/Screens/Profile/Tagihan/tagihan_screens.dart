@@ -65,6 +65,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
             child: Text(
               "${tagihan.judul} Berhasil Dibayar",
               style: putihBold15,
+              textAlign: TextAlign.center,
             ),
           ),
         ),
@@ -124,6 +125,7 @@ class _TagihanScreensState extends State<TagihanScreens> {
               child: Text(
                 "${tagihan.judul} berhasil dihapus",
                 style: putihBold15,
+                textAlign: TextAlign.center,
               ),
             ),
           ),

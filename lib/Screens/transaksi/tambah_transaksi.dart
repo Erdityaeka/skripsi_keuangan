@@ -41,7 +41,11 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(
-            child: Text("Lengkapi semua data", style: putihBold15),
+            child: Text(
+              "Lengkapi semua data",
+              style: putihBold15,
+              textAlign: TextAlign.center,
+            ),
           ),
           backgroundColor: rednotif,
         ),
@@ -73,7 +77,11 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(
-            child: Text("Transaksi berhasil disimpan", style: putihBold15),
+            child: Text(
+              "Transaksi berhasil disimpan",
+              style: putihBold15,
+              textAlign: TextAlign.center,
+            ),
           ),
           backgroundColor: greennotif,
         ),
@@ -86,7 +94,11 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(
-            child: Text("Gagal menyimpan: $e", style: putihBold15),
+            child: Text(
+              "Gagal menyimpan: $e",
+              style: putihBold15,
+              textAlign: TextAlign.center,
+            ),
           ),
           backgroundColor: rednotif,
         ),

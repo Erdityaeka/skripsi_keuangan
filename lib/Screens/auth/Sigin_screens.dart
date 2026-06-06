@@ -39,7 +39,9 @@ class _SiginScreensState extends State<SiginScreens> {
   void _showSnack(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Center(child: Text(msg, style: putihBold15)),
+        content: Center(
+          child: Text(msg, style: putihBold15, textAlign: TextAlign.center),
+        ),
         backgroundColor: success ? greennotif : rednotif,
       ),
     );

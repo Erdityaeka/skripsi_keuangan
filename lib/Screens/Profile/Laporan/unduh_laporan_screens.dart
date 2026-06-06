@@ -176,7 +176,9 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: rednotif,
-        content: Center(child: Text(msg, style: putihBold15)),
+        content: Center(
+          child: Text(msg, style: putihBold15, textAlign: TextAlign.center),
+        ),
       ),
     );
   }
