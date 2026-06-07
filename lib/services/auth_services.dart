@@ -67,7 +67,6 @@ class AuthService {
   }
 
   // Update Profile
-  // Update Profile
   Future<String?> updateProfile({
     required String newName,
     String? newfotoFileName,

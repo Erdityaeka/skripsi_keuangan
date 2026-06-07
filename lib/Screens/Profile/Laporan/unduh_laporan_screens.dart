@@ -18,6 +18,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
 
   List<TransaksiModel> transactions = [];
   bool isLoading = true;
+  bool isExporting = false; 
 
   DateTime? startDate;
   DateTime? endDate;
@@ -45,6 +46,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
 
   void _loadData() {
     service.gettransaksi().listen((data) {
+      if (!mounted) return;
       setState(() {
         transactions = data;
         isLoading = false;
@@ -54,13 +56,11 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
 
   // AUTO SET TANGGAL
   void _setPeriodeTanggal() {
-    // BULANAN
     if (selectedPeriode == "Bulanan") {
       startDate = DateTime(selectedYear, selectedMonth, 1);
       endDate = DateTime(selectedYear, selectedMonth + 1, 0, 23, 59, 59);
     }
 
-    // MINGGUAN
     if (selectedPeriode == "Mingguan") {
       startDate = DateTime(
         selectedYear,
@@ -68,7 +68,6 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
         ((selectedWeek - 1) * 7) + 1,
       );
 
-      // Minggu 4 langsung akhir bulan
       endDate = selectedWeek == 4
           ? DateTime(selectedYear, selectedMonth + 1, 0, 23, 59, 59)
           : startDate!.add(const Duration(days: 6));
@@ -186,6 +185,11 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
   // EXPORT PDF
   Future<void> _export() async {
     if (!_isValid()) return;
+    if (isExporting) return; // Mencegah double click saat proses berjalan
+
+    setState(() {
+      isExporting = true; // Jalankan loading tombol
+    });
 
     try {
       final data = _getFilteredData();
@@ -211,7 +215,6 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +230,6 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  // Background abu-abu tipis untuk path file
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(filePath, style: hitamBold15),
@@ -255,6 +257,12 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       );
     } catch (e) {
       _showMsg("Gagal export");
+    } finally {
+      if (mounted) {
+        setState(() {
+          isExporting = false; // Pastikan loading mati di akhir proses
+        });
+      }
     }
   }
 
@@ -297,7 +305,6 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                     const SizedBox(height: 20),
                     _buildBank(),
 
-                    // Ganti Spacer() dengan jarak statis yang rapi agar scrollview tidak error
                     const SizedBox(height: 40),
                     _buildButtonUnduh(),
                     const SizedBox(height: 20),
@@ -692,7 +699,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
   // BUTTON UNDUH
   Widget _buildButtonUnduh() {
     return InkWell(
-      onTap: _export,
+      onTap: isExporting ? null : _export, 
       child: Container(
         width: double.infinity,
         height: 60,
@@ -700,7 +707,18 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
           color: hijauSimpan,
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Center(child: Text("Unduh Laporan", style: putihBold15)),
+        child: Center(
+          child: isExporting
+              ? SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(putih),
+                    strokeWidth: 2.5,
+                  ),
+                )
+              : Text("Unduh Laporan", style: putihBold15),
+        ),
       ),
     );
   }

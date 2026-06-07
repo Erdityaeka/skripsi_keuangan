@@ -104,7 +104,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
       confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) {
-          // Solusi utama: Jadikan controller ini lokal di dalam builder dialog
           final localController = TextEditingController();
 
           return AlertDialog(
@@ -130,9 +129,9 @@ class _ProfileScreensState extends State<ProfileScreens> {
                     child: TextField(
                       controller: localController,
                       style: hitamReguler15,
-                      obscureText: true,
+                      obscureText: true, // Menyembunyikan password
                       decoration: InputDecoration(
-                        hintText: 'Masukan Password',
+                        hintText: 'Masukkan Password',
                         hintStyle: abuReguler15,
                         border: InputBorder.none,
                       ),
@@ -159,7 +158,6 @@ class _ProfileScreensState extends State<ProfileScreens> {
                       _showSnack("Password wajib diisi");
                       return;
                     }
-                    // Ambil nilainya ke variabel String sebelum dialog ditutup
                     inputPassword = localController.text.trim();
                     Navigator.pop(ctx, true);
                   },
@@ -179,24 +177,27 @@ class _ProfileScreensState extends State<ProfileScreens> {
         return;
       }
 
+      // VERIFIKASI PASSWORD
       final credential = EmailAuthProvider.credential(
         email: currentUser.email!,
         password: inputPassword,
       );
-
       await currentUser.reauthenticateWithCredential(credential);
 
-      await FirebaseFirestore.instance
-          .collection('user')
-          .doc(currentUser.uid)
-          .delete();
+      // Simpan UID ke variabel lokal sebelum akun auth dihapus
+      final String uid = currentUser.uid;
 
+      // 2. HAPUS DATA DI FIRESTORE DAHULU
+      await FirebaseFirestore.instance.collection('user').doc(uid).delete();
+
+      // HAPUS USER AUNTH
       await currentUser.delete();
 
       if (!mounted) return;
 
       _showSnack("Akun berhasil dihapus", success: true);
 
+      // Tendang user keluar ke halaman Login
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginScreens()),
         (route) => false,
@@ -204,11 +205,13 @@ class _ProfileScreensState extends State<ProfileScreens> {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
         _showSnack("Password salah");
+      } else if (e.code == 'requires-recent-login') {
+        _showSnack("Silakan login ulang terlebih dahulu");
       } else {
-        _showSnack("Gagal hapus akun");
+        _showSnack(e.message ?? "Gagal hapus akun");
       }
     } catch (e) {
-      _showSnack("Gagal hapus akun");
+      _showSnack("Gagal menghapus data di database");
     }
   }
 
