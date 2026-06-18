@@ -400,7 +400,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
                     DateFormat('dd-MM-yyyy').format(selectedDate),
                     style: hitamReguler15,
                   ),
-                  Icon(Icons.calendar_today, color: hijauSimpan),
+                  Icon(Icons.calendar_month_outlined, color: hitam),
                 ],
               ),
             ),

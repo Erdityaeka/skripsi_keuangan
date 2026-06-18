@@ -497,24 +497,18 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 return Theme(
                   data: Theme.of(context).copyWith(
                     colorScheme: ColorScheme.light(
-                      primary:
-                          hijauSimpan, 
-                      onPrimary:
-                          putih, 
+                      primary: hijauSimpan,
+                      onPrimary: putih,
                       surface: putih,
-                      onSurface: hitam, 
+                      onSurface: hitam,
                     ),
                     textButtonTheme: TextButtonThemeData(
-                      style: TextButton.styleFrom(
-                        foregroundColor:
-                            hijauSimpan, 
-                      ),
+                      style: TextButton.styleFrom(foregroundColor: hijauSimpan),
                     ),
                   ),
                   child: child!,
                 );
               },
-              // ------------------------------------------------
             );
             if (picked != null && picked != _selectedDate) {
               setState(() {
@@ -538,7 +532,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                     '${_selectedDate.day.toString().padLeft(2, '0')}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.year}',
                     style: hitamReguler15,
                   ),
-                  Icon(Icons.calendar_today, color: hijauSimpan),
+                  Icon(Icons.calendar_month_outlined, color: hitam),
                 ],
               ),
             ),

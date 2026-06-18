@@ -463,30 +463,22 @@ class _EditTransaksiState extends State<EditTransaksi> {
               initialDate: selectedDate,
               firstDate: DateTime(2020),
               lastDate: DateTime.now().add(const Duration(days: 365)),
-              // --- KUNCI UNTUK MENGUBAH WARNA KALENDER DI SINI ---
               builder: (BuildContext context, Widget? child) {
                 return Theme(
                   data: Theme.of(context).copyWith(
                     colorScheme: ColorScheme.light(
-                      primary:
-                          hijauSimpan, // Warna header kalender & lingkaran tanggal terpilih
-                      onPrimary:
-                          putih, // Warna teks di dalam header dan tanggal terpilih
-                      surface: putih, // Warna latar belakang dialog kalender
-                      onSurface:
-                          hitam, // Warna teks tanggal biasa dan nama bulan
+                      primary: hijauSimpan,
+                      onPrimary: putih,
+                      surface: putih,
+                      onSurface: hitam,
                     ),
                     textButtonTheme: TextButtonThemeData(
-                      style: TextButton.styleFrom(
-                        foregroundColor:
-                            hijauSimpan, // Warna tombol 'BATAL' dan 'OKE'
-                      ),
+                      style: TextButton.styleFrom(foregroundColor: hijauSimpan),
                     ),
                   ),
                   child: child!,
                 );
               },
-              // ----------------------------------------------------
             );
             if (picked != null && picked != selectedDate) {
               setState(() {
@@ -510,7 +502,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
                     '${selectedDate.day.toString().padLeft(2, '0')}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.year}',
                     style: hitamReguler15,
                   ),
-                  Icon(Icons.calendar_today, color: hijauSimpan, size: 20),
+                  Icon(Icons.calendar_month_outlined, color: hitam),
                 ],
               ),
             ),
