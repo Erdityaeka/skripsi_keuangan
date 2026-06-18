@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:skripsi_keuangan/models/bank_model.dart';
 import 'package:skripsi_keuangan/models/comentar_model.dart';
 import 'package:skripsi_keuangan/models/kategori_model.dart';
+import 'package:skripsi_keuangan/models/sumberdana_model.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/models/tagihan_models.dart';
 
@@ -13,7 +13,6 @@ class FirestoreService {
   String? get uid => FirebaseAuth.instance.currentUser?.uid;
 
   // TRANSAKSI
-
   Future<void> addTransaction(TransaksiModel tx) async {
     if (uid == null) return;
 
@@ -45,8 +44,9 @@ class FirestoreService {
     String newJudul,
     double newNominal,
     String newKategori,
-    String newBank,
+    String newSumberdana, // Menggantikan newbank
     String newTipe,
+    DateTime newTanggal,
   ) async {
     if (uid == null) return;
 
@@ -59,8 +59,10 @@ class FirestoreService {
           'judul': newJudul,
           'nominal': newNominal,
           'kategori': newKategori,
-          'bank': newBank,
+          'sumberdana':
+              newSumberdana, // Menyimpan ke field 'sumberdana' di Firestore
           'tipe': newTipe,
+          'tanggal': Timestamp.fromDate(newTanggal),
         });
   }
 
@@ -223,36 +225,65 @@ class FirestoreService {
         .delete();
   }
 
-  // BANK
-
-  Future<void> addBank(BankModel bank) async {
+  // SUMBER DANA 
+  Future<void> addSumberdana(SumberdanaModel sumberDana) async {
     if (uid == null) return;
 
-    await _db.collection('user').doc(uid).collection('bank').add(bank.toMap());
+    await _db
+        .collection('user')
+        .doc(uid)
+        .collection('sumberdana')
+        .add(sumberDana.toMap());
   }
 
-  Stream<List<BankModel>> getBankModels() {
+  Stream<List<SumberdanaModel>> getSumberdanaModels() {
     if (uid == null) return const Stream.empty();
 
     return _db
         .collection('user')
         .doc(uid)
-        .collection('bank')
+        .collection('sumberdana')
         .orderBy('createdAt')
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => BankModel.fromMap(doc.id, doc.data()))
+              .map((doc) => SumberdanaModel.fromMap(doc.id, doc.data()))
               .toList(),
         );
   }
 
-  Future<void> deleteBank(String id) async {
-    if (uid == null) return;
+  Future<List<SumberdanaModel>> getSumberdanaModelsAsFuture() async {
+    try {
+      if (uid == null) return [];
 
-    await _db.collection('user').doc(uid).collection('bank').doc(id).delete();
+      final snapshot = await _db
+          .collection('user')
+          .doc(uid)
+          .collection('sumberdana')
+          .orderBy('createdAt')
+          .get();
+
+      return snapshot.docs
+          .map((doc) => SumberdanaModel.fromMap(doc.id, doc.data()))
+          .toList();
+    } catch (e) {
+      print("Gagal ambil sumber dana as future: $e");
+      return [];
+    }
   }
 
+  Future<void> deleteSumberdana(String id) async {
+    if (uid == null) return;
+
+    await _db
+        .collection('user')
+        .doc(uid)
+        .collection('sumberdana')
+        .doc(id)
+        .delete();
+  }
+
+  // Komentar
   Future<void> addComment(String deskripsi) async {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -343,7 +374,8 @@ class FirestoreService {
           id: '',
           judul: 'Bayar ${tagihan.judul}',
           kategori: tagihan.kategori,
-          bank: tagihan.bank,
+          sumberdana: tagihan
+              .sumberdana, 
           nominal: tagihan.nominal,
           tanggal: DateTime.now(),
           tipe: 'pengeluaran',

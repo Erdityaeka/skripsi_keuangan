@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
+import 'package:intl/intl.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Sumber%20Dana/sumberdana_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/formats/currency_input_formatter.dart';
-import 'package:skripsi_keuangan/models/bank_model.dart';
+import 'package:skripsi_keuangan/models/sumberdana_model.dart';
 import 'package:skripsi_keuangan/models/kategori_model.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
@@ -23,7 +24,24 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
   bool _isLoading = false;
   String selectedType = "pemasukan";
   String? selectedKategory;
-  String? selectedBank;
+  String? selectedsumberdana;
+  DateTime selectedDate = DateTime.now();
+
+  final currencyFormatter = NumberFormat.simpleCurrency(
+    locale: 'id',
+    name: 'Rp ',
+    decimalDigits: 0,
+  );
+
+  List<TransaksiModel> _allTransactions = [];
+  List<SumberdanaModel> _cachedSumberdana = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _listenToTransactions();
+    _listenToSumberdana();
+  }
 
   @override
   void dispose() {
@@ -32,12 +50,71 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
     super.dispose();
   }
 
-  // SIMPAN TRANSAKSI
+  void _listenToTransactions() {
+    _firestoreService.gettransaksi().listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _allTransactions = snapshot;
+        });
+      }
+    });
+  }
+
+  void _listenToSumberdana() {
+    _firestoreService.getSumberdanaModels().listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _cachedSumberdana = snapshot;
+        });
+      }
+    });
+  }
+
+  String _normalize(String? val) {
+    return (val ?? '').toLowerCase().trim();
+  }
+
+  void _showMinusAlert(String pesan) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: rednotif, size: 28),
+              const SizedBox(width: 10),
+              Text("Saldo Tidak Cukup", style: hitamBold20),
+            ],
+          ),
+          content: Text(pesan, style: teksdialogBold15),
+          actions: [
+            Container(
+              width: 100,
+              height: 40,
+              decoration: BoxDecoration(
+                color: merahHapus,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text("OK", style: putihBold15),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _saveTransaction() async {
     if (judul.text.isEmpty ||
         nominal.text.isEmpty ||
         selectedKategory == null ||
-        selectedBank == null) {
+        selectedsumberdana == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(
@@ -53,18 +130,59 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       return;
     }
 
+    final amount = double.parse(nominal.text.replaceAll('.', ''));
+
+    if (selectedType == "pengeluaran") {
+      final targetsumberdanaNormalized = _normalize(selectedsumberdana);
+
+      final totalPemasukansumberdana = _allTransactions
+          .where(
+            (tx) =>
+                _normalize(tx.sumberdana) == targetsumberdanaNormalized &&
+                tx.tipe.trim().toLowerCase() == "pemasukan",
+          )
+          .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+      final totalPengeluaransumberdana = _allTransactions
+          .where(
+            (tx) =>
+                _normalize(tx.sumberdana) == targetsumberdanaNormalized &&
+                tx.tipe.trim().toLowerCase() == "pengeluaran",
+          )
+          .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+      final saldoSaatIni =
+          totalPemasukansumberdana - totalPengeluaransumberdana;
+      double sisaSimulasi = saldoSaatIni - amount;
+
+      if (sisaSimulasi < 0) {
+        final match = _cachedSumberdana.firstWhere(
+          (e) => _normalize(e.nama) == targetsumberdanaNormalized,
+          orElse: () => SumberdanaModel(id: '', nama: '', jenis: 'sumber dana'),
+        );
+
+        final stringFormatRupiah = currencyFormatter
+            .format(sisaSimulasi.abs())
+            .replaceAll('Rp ', '');
+        final formatTeksMinus = "Rp. -$stringFormatRupiah";
+
+        _showMinusAlert(
+          "Saldo anda akan minus di ${match.jenis.toLowerCase()} '${selectedsumberdana!.toUpperCase()}', $formatTeksMinus mohon input pemasukan terlebih dahulu.",
+        );
+        return;
+      }
+    }
+
     setState(() => _isLoading = true);
 
     try {
-      final amount = double.parse(nominal.text.replaceAll('.', ''));
-
       final tx = TransaksiModel(
         id: '',
         judul: judul.text,
         kategori: selectedKategory!,
-        bank: selectedBank!,
+        sumberdana: selectedsumberdana!,
         nominal: amount,
-        tanggal: DateTime.now(),
+        tanggal: selectedDate,
         tipe: selectedType,
       );
 
@@ -89,7 +207,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
 
       Navigator.pop(context);
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -106,24 +224,64 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
     }
   }
 
+  // PENTING: Fungsi Kustom Date Picker agar UI sesuai request, Bahasa Indonesia, dan Aman dari Crash
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      helpText: 'Pilih Tanggal',
+      cancelText: 'Batal',
+      confirmText: 'Pilih Tanggal',
+      locale: const Locale('id', 'ID'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: hijauSimpan,
+              onPrimary: putih,
+              onSurface: hitam,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    // PENTING: Cegah crash memori (State Leak) setelah await asinkronus menggunakan mounted check
+    if (picked != null && picked != selectedDate && mounted) {
+      setState(() {
+        selectedDate = picked;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppbar(context),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.only(left: 20, right: 20, top: 30, bottom: 30),
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 30,
+            bottom: 30,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               buttonInput(),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
+              buttonTanggal(),
+              const SizedBox(height: 15),
               buttoTipe(),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               buttonKategori(),
-              SizedBox(height: 15),
-              buttonBank(),
-              SizedBox(height: 100),
+              const SizedBox(height: 15),
+              buttonsumberdana(),
+              const SizedBox(height: 100),
               buttonSimpan(),
             ],
           ),
@@ -154,7 +312,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Judul Transaksi', style: hitamReguler15),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
@@ -176,10 +334,9 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
             ),
           ),
         ),
-
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         Text('Nominal', style: hitamReguler15),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
@@ -191,10 +348,9 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
-                padding: EdgeInsets.only(right: 5.0, left: 14.0),
+                padding: const EdgeInsets.only(right: 5.0, left: 14.0),
                 child: Text('Rp.', style: hitamReguler15),
               ),
-
               Expanded(
                 child: TextField(
                   controller: nominal,
@@ -217,13 +373,50 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
     );
   }
 
+  Widget buttonTanggal() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Tanggal Transaksi', style: hitamReguler15),
+        const SizedBox(height: 15),
+        GestureDetector(
+          onTap:
+              _pickDate, // PENTING: Memanggil fungsi date picker kustom yang aman
+          child: Container(
+            width: double.infinity,
+            height: 55,
+            decoration: BoxDecoration(
+              border: Border.all(color: hijauSimpan, width: 1.5),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    // PENTING: Mengatur bentuk format visual tanggal sesuai standar lokal (DD-MM-YYYY)
+                    DateFormat('dd-MM-yyyy').format(selectedDate),
+                    style: hitamReguler15,
+                  ),
+                  Icon(Icons.calendar_today, color: hijauSimpan),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget buttoTipe() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Tipe Transaksi', style: hitamReguler15),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
@@ -235,11 +428,18 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
+                key: ValueKey('tipe_$selectedType'),
                 value: selectedType,
                 dropdownColor: putih,
                 hint: Text('Pemasukan', style: hitamReguler15),
                 icon: Icon(Icons.arrow_drop_down, color: hitam),
-                onChanged: (v) => setState(() => selectedType = v!),
+                onChanged: (v) {
+                  if (v == null) return;
+                  setState(() {
+                    selectedType = v;
+                    selectedsumberdana = null;
+                  });
+                },
                 items: [
                   DropdownMenuItem(
                     value: "pemasukan",
@@ -264,7 +464,7 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Kategori', style: hitamReguler15),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         StreamBuilder<List<KategoriModel>>(
           stream: _firestoreService.getCategoryModels(),
           builder: (context, snapshot) {
@@ -296,16 +496,18 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
+                    key: ValueKey('kat_${kategori.length}'),
                     value: selectedKategory,
                     dropdownColor: putih,
                     hint: Text('Pilih Kategori', style: hitamReguler15),
                     icon: Icon(Icons.arrow_drop_down, color: hitam),
+                    menuMaxHeight: 200,
                     onChanged: (v) => setState(() => selectedKategory = v),
                     items: kategori
                         .map(
                           (e) => DropdownMenuItem<String>(
                             value: e.nama,
-                            child: Text(e.nama),
+                            child: Text(e.nama, style: hitamReguler15),
                           ),
                         )
                         .toList(),
@@ -319,31 +521,35 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
     );
   }
 
-  Widget buttonBank() {
+  Widget buttonsumberdana() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: hitamReguler15),
-        SizedBox(height: 15),
-        StreamBuilder<List<BankModel>>(
-          stream: _firestoreService.getBankModels(),
+        Text('Sumber Dana', style: hitamReguler15),
+        const SizedBox(height: 15),
+        StreamBuilder<List<SumberdanaModel>>(
+          stream: _firestoreService.getSumberdanaModels(),
           builder: (context, snapshot) {
-            final bank = snapshot.data ?? <BankModel>[];
+            final sumberdanaList = snapshot.data ?? <SumberdanaModel>[];
 
-            if (bank.isEmpty) {
+            if (sumberdanaList.isEmpty) {
               return _emptyMessage(
-                "Bank kosong",
+                "Sumber Dana kosong",
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const BankScreens()),
+                  MaterialPageRoute(builder: (_) => const SumberDanaScreens()),
                 ),
               );
             }
 
-            if (selectedBank != null &&
-                !bank.map((e) => e.nama).contains(selectedBank)) {
-              selectedBank = null;
+            if (selectedsumberdana != null) {
+              final isExist = sumberdanaList
+                  .map((e) => e.nama)
+                  .contains(selectedsumberdana);
+              if (!isExist) {
+                selectedsumberdana = null;
+              }
             }
 
             return Container(
@@ -357,19 +563,107 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: selectedBank,
+                    key: ValueKey('sd_${sumberdanaList.length}_$selectedType'),
+                    value: selectedsumberdana,
                     dropdownColor: putih,
-                    hint: Text('SEMUA', style: hitamReguler15),
+                    hint: Text('Pilih Sumber Dana', style: hitamReguler15),
                     icon: Icon(Icons.arrow_drop_down, color: hitam),
-                    onChanged: (v) => setState(() => selectedBank = v),
-                    items: bank
-                        .map(
-                          (e) => DropdownMenuItem<String>(
-                            value: e.nama,
-                            child: Text(e.nama),
-                          ),
-                        )
-                        .toList(),
+                    menuMaxHeight: 200,
+                    onChanged: (v) {
+                      if (v == null) return;
+
+                      if (selectedType == "pengeluaran") {
+                        final sumberdanaNameNormalized = _normalize(v);
+
+                        final double income = _allTransactions
+                            .where(
+                              (tx) =>
+                                  _normalize(tx.sumberdana) ==
+                                      sumberdanaNameNormalized &&
+                                  tx.tipe.trim().toLowerCase() == "pemasukan",
+                            )
+                            .fold(0.0, (sum, tx) => sum + tx.nominal);
+                        final double expense = _allTransactions
+                            .where(
+                              (tx) =>
+                                  _normalize(tx.sumberdana) ==
+                                      sumberdanaNameNormalized &&
+                                  tx.tipe.trim().toLowerCase() == "pengeluaran",
+                            )
+                            .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+                        final currentsumberdanaSaldo = income - expense;
+
+                        final inputNominalText = nominal.text.replaceAll(
+                          '.',
+                          '',
+                        );
+                        final double localAmount = inputNominalText.isEmpty
+                            ? 0.0
+                            : double.parse(inputNominalText);
+
+                        double sisaSimulasi =
+                            currentsumberdanaSaldo - localAmount;
+                        if (sisaSimulasi < 0) {
+                          final match = sumberdanaList.firstWhere(
+                            (e) =>
+                                _normalize(e.nama) == sumberdanaNameNormalized,
+                            orElse: () => SumberdanaModel(
+                              id: '',
+                              nama: '',
+                              jenis: 'sumber dana',
+                            ),
+                          );
+
+                          final stringFormatRupiah = currencyFormatter
+                              .format(sisaSimulasi.abs())
+                              .replaceAll('Rp ', '');
+                          final formatTeksMinus = "Rp. -$stringFormatRupiah";
+
+                          _showMinusAlert(
+                            "Saldo anda akan minus di ${match.jenis.toLowerCase()} '${v.toUpperCase()}',$formatTeksMinus mohon input pemasukan terlebih dahulu.",
+                          );
+                          return;
+                        }
+                      }
+
+                      setState(() => selectedsumberdana = v);
+                    },
+                    items: sumberdanaList.map((e) {
+                      final sumberdanaNameNormalized = _normalize(e.nama);
+
+                      final double income = _allTransactions
+                          .where(
+                            (tx) =>
+                                _normalize(tx.sumberdana) ==
+                                    sumberdanaNameNormalized &&
+                                tx.tipe.trim().toLowerCase() == "pemasukan",
+                          )
+                          .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+                      final double expense = _allTransactions
+                          .where(
+                            (tx) =>
+                                _normalize(tx.sumberdana) ==
+                                    sumberdanaNameNormalized &&
+                                tx.tipe.trim().toLowerCase() == "pengeluaran",
+                          )
+                          .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+                      final currentsumberdanaSaldo = income - expense;
+                      final bool isItemDisabled =
+                          selectedType == "pengeluaran" &&
+                          currentsumberdanaSaldo <= 0;
+
+                      return DropdownMenuItem<String>(
+                        value: e.nama,
+                        onTap: isItemDisabled ? () {} : null,
+                        child: Text(
+                          e.nama.toUpperCase(),
+                          style: isItemDisabled ? abuReguler15 : hitamReguler15,
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
@@ -402,15 +696,19 @@ class _TambahTransaksiState extends State<TambahTransaksi> {
   }
 
   Widget _emptyMessage(String text, VoidCallback action) {
-    return Column(
-      children: [
-        Text(text, style: biruReguler12),
-        TextButton.icon(
-          icon: const Icon(Icons.add),
-          label: const Text("Tambah Data"),
-          onPressed: action,
+    return GestureDetector(
+      onTap: action,
+      child: Container(
+        width: double.infinity,
+        height: 55,
+        decoration: BoxDecoration(
+          border: Border.all(color: merahPengeluaran, width: 1.5),
+          borderRadius: BorderRadius.circular(15),
         ),
-      ],
+        child: Center(
+          child: Text("$text (Tambah dulu data)", style: merahBold15),
+        ),
+      ),
     );
   }
 }

@@ -18,7 +18,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
 
   List<TransaksiModel> transactions = [];
   bool isLoading = true;
-  bool isExporting = false; 
+  bool isExporting = false;
 
   DateTime? startDate;
   DateTime? endDate;
@@ -31,7 +31,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
 
   // FILTER DATA
   String selectedType = "Semua";
-  String selectedBank = "Semua";
+  String selectedSumberdana = "Semua";
 
   final TextEditingController judulController = TextEditingController(
     text: "Laporan Keuangan",
@@ -83,7 +83,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
       lastDate: DateTime(2100),
       helpText: 'Pilih Tanggal',
       cancelText: 'Batal',
-      confirmText: 'Pilih Tanggal',
+      confirmText: 'Oke',
       locale: const Locale('id', 'ID'),
       builder: (context, child) {
         return Theme(
@@ -110,16 +110,16 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     });
   }
 
-  // BANK LIST
-  List<String> get bankList {
-    final banks = transactions
-        .map((e) => e.bank)
+  // SUMBER DANA LIST
+  List<String> get sumberdanaList {
+    final items = transactions
+        .map((e) => e.sumberdana)
         .where((e) => e.isNotEmpty)
         .toSet()
         .toList();
 
-    banks.sort();
-    return ["Semua", ...banks];
+    items.sort();
+    return ["Semua", ...items];
   }
 
   // FILTER DATA
@@ -145,9 +145,12 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
           (selectedType == "Pemasukan" && tx.tipe == "pemasukan") ||
           (selectedType == "Pengeluaran" && tx.tipe == "pengeluaran");
 
-      final bankMatch = selectedBank == "Semua" || tx.bank == selectedBank;
+      final sumberdanaMatch =
+          selectedSumberdana == "Semua" ||
+          tx.sumberdana ==
+              selectedSumberdana; // DIPERBAIKI: Filter ke properti tx.sumberdana
 
-      return inRange && typeMatch && bankMatch;
+      return inRange && typeMatch && sumberdanaMatch;
     }).toList();
   }
 
@@ -303,7 +306,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
                     const Divider(height: 30),
                     _buildTipe(),
                     const SizedBox(height: 20),
-                    _buildBank(),
+                    _buildSumberdana(), // DIPERBAIKI: Memanggil widget _buildSumberdana() baru
 
                     const SizedBox(height: 40),
                     _buildButtonUnduh(),
@@ -658,13 +661,13 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
     );
   }
 
-  // WIDGET BANK
-  Widget _buildBank() {
+  // WIDGET DROPDOWN SUMBER DANA
+  Widget _buildSumberdana() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: hitamReguler15),
+        Text('Sumber Dana', style: hitamReguler15),
         const SizedBox(height: 15),
         Container(
           width: double.infinity,
@@ -677,15 +680,15 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                value: selectedBank,
+                value: selectedSumberdana,
                 dropdownColor: putih,
                 icon: Icon(Icons.arrow_drop_down, color: hitam),
                 onChanged: (val) {
                   setState(() {
-                    selectedBank = val!;
+                    selectedSumberdana = val!;
                   });
                 },
-                items: bankList
+                items: sumberdanaList
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
               ),
@@ -699,7 +702,7 @@ class _UnduhLaporanScreensState extends State<UnduhLaporanScreens> {
   // BUTTON UNDUH
   Widget _buildButtonUnduh() {
     return InkWell(
-      onTap: isExporting ? null : _export, 
+      onTap: isExporting ? null : _export,
       child: Container(
         width: double.infinity,
         height: 60,

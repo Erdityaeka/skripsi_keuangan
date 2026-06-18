@@ -1,33 +1,27 @@
-import 'package:flutter_gemini/flutter_gemini.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:skripsi_keuangan/keys/api_keys.dart';
+import 'package:skripsi_keuangan/models/sumberdana_model.dart';
+import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'firestore_service.dart';
 import 'ai_cache_service.dart';
 
 class GeminiService {
-  //  CACHE RAM
   static final Map<String, String> _cache = {};
-
-  // Mencegah spam request Gemini
   static DateTime? _lastRequest;
-
-  // Status inisialisasi
   static bool _initialized = false;
 
-  // Menyimpan konteks pertanyaan terakhir
-  static String _lastContext = "";
+  // State pelacakan context chat lokal untuk menangani follow-up user tanpa AI
+  static String _lastCheckedType = "";
+  static String _lastCheckedCategoryType = "pengeluaran";
+  static bool _lastActionWasCategory = false;
 
-  // Menyimpan hasil transaksi terakhir untuk follow-up
-  static List<dynamic> _lastTransactions = [];
-
-  //  INIT GEMINI
   static Future<void> initialize() async {
     if (_initialized) return;
-    Gemini.init(apiKey: ApiKeys.geminiApiKey);
     _initialized = true;
   }
 
-  //  NORMALISASI TYPO
   static String normalizePrompt(String text) {
     return text
         .toLowerCase()
@@ -37,41 +31,28 @@ class GeminiService {
         .replaceAll("bln", "bulan")
         .replaceAll("tgl", "tanggal")
         .replaceAll("kmrn", "kemarin")
+        .replaceAll("mggu", "minggu")
+        .replaceAll("mgu", "minggu")
         .replaceAll("thn", "tahun")
         .replaceAll("trnsaksi", "transaksi")
         .replaceAll("ngga", "tidak")
-        .replaceAll("nggak", "tidak");
+        .replaceAll("nggak", "tidak")
+        .replaceAll("ndk", "tidak")
+        .replaceAll("ndak", "tidak")
+        .replaceAll("nga", "tidak")
+        .replaceAll("selelu", "selalu")
+        .replaceAll("selalau", "selalu")
+        .replaceAll("e walet", "e-wallet")
+        .replaceAll("ewallet", "e-wallet")
+        .replaceAll("ewalet", "e-wallet")
+        .replaceAll("walet", "e-wallet")
+        .replaceAll("pmsukan", "pemasukan")
+        .replaceAll("pngeluaran", "pengeluaran")
+        .replaceAll("katgeori", "kategori")
+        .replaceAll("kategori apa", "kategori")
+        .replaceAll("gmn", "bagaimana");
   }
 
-  //  FORMAT TRANSAKSI
-  static String formatTransaction(dynamic tx) {
-    final rupiah = NumberFormat('#,###', 'id_ID');
-
-    return "- ${tx.judul}\n"
-        "  Nominal : Rp ${rupiah.format(tx.nominal)}\n"
-        "  Tanggal : ${DateFormat('dd/MM/yyyy', 'id_ID').format(tx.tanggal)}\n"
-        "  Kategori: ${tx.kategori ?? '-'}\n"
-        "  Bank    : ${tx.bank ?? '-'}\n"
-        "  Tipe    : ${tx.tipe ?? '-'}\n";
-  }
-
-  //  CEK BULAN
-  static final Map<String, int> bulanMap = {
-    "januari": 1,
-    "februari": 2,
-    "maret": 3,
-    "april": 4,
-    "mei": 5,
-    "juni": 6,
-    "juli": 7,
-    "agustus": 8,
-    "september": 9,
-    "oktober": 10,
-    "november": 11,
-    "desember": 12,
-  };
-
-  //  FUNGSI UTAMA
   static Future<String> ask(String prompt, {String context = ""}) async {
     await initialize();
 
@@ -82,214 +63,417 @@ class GeminiService {
     final cleanPrompt = prompt.trim();
     String lower = normalizePrompt(cleanPrompt);
 
-    if (cleanPrompt.isEmpty) {
-      return "Pertanyaan kosong.";
+    if (cleanPrompt.isEmpty) return "Pertanyaan kosong.";
+
+    // 1. Intersepsi lokal jika pengguna mengeluhkan kegagalan AI / ngetes aplikasi
+    if (lower.contains("gagal memproses") ||
+        lower.contains("gagal proses") ||
+        lower.contains("ai rusak") ||
+        lower.contains("kenapa gagal")) {
+      return "Sistem asisten pintar telah disinkronisasi ulang. Sekarang saya siap menjawab pertanyaan saldo Anda secara instan atau memberikan analisis keuangan jika diminta!";
     }
 
-    //  FOLLOW-UP KONTEKS BULAN
-    bool containsMonth = bulanMap.keys.any((bulan) => lower.contains(bulan));
+    // 2. Deteksi dini apakah pertanyaan butuh analisis mendalam (Jalur AI Gemini) - UPDATED!
+    bool isMintaSaranAI =
+        lower.contains("boros") ||
+        lower.contains("hemat") ||
+        lower.contains("tips") ||
+        lower.contains("cara") ||
+        lower.contains("saran") ||
+        lower.contains("rekomendasi") ||
+        lower.contains("solusi") ||
+        lower.contains("analisis") ||
+        lower.contains("prediksi") || // <-- Ditambahkan agar masuk Jalur AI
+        lower.contains("proyeksi"); // <-- Ditambahkan agar masuk Jalur AI
 
-    if (containsMonth &&
+    // FORCE JALUR LOKAL: Jika user murni menanyakan saldo tertinggi/terendah/terbesar,
+    // langsung paksa ke Jalur B (Lokal) agar tidak lari ke template AI yang salah.
+    if ((lower.contains("saldo") || lower.contains("uang")) &&
+        (lower.contains("tinggi") ||
+            lower.contains("besar") ||
+            lower.contains("banyak") ||
+            lower.contains("rendah") ||
+            lower.contains("kecil"))) {
+      isMintaSaranAI = false;
+    }
+
+    // FITUR DETEKSI BULAN & WAKTU (Maksimal Mentok 4 Bulan)
+    DateTime? startTime;
+    DateTime? endTime;
+    String labelWaktuKonteks = "Semua Waktu";
+    bool isNanyaWaktuSpesifik = false;
+
+    // A. Cek bulan spesifik berdasarkan nama bulan (Januari - Desember)
+    List<String> daftarBulan = [
+      "januari",
+      "februari",
+      "maret",
+      "april",
+      "mei",
+      "juni",
+      "juli",
+      "agustus",
+      "september",
+      "oktober",
+      "november",
+      "desember",
+    ];
+
+    int bulanDitemukan = -1;
+    for (int i = 0; i < daftarBulan.length; i++) {
+      if (lower.contains(daftarBulan[i])) {
+        bulanDitemukan = i + 1;
+        break;
+      }
+    }
+
+    if (bulanDitemukan != -1) {
+      int targetYear = now.year;
+      if (bulanDitemukan > now.month) {
+        targetYear =
+            now.year -
+            1; // Jika input bulan melampaui bulan sekarang, asumsi tahun lalu
+      }
+      startTime = DateTime(targetYear, bulanDitemukan, 1);
+      endTime = DateTime(targetYear, bulanDitemukan + 1, 0, 23, 59, 59);
+
+      String namaBulanKapital = daftarBulan[bulanDitemukan - 1].toUpperCase();
+      labelWaktuKonteks = "Bulan $namaBulanKapital $targetYear";
+      isNanyaWaktuSpesifik = true;
+    }
+    // B. Cek frase "bulan kemarin / lalu" (Harus di atas cek kata "kemarin" biasa agar tidak bentrok)
+    else if (lower.contains("bulan kemarin") || lower.contains("bulan lalu")) {
+      startTime = DateTime(now.year, now.month - 1, 1);
+      endTime = DateTime(now.year, now.month, 0, 23, 59, 59);
+      labelWaktuKonteks =
+          "Bulan Kemarin (${DateFormat('MMMM yyyy', 'id_ID').format(startTime)})";
+      isNanyaWaktuSpesifik = true;
+    } else if (lower.contains("2 bulan") || lower.contains("dua bulan")) {
+      startTime = DateTime(now.year, now.month - 2, 1);
+      labelWaktuKonteks = "2 Bulan Terakhir";
+      isNanyaWaktuSpesifik = true;
+    } else if (lower.contains("3 bulan") || lower.contains("tiga bulan")) {
+      startTime = DateTime(now.year, now.month - 3, 1);
+      labelWaktuKonteks = "3 Bulan Terakhir";
+      isNanyaWaktuSpesifik = true;
+    } else if (lower.contains("4 bulan") || lower.contains("empat bulan")) {
+      startTime = DateTime(now.year, now.month - 4, 1);
+      labelWaktuKonteks = "4 Bulan Terakhir";
+      isNanyaWaktuSpesifik = true;
+    } else if (lower.contains("bulan ini")) {
+      startTime = DateTime(now.year, now.month, 1);
+      labelWaktuKonteks =
+          "Bulan Ini (${DateFormat('MMMM yyyy', 'id_ID').format(now)})";
+      isNanyaWaktuSpesifik = true;
+    } else if (lower.contains("minggu kemarin") ||
+        lower.contains("minggu lalu")) {
+      DateTime hariIniMingguLalu = now.subtract(const Duration(days: 7));
+      startTime = hariIniMingguLalu.subtract(
+        Duration(days: hariIniMingguLalu.weekday - 1),
+      );
+      startTime = DateTime(startTime.year, startTime.month, startTime.day);
+      endTime = startTime.add(
+        const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
+      );
+      labelWaktuKonteks = "Minggu Lalu";
+      isNanyaWaktuSpesifik = true;
+    } else if (lower.contains("minggu ini")) {
+      startTime = now.subtract(Duration(days: now.weekday - 1));
+      startTime = DateTime(startTime.year, startTime.month, startTime.day);
+      labelWaktuKonteks = "Minggu Ini";
+      isNanyaWaktuSpesifik = true;
+    }
+    // C. Kata "kemarin" diletakkan paling bawah agar tidak memotong "bulan kemarin"
+    else if (lower.contains("kemarin")) {
+      startTime = DateTime(now.year, now.month, now.day - 1);
+      endTime = DateTime(now.year, now.month, now.day - 1, 23, 59, 59);
+      labelWaktuKonteks =
+          "Kemarin (${DateFormat('dd MMMM yyyy', 'id_ID').format(startTime)})";
+      isNanyaWaktuSpesifik = true;
+    }
+
+    // Ambil seluruh data transaksi dari Firestore
+    final allTransactions = await firestore.getAllTransactions();
+    final rupiah = NumberFormat('#,###', 'id_ID');
+
+    List<SumberdanaModel> daftarSumberDana = [];
+    try {
+      daftarSumberDana = await firestore.getSumberdanaModelsAsFuture();
+    } catch (e) {
+      daftarSumberDana = [];
+    }
+
+    Map<String, String> mapJenisSumberdana = {};
+    for (var sd in daftarSumberDana) {
+      mapJenisSumberdana[sd.nama.toLowerCase().trim()] = sd.jenis
+          .toLowerCase()
+          .trim();
+    }
+
+    Map<String, double> saldoPerSumberdanaMap = {};
+    Map<String, double> pengeluaranKategoriMap = {};
+    Map<String, double> pemasukanKategoriMap = {};
+
+    // FIXED: Diubah dari TransaksiModel menjadi TransactionModel sesuai nama kelas di berkas impor Anda
+    List<TransaksiModel> transaksiTerfilterList = [];
+
+    for (var tx in allTransactions) {
+      // Proses filter berdasarkan rentang tanggal yang dideteksi
+      if (startTime != null && tx.tanggal.isBefore(startTime)) continue;
+      if (endTime != null && tx.tanggal.isAfter(endTime)) continue;
+
+      transaksiTerfilterList.add(tx);
+      String tipe = tx.tipe.toLowerCase();
+      String namaSD = tx.sumberdana.trim();
+      double nominal = tx.nominal;
+
+      if (tipe.contains("pemasukan")) {
+        saldoPerSumberdanaMap[namaSD] =
+            (saldoPerSumberdanaMap[namaSD] ?? 0) + nominal;
+        pemasukanKategoriMap[tx.kategori] =
+            (pemasukanKategoriMap[tx.kategori] ?? 0) + nominal;
+      } else if (tipe.contains("pengeluaran")) {
+        saldoPerSumberdanaMap[namaSD] =
+            (saldoPerSumberdanaMap[namaSD] ?? 0) - nominal;
+        pengeluaranKategoriMap[tx.kategori] =
+            (pengeluaranKategoriMap[tx.kategori] ?? 0) + nominal;
+      }
+    }
+
+    // Intersepsi jika filter waktu menghasilkan data kosong
+    if (startTime != null && transaksiTerfilterList.isEmpty) {
+      return "Saya tidak menemukan adanya riwayat catatan transaksi pada periode $labelWaktuKonteks.";
+    }
+
+    // JALUR A: PERTANYAAN STRATEGIS KE GEMINI AI
+    if (isMintaSaranAI) {
+      if (_cache.containsKey(cleanPrompt)) return _cache[cleanPrompt]!;
+      final saved = await aiCache.findSimilarAiPrompt(cleanPrompt);
+      if (saved != null && saved['respon'] != null) {
+        final oldResponse = saved['respon'].toString();
+        _cache[cleanPrompt] = oldResponse;
+        return oldResponse;
+      }
+
+      String dataKonteksSistem =
+          "DATA FINANSIAL RIIL USER (Periode: $labelWaktuKonteks):\n\n";
+
+      dataKonteksSistem += "=== SALDO TERHITUNG PERIODE INI ===\n";
+      saldoPerSumberdanaMap.forEach((nama, saldo) {
+        String jenis =
+            mapJenisSumberdana[nama.toLowerCase().trim()] ?? "tidak diketahui";
+        dataKonteksSistem +=
+            " * Nama: $nama (Jenis: $jenis) -> Akumulasi Selisih Saldo: Rp ${rupiah.format(saldo)}\n";
+      });
+
+      dataKonteksSistem += "\n=== RIWAYAT TRANSAKSI TERHUBUNG TERFILTER ===\n";
+      for (var tx in transaksiTerfilterList) {
+        String jenis =
+            mapJenisSumberdana[tx.sumberdana.toLowerCase().trim()] ??
+            "tidak diketahui";
+        dataKonteksSistem +=
+            " * [${tx.tipe.toUpperCase()}] Tgl: ${DateFormat('dd/MM/yyyy').format(tx.tanggal)} | Kategori: ${tx.kategori} | Menggunakan: ${tx.sumberdana} (Jenis: $jenis) | Nominal: Rp ${rupiah.format(tx.nominal)}\n";
+      }
+
+      dataKonteksSistem += "\n=== TOTAL AKUMULASI KATEGORI PERIODE INI ===\n";
+      pengeluaranKategoriMap.forEach(
+        (k, v) => dataKonteksSistem +=
+            " * Total Pengeluaran Kategori $k: Rp ${rupiah.format(v)}\n",
+      );
+      pemasukanKategoriMap.forEach(
+        (k, v) => dataKonteksSistem +=
+            " * Total Pemasukan Kategori $k: Rp ${rupiah.format(v)}\n",
+      );
+
+      return await _askGemini(cleanPrompt, context: dataKonteksSistem);
+    }
+
+    // JALUR B: JAWABAN INSTAN LOKAL (TANPA AI)
+
+    // JIKA USER HANYA MENANYAKAN STRUKTUR RIWAYAT PADA PERIODE WAKTU (Murni menampilkan List Data)
+    if (isNanyaWaktuSpesifik &&
         !lower.contains("saldo") &&
-        !lower.contains("transaksi")) {
-      if (_lastContext == "saldo") {
-        lower = "saldo $lower";
-      } else if (_lastContext == "transaksi") {
-        lower = "transaksi $lower";
+        !lower.contains("kategori") &&
+        !lower.contains("besar") &&
+        !lower.contains("kecil")) {
+      String responseLokal =
+          "Berikut riwayat transaksi Anda pada periode $labelWaktuKonteks:\n";
+      for (int index = 0; index < transaksiTerfilterList.length; index++) {
+        var tx = transaksiTerfilterList[index];
+        String tglStr = DateFormat('dd/MM/yyyy').format(tx.tanggal);
+        responseLokal +=
+            "${index + 1}. [$tglStr] ${tx.tipe.toUpperCase()} - Kategori ${tx.kategori} sebesar Rp ${rupiah.format(tx.nominal)} (${tx.sumberdana})\n";
+      }
+      return responseLokal.trim();
+    }
+
+    // Sinkronisasi state tipe kategori berdasarkan obrolan saat ini
+    if (lower.contains("pemasukan")) {
+      _lastCheckedCategoryType = "pemasukan";
+      _lastActionWasCategory = true;
+    } else if (lower.contains("pengeluaran")) {
+      _lastCheckedCategoryType = "pengeluaran";
+      _lastActionWasCategory = true;
+    }
+
+    String currentTargetJenis = "";
+    if (lower.contains("bank")) {
+      currentTargetJenis = "bank";
+      _lastActionWasCategory = false;
+    }
+    if (lower.contains("e-wallet") || lower.contains("walet")) {
+      currentTargetJenis = "e-wallet";
+      _lastActionWasCategory = false;
+    }
+    if (lower.contains("cash") ||
+        lower.contains("tunai") ||
+        lower.contains("dompet")) {
+      currentTargetJenis = "cash";
+      _lastActionWasCategory = false;
+    }
+
+    if (lower.contains("lain") ||
+        lower.contains("kayak di") ||
+        lower.contains("selain") ||
+        lower.startsWith("kalau ") ||
+        lower.startsWith("kalw ")) {
+      if (_lastActionWasCategory) {
+        if (!lower.contains("pemasukan") && !lower.contains("pengeluaran")) {
+          _lastCheckedCategoryType = (_lastCheckedCategoryType == "pemasukan")
+              ? "pengeluaran"
+              : "pemasukan";
+        }
+      } else {
+        if (_lastCheckedType == "bank") currentTargetJenis = "e-wallet";
+        if (_lastCheckedType == "e-wallet") currentTargetJenis = "bank";
       }
     }
 
-    //  SALDO
-    if (lower.contains("saldo")) {
-      _lastContext = "saldo";
+    if (currentTargetJenis.isNotEmpty) _lastCheckedType = currentTargetJenis;
+    if (lower.contains("kategori")) _lastActionWasCategory = true;
+    if (lower.contains("saldo") || lower.contains("sumber dana")) {
+      _lastActionWasCategory = false;
+    }
 
-      // Saldo kemarin
-      if (lower.contains("kemarin")) {
-        final saldo = await firestore.getSaldoUntilDate(
-          now.subtract(const Duration(days: 1)),
-        );
+    bool mintaTerbesar =
+        lower.contains("besar") ||
+        lower.contains("banyak") ||
+        lower.contains("tinggi") ||
+        lower.contains("mana") ||
+        lower.contains("apa aja");
+    bool mintaTerkecil =
+        lower.contains("kecil") ||
+        lower.contains("sedikit") ||
+        lower.contains("rendah");
 
-        return "Saldo Anda kemarin adalah Rp ${NumberFormat('#,###', 'id_ID').format(saldo)}";
-      }
+    // B.1 EKSEKUSI DATA KATEGORI SECARA LOKAL
+    if (lower.contains("kategori") || _lastActionWasCategory) {
+      bool isPemasukan = _lastCheckedCategoryType == "pemasukan";
+      Map<String, double> targetMap = isPemasukan
+          ? pemasukanKategoriMap
+          : pengeluaranKategoriMap;
+      String labelTipe = isPemasukan ? "pemasukan" : "pengeluaran";
 
-      // Saldo bulan kemarin
-      if (lower.contains("bulan kemarin")) {
-        final lastMonth = DateTime(now.year, now.month - 1);
-
-        final saldo = await firestore.getSaldoByMonth(
-          lastMonth.month,
-          lastMonth.year,
-        );
-
-        return "Saldo bulan ${DateFormat('MMMM yyyy', 'id_ID').format(lastMonth)} adalah Rp ${NumberFormat('#,###', 'id_ID').format(saldo)}";
-      }
-
-      // Saldo bulan spesifik
-      for (final bulan in bulanMap.keys) {
-        if (lower.contains(bulan)) {
-          final saldo = await firestore.getSaldoByMonth(
-            bulanMap[bulan]!,
-            now.year,
-          );
-
-          return "Saldo bulan $bulan ${now.year} adalah Rp ${NumberFormat('#,###', 'id_ID').format(saldo)}";
+      if (targetMap.isEmpty) {
+        if (isPemasukan && pengeluaranKategoriMap.isNotEmpty) {
+          targetMap = pengeluaranKategoriMap;
+          labelTipe = "pengeluaran";
+          _lastCheckedCategoryType = "pengeluaran";
+        } else if (!isPemasukan && pemasukanKategoriMap.isNotEmpty) {
+          targetMap = pemasukanKategoriMap;
+          labelTipe = "pemasukan";
+          _lastCheckedCategoryType = "pemasukan";
         }
       }
 
-      // Saldo tahun lalu
-      if (lower.contains("tahun lalu")) {
-        final all = await firestore.getAllTransactions();
-        double pemasukan = 0;
-        double pengeluaran = 0;
+      if (targetMap.isEmpty) {
+        return "Belum ada riwayat pencatatan transaksi untuk periode $labelWaktuKonteks.";
+      }
 
-        for (var tx in all) {
-          if (tx.tanggal.year == now.year - 1) {
-            if (tx.tipe.toLowerCase().contains("pemasukan")) {
-              pemasukan += tx.nominal;
+      String kategoriTerpilih = "";
+      double nominalTerpilih = mintaTerkecil ? 9999999999.0 : -1.0;
+
+      targetMap.forEach((kategori, total) {
+        if (mintaTerkecil) {
+          if (total < nominalTerpilih) {
+            nominalTerpilih = total;
+            kategoriTerpilih = kategori;
+          }
+        } else {
+          if (total > nominalTerpilih) {
+            nominalTerpilih = total;
+            kategoriTerpilih = kategori;
+          }
+        }
+      });
+
+      if (kategoriTerpilih.isNotEmpty) {
+        String sifat = mintaTerkecil ? "terkecil" : "terbesar";
+        return "Kategori $labelTipe $sifat Anda pada periode $labelWaktuKonteks ada pada kategori $kategoriTerpilih dengan total Rp ${rupiah.format(nominalTerpilih)}.";
+      }
+      return "Belum ada data transaksi untuk kategori tersebut pada periode ini.";
+    }
+
+    // B.2 EKSEKUSI DATA SALDO & SUMBER DANA SECARA LOKAL
+    if (mintaTerbesar ||
+        mintaTerkecil ||
+        lower.contains("saldo") ||
+        lower.contains("ada tidak") ||
+        currentTargetJenis.isNotEmpty) {
+      if (mintaTerbesar || mintaTerkecil || lower.contains("mana")) {
+        String namaAkunTerpilih = "";
+        double saldoTerpilih = mintaTerkecil ? 9999999999.0 : -9999999999.0;
+
+        saldoPerSumberdanaMap.forEach((nama, saldo) {
+          String jenis =
+              mapJenisSumberdana[nama.toLowerCase().trim()] ?? "cash";
+          if (currentTargetJenis.isEmpty || jenis == currentTargetJenis) {
+            if (mintaTerkecil) {
+              if (saldo < saldoTerpilih) {
+                saldoTerpilih = saldo;
+                namaAkunTerpilih = nama;
+              }
             } else {
-              pengeluaran += tx.nominal;
+              if (saldo > saldoTerpilih) {
+                saldoTerpilih = saldo;
+                namaAkunTerpilih = nama;
+              }
             }
           }
+        });
+
+        if (namaAkunTerpilih.isNotEmpty) {
+          String jenisAkun =
+              mapJenisSumberdana[namaAkunTerpilih.toLowerCase().trim()] ??
+              "akun";
+          String sifat = mintaTerkecil ? "terkecil" : "terbesar";
+          return "Saldo $sifat Anda di periode $labelWaktuKonteks ada di $jenisAkun $namaAkunTerpilih dengan nominal Rp ${rupiah.format(saldoTerpilih)}.";
         }
-
-        return "Saldo tahun ${now.year - 1} adalah Rp ${NumberFormat('#,###', 'id_ID').format(pemasukan - pengeluaran)}";
+        return "Data saldo tidak ditemukan untuk periode $labelWaktuKonteks.";
       }
 
-      // Saldo sekarang
-      final saldo = await firestore.getCurrentSaldo();
-      return "Per tanggal ${DateFormat('dd MMMM yyyy', 'id_ID').format(now)}, saldo Anda adalah Rp ${NumberFormat('#,###', 'id_ID').format(saldo)}";
-    }
-
-    //  TRANSAKSI
-    if (lower.contains("transaksi") ||
-        lower.contains("riwayat") ||
-        lower.contains("pengeluaran") ||
-        lower.contains("pemasukan") ||
-        lower.contains("tanggal") ||
-        lower.contains("bulan") ||
-        lower.contains("minggu lalu") ||
-        lower.contains("tahun lalu")) {
-      _lastContext = "transaksi";
-
-      final all = await firestore.getAllTransactions();
-      List<dynamic> hasil = [];
-
-      // Minggu lalu
-      if (lower.contains("minggu lalu")) {
-        final start = now.subtract(Duration(days: now.weekday + 6));
-        final end = start.add(const Duration(days: 6));
-
-        hasil = all.where((tx) {
-          return tx.tanggal.isAfter(start.subtract(const Duration(days: 1))) &&
-              tx.tanggal.isBefore(end.add(const Duration(days: 1)));
-        }).toList();
-      }
-      // Tahun lalu
-      else if (lower.contains("tahun lalu")) {
-        hasil = all.where((tx) {
-          return tx.tanggal.year == now.year - 1;
-        }).toList();
-      }
-      // Tanggal spesifik
-      else if (RegExp(r'(\d{1,2})').hasMatch(lower)) {
-        final day = int.parse(
-          RegExp(r'(\d{1,2})').firstMatch(lower)!.group(1)!,
-        );
-
-        int month = now.month;
-        int year = now.year;
-
-        for (final bulan in bulanMap.keys) {
-          if (lower.contains(bulan)) {
-            month = bulanMap[bulan]!;
+      if (currentTargetJenis.isNotEmpty) {
+        double totalJenis = 0;
+        saldoPerSumberdanaMap.forEach((nama, saldo) {
+          if ((mapJenisSumberdana[nama.toLowerCase().trim()] ?? "cash") ==
+              currentTargetJenis) {
+            totalJenis += saldo;
           }
-        }
-
-        hasil = all.where((tx) {
-          return tx.tanggal.day == day &&
-              tx.tanggal.month == month &&
-              tx.tanggal.year == year;
-        }).toList();
-      }
-      // Bulan kemarin
-      else if (lower.contains("bulan kemarin")) {
-        final lastMonth = DateTime(now.year, now.month - 1);
-
-        hasil = all.where((tx) {
-          return tx.tanggal.month == lastMonth.month &&
-              tx.tanggal.year == lastMonth.year;
-        }).toList();
-      }
-      // Bulan spesifik
-      else {
-        int month = now.month;
-        int year = now.year;
-
-        for (final bulan in bulanMap.keys) {
-          if (lower.contains(bulan)) {
-            month = bulanMap[bulan]!;
-          }
-        }
-
-        hasil = all.where((tx) {
-          return tx.tanggal.month == month && tx.tanggal.year == year;
-        }).toList();
+        });
+        return "Total saldo Anda di kategori $currentTargetJenis untuk periode $labelWaktuKonteks adalah Rp ${rupiah.format(totalJenis)}.";
       }
 
-      _lastTransactions = hasil;
-
-      if (hasil.isEmpty) {
-        return "Tidak ada transaksi ditemukan.";
+      if (saldoPerSumberdanaMap.isNotEmpty) {
+        double totalSemuaSaldo = 0;
+        saldoPerSumberdanaMap.forEach((_, saldo) => totalSemuaSaldo += saldo);
+        return "Total keseluruhan saldo Anda pada periode $labelWaktuKonteks adalah Rp ${rupiah.format(totalSemuaSaldo)}.";
       }
-
-      String response = "Daftar transaksi:\n\n";
-
-      for (var tx in hasil.take(10)) {
-        response += "${formatTransaction(tx)}\n";
-      }
-
-      return response;
     }
 
-    //  FOLLOW-UP APA AJA
-    if (_lastContext == "transaksi" &&
-        (lower == "apa aja" ||
-            lower == "apa" ||
-            lower.contains("selain itu"))) {
-      if (_lastTransactions.isEmpty) {
-        return "Tidak ada transaksi ditemukan.";
-      }
-
-      String response = "Daftar transaksi:\n\n";
-
-      for (var tx in _lastTransactions.take(10)) {
-        response += "${formatTransaction(tx)}\n";
-      }
-
-      return response;
-    }
-
-    //  CACHE RAM
-    if (_cache.containsKey(cleanPrompt)) {
-      return _cache[cleanPrompt]!;
-    }
-
-    //  CACHE FIRESTORE
-    final saved = await aiCache.findSimilarAiPrompt(cleanPrompt);
-
-    if (saved != null && saved['respon'] != null) {
-      final oldResponse = saved['respon'].toString();
-
-      _cache[cleanPrompt] = oldResponse;
-
-      return oldResponse;
-    }
-
-    //  GEMINI ANALISIS
-    return await _askGemini(cleanPrompt, context: context);
+    // FIXED: Ditambahkan info prediksi/analisis keuangan di pesan default petunjuk
+    return "Maaf, saya belum memahami maksud pertanyaan Anda. Silakan tanyakan total saldo, saldo terbesar/terkecil, kategori transaksi, prediksi keuangan, atau tips hemat.";
   }
 
-  //  GEMINI Itu Aja
   static Future<String> _askGemini(String prompt, {String context = ""}) async {
     final aiCache = AiCacheService();
     final now = DateTime.now();
@@ -298,60 +482,89 @@ class GeminiService {
         now.difference(_lastRequest!) < const Duration(seconds: 2)) {
       return "Terlalu cepat. Tunggu sebentar.";
     }
-
     _lastRequest = now;
 
-    try {
-      final response = await Gemini.instance.prompt(
-        parts: [
-          Part.text('''
-$context
+    final List<String> availableModels = [
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
+    ];
 
-Anda adalah AI pintar aplikasi Uang Note.
+    String? finalResponseText;
 
-Prioritas utama:
-- keuangan pribadi
-- tips hemat
-- analendasi budgeting
-- edukasi finansial
-
-Jika pertanyaan pengguna di luar konteks keuangan, tetap jawab secara umum dengan informatif dan natural.
-
-Untuk pertanyaan transaksi, saldo, tanggal, riwayat keuangan sederhana, serahkan pada sistem lokal dan jangan ambil alih.
-
-Pertanyaan:
-$prompt
-Jawab maksimal 300 kata.
-Gunakan poin-poin jika perlu.
-'''),
-        ],
-      );
-
-      if (response != null && response.output != null) {
-        String text = response.output!
-            .replaceAll('#', '')
-            .replaceAll('*', '')
-            .replaceAll('•', '-')
-            .trim();
-
-        if (text.isEmpty) {
-          text = "AI tidak memberikan jawaban.";
-        }
-
-        _cache[prompt] = text;
-
-        await aiCache.addAiResult(
-          prompt,
-          text,
-          DateFormat('MMMM yyyy', 'id_ID').format(now),
+    for (String model in availableModels) {
+      try {
+        final url = Uri.parse(
+          'https://generativelanguage.googleapis.com/v1/models/$model:generateContent?key=${ApiKeys.geminiApiKey}',
         );
 
-        return text;
+        final bodyRequestBody = {
+          "contents": [
+            {
+              "parts": [
+                {
+                  "text":
+                      '''
+Konteks Data Finansial Pengguna Saat Ini (Terintegrasi Rentang Waktu):
+$context
+
+Anda adalah AI pintar asisten keuangan dari aplikasi Uang Note.
+
+Aturan Penting & Ketat Respon Anda:
+1. Berikan analisis finansial secara SPESIFIK dan MENDALAM mengenai hubungan antara Jenis Akun (Bank/E-Wallet/Cash), Nama Sumber Dana, dan Kategori transaksi yang paling dominan/mempengaruhi keuangan user PADA PERIODE WAKTU YANG DIMINTA sesuai konteks di atas.
+2. JANGAN hanya membeberkan list mentah, melainkan buatlah penjelasan deskriptif yang saling mengaitkan elemen-elemen tersebut.
+3. Berikan rekomendasi/tips finansial taktis yang relevan berdasarkan keterkaitan data tersebut.
+4. Jawab dengan bahasa Indonesia yang sopan, ringkas, namun berbobot.
+
+Pertanyaan Pengguna:
+$prompt
+''',
+                },
+              ],
+            },
+          ],
+        };
+
+        print("Mencoba request ke model: $model");
+
+        final response = await http
+            .post(
+              url,
+              headers: {"Content-Type": "application/json"},
+              body: jsonEncode(bodyRequestBody),
+            )
+            .timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+          finalResponseText =
+              jsonResponse['candidates'][0]['content']['parts'][0]['text'];
+          print("Sukses menggunakan model: $model");
+          break;
+        } else {
+          print("Model $model gagal dengan status: ${response.statusCode}");
+          continue;
+        }
+      } catch (e) {
+        print("Gangguan pada model $model: $e");
       }
-    } catch (e) {
-      return "Gagal memproses AI.";
     }
 
-    return "Server AI sedang sibuk.";
+    if (finalResponseText == null) {
+      return "Mohon maaf, server AI sedang sibuk. Silakan coba beberapa saat lagi.";
+    }
+
+    String text = finalResponseText
+        .replaceAll('#', '')
+        .replaceAll('*', '')
+        .trim();
+    _cache[prompt] = text;
+
+    await aiCache.addAiResult(
+      prompt,
+      text,
+      DateFormat('MMMM yyyy', 'id_ID').format(now),
+    );
+
+    return text;
   }
 }

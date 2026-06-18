@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:skripsi_keuangan/models/bank_model.dart';
+import 'package:skripsi_keuangan/models/sumberdana_model.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/Screens/transaksi/edit_transaksi.dart';
@@ -26,164 +26,310 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     decimalDigits: 0,
   );
 
-  String selectedBank = "semua";
-  List<String> allBanks = ["semua"];
+  String selectedSumberdana = "semua";
+  String selectedKategori = "semua";
+  String selectedJenis = "semua";
 
-  //  Format Text Kapital
+  List<String> allSumberdana = ["semua"];
+  List<String> allKategori = ["semua"];
+  List<String> allJenis = ["semua"];
+
+  String _lastAlertedSumberdana = "";
+  int _lastAlertedMonth = 0;
+
+  final firestoreService = FirestoreService();
+
   String capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  final firestoreService = FirestoreService();
-
   Future<void> _refreshData() async {
     setState(() {});
   }
 
-  // Mengetahui Data Bank Sama
   String normalize(String? val) {
     return (val ?? '').toLowerCase().trim();
+  }
+
+  void _showMinusAlert(String sumberdanaName) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: putih,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: rednotif, size: 28),
+              const SizedBox(width: 10),
+              Text("Saldo Peringatan", style: hitamBold20),
+            ],
+          ),
+          content: Text(
+            "Saldo anda minus di sumber dana '$sumberdanaName', mohon input pemasukan terlebih dahulu.",
+            style: teksdialogBold15,
+          ),
+          actions: [
+            Container(
+              width: 100,
+              height: 40,
+              decoration: BoxDecoration(
+                color: merahHapus,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text("OK", style: putihBold15),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Menampilkan Data Transaksi
+      appBar: widget.showBackButton
+          ? AppBar(
+              backgroundColor: putih,
+              elevation: 0,
+              centerTitle: true,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back, color: hitam),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: Text("Daftar Transaksi", style: hitamBold20),
+            )
+          : null,
       body: SafeArea(
         child: StreamBuilder<List<TransaksiModel>>(
           stream: firestoreService.gettransaksi(),
-
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
             final transactions = snapshot.data!;
 
-            // Menampilkan Data Bank
-            return StreamBuilder<List<BankModel>>(
-              stream: firestoreService.getBankModels(),
-
-              builder: (context, bankSnap) {
-                if (!bankSnap.hasData) {
+            return StreamBuilder<List<SumberdanaModel>>(
+              stream: firestoreService.getSumberdanaModels(),
+              builder: (context, sumberdanaSnap) {
+                if (!sumberdanaSnap.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                // Data Dari Kolekesi Bank
-                final bankMaster = bankSnap.data!
+                final sumberdanaMaster = sumberdanaSnap.data!
                     .map((e) => normalize(e.nama))
                     .where((e) => e.isNotEmpty)
                     .toSet();
 
-                // Bank dari transaksi
-                final bankFromTx = transactions
-                    .map((tx) => normalize(tx.bank))
+                final sumberdanaFromTx = transactions
+                    .map((tx) => normalize(tx.sumberdana))
                     .where((e) => e.isNotEmpty)
                     .toSet();
 
-                allBanks = [
+                allSumberdana = [
                   "semua",
-                  ...{...bankMaster, ...bankFromTx}.toList()..sort(),
+                  ...{...sumberdanaMaster, ...sumberdanaFromTx}.toList()
+                    ..sort(),
                 ];
 
-                // Kondisi Bank Tidak Ada
-                if (!allBanks.contains(selectedBank)) {
-                  selectedBank = "semua";
+                if (!allSumberdana.contains(selectedSumberdana)) {
+                  selectedSumberdana = "semua";
                 }
 
-                // Filter
-                final filtered = transactions.where((tx) {
-                  // Filter Bulan
-                  final sameMonth =
-                      tx.tanggal.month == _focusedMonth.month &&
-                      tx.tanggal.year == _focusedMonth.year;
+                final jenisMaster = sumberdanaSnap.data!
+                    .map((e) => normalize(e.jenis))
+                    .where((e) => e.isNotEmpty)
+                    .toSet();
 
-                  // Filter Bank
-                  final bank = normalize(tx.bank);
-                  final sameBank =
-                      selectedBank == "semua" || bank == selectedBank;
+                allJenis = ["semua", ...jenisMaster.toList()..sort()];
 
-                  return sameMonth && sameBank;
-                }).toList();
-
-                // Hitung Transaksi
-                final pemasukan = filtered
-                    .where((tx) => tx.tipe == "pemasukan")
-                    .fold(0.0, (sum, tx) => sum + tx.nominal);
-
-                final pengeluaran = filtered
-                    .where((tx) => tx.tipe == "pengeluaran")
-                    .fold(0.0, (sum, tx) => sum + tx.nominal);
-
-                final saldo = pemasukan - pengeluaran;
-
-                final Map<DateTime, List<TransaksiModel>> grouped = {};
-
-                for (var tx in filtered) {
-                  final day = DateTime(
-                    tx.tanggal.year,
-                    tx.tanggal.month,
-                    tx.tanggal.day,
-                  );
-                  grouped.putIfAbsent(day, () => []).add(tx);
+                if (!allJenis.contains(selectedJenis)) {
+                  selectedJenis = "semua";
                 }
 
-                final days = grouped.keys.toList()
-                  ..sort((a, b) => b.compareTo(a));
+                return StreamBuilder<List<dynamic>>(
+                  stream: firestoreService.getCategoryModels(),
+                  builder: (context, kategoriSnap) {
+                    if (!kategoriSnap.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                return RefreshIndicator(
-                  onRefresh: _refreshData,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          // Card Saldo
-                          cardSaldo(pemasukan, pengeluaran, saldo),
+                    final kategoriMaster = kategoriSnap.data!
+                        .map((e) => normalize(e.nama))
+                        .where((e) => e.isNotEmpty)
+                        .toSet();
 
-                          const SizedBox(height: 20),
+                    allKategori = ["semua", ...kategoriMaster.toList()..sort()];
 
-                          // Dropdown Bank
-                          cardBank(allBanks),
+                    if (!allKategori.contains(selectedKategori)) {
+                      selectedKategori = "semua";
+                    }
 
-                          const SizedBox(height: 30),
+                    final currentSumberdana = selectedSumberdana;
+                    final currentKategori = selectedKategori;
+                    final currentJenis = selectedJenis;
 
-                          // Filter Bulan
-                          cardBulan(filtered.length),
+                    final mapSumberdanaKeJenis = {
+                      for (var sd in sumberdanaSnap.data!)
+                        normalize(sd.nama): normalize(sd.jenis),
+                    };
 
-                          const SizedBox(height: 30),
+                    final filtered = transactions.where((tx) {
+                      final sameMonth =
+                          tx.tanggal.month == _focusedMonth.month &&
+                          tx.tanggal.year == _focusedMonth.year;
 
-                          filtered.isEmpty
-                              ? Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Text(
-                                    selectedBank == "semua"
-                                        ? "Belum ada transaksi"
-                                        : "Belum ada transaksi di Bank '${selectedBank.toUpperCase()}'",
-                                    style: abuReguler15,
+                      final sumberdana = normalize(tx.sumberdana);
+                      final kategori = normalize(tx.kategori);
+                      final jenisSDAplikasi =
+                          (mapSumberdanaKeJenis[sumberdana] ?? '').trim();
+
+                      bool matchSumberdana =
+                          currentSumberdana == "semua" ||
+                          sumberdana == currentSumberdana;
+                      bool matchKategori =
+                          currentKategori == "semua" ||
+                          kategori == currentKategori;
+                      bool matchJenis =
+                          currentJenis == "semua" ||
+                          jenisSDAplikasi == currentJenis.trim();
+
+                      return sameMonth &&
+                          matchSumberdana &&
+                          matchKategori &&
+                          matchJenis;
+                    }).toList();
+
+                    final pemasukan = filtered
+                        .where(
+                          (tx) => tx.tipe.trim().toLowerCase() == "pemasukan",
+                        )
+                        .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+                    final pengeluaran = filtered
+                        .where(
+                          (tx) => tx.tipe.trim().toLowerCase() == "pengeluaran",
+                        )
+                        .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+                    final saldo = pemasukan - pengeluaran;
+
+                    // LOGIKA ALERT MINUS PER BULAN
+                    final txBulanIni = transactions.where((tx) {
+                      return tx.tanggal.month == _focusedMonth.month &&
+                          tx.tanggal.year == _focusedMonth.year;
+                    }).toList();
+
+                    Map<String, double> saldoPerSumberDana = {};
+                    for (var tx in txBulanIni) {
+                      final sdNama = normalize(tx.sumberdana);
+                      if (sdNama.isEmpty) continue;
+
+                      final nominal = tx.nominal;
+                      final tipe = tx.tipe.trim().toLowerCase();
+
+                      double perubahan = (tipe == "pemasukan")
+                          ? nominal
+                          : -nominal;
+                      saldoPerSumberDana[sdNama] =
+                          (saldoPerSumberDana[sdNama] ?? 0.0) + perubahan;
+                    }
+
+                    String sumberDanaMinus = "";
+                    saldoPerSumberDana.forEach((namaSD, saldoSD) {
+                      if (saldoSD < 0 && sumberDanaMinus.isEmpty) {
+                        sumberDanaMinus = namaSD;
+                      }
+                    });
+
+                    if (sumberDanaMinus.isNotEmpty &&
+                        (_lastAlertedSumberdana != sumberDanaMinus ||
+                            _lastAlertedMonth != _focusedMonth.month)) {
+                      _lastAlertedSumberdana = sumberDanaMinus;
+                      _lastAlertedMonth = _focusedMonth.month;
+
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _showMinusAlert(sumberDanaMinus.toUpperCase());
+                      });
+                    } else if (sumberDanaMinus.isEmpty) {
+                      _lastAlertedSumberdana = "";
+                      _lastAlertedMonth = 0;
+                    }
+
+                    final Map<DateTime, List<TransaksiModel>> grouped = {};
+                    for (var tx in filtered) {
+                      final day = DateTime(
+                        tx.tanggal.year,
+                        tx.tanggal.month,
+                        tx.tanggal.day,
+                      );
+                      grouped.putIfAbsent(day, () => []).add(tx);
+                    }
+
+                    final days = grouped.keys.toList()
+                      ..sort((a, b) => b.compareTo(a));
+
+                    return RefreshIndicator(
+                      onRefresh: _refreshData,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            children: [
+                              cardSaldo(pemasukan, pengeluaran, saldo),
+                              const SizedBox(height: 20),
+
+                              // DIPERBAIKI: Row Filter Sejajar Horizontal 50:50 Pas Kayak di Home
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: cardSumberdana(allSumberdana),
                                   ),
-                                )
-                              : listTransaksi(days, grouped),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: cardKategori()),
+                                ],
+                              ),
 
-                          const SizedBox(height: 80),
-                        ],
+                              const SizedBox(height: 30),
+                              cardBulan(filtered.length),
+                              const SizedBox(height: 30),
+                              filtered.isEmpty
+                                  ? Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Text(
+                                        "Belum ada transaksi yang cocok dengan filter",
+                                        style: abuReguler15,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    )
+                                  : listTransaksi(days, grouped),
+                              const SizedBox(height: 80),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 );
               },
             );
           },
         ),
       ),
-
       floatingActionButton: _buildFloatingActionButton(),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  // Card Saldo
+  // Card Saldo (Sama Persis Kayak Di Home, Ada cardJenis Kanan Atas)
   Widget cardSaldo(double pemasukan, double pengeluaran, double saldo) {
     return Container(
       width: double.infinity,
@@ -204,18 +350,28 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Pemasukan', style: hitamBold15),
-            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Pemasukan', style: hitamBold15),
+                cardJenis(), // Diposisikan menempel kanan atas
+              ],
+            ),
+            const SizedBox(height: 5),
             Text(currency.format(pemasukan), style: hijauBold15),
+
             const SizedBox(height: 10),
+
             Text('Pengeluaran', style: hitamBold15),
-            const SizedBox(height: 10),
+            const SizedBox(height: 5),
             Text(currency.format(pengeluaran), style: merahBold15),
+
             const SizedBox(height: 10),
+
             Row(
               children: [
                 Text('Total', style: hitamBold15),
@@ -234,6 +390,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                 ),
               ],
             ),
+
             Text(
               _isPasswordVisible ? currency.format(saldo) : '••••••',
               style: hitamBold15,
@@ -244,8 +401,8 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // Dropdown Bank
-  Widget cardBank(List<String> banks) {
+  // Dropdown Sumber Dana (Dengan menuMaxHeight)
+  Widget cardSumberdana(List<String> sumberdanaList) {
     return Container(
       width: double.infinity,
       height: 50,
@@ -253,28 +410,102 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
         color: hijauSimpan,
         borderRadius: BorderRadius.circular(20),
       ),
-      padding: const EdgeInsets.all(12),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: selectedBank,
-          dropdownColor: hijauSimpan,
-          icon: Icon(Icons.arrow_drop_down, color: putih),
-          onChanged: (value) {
-            if (value == null) return;
-            setState(() => selectedBank = value);
-          },
-          items: banks.map((bank) {
-            return DropdownMenuItem(
-              value: bank,
-              child: Text(bank.toUpperCase(), style: putihReguler15),
-            );
-          }).toList(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            key: ValueKey('sd_${sumberdanaList.length}'),
+            value: selectedSumberdana,
+            dropdownColor: hijauSimpan,
+            icon: Icon(Icons.arrow_drop_down, color: putih),
+            isExpanded: true,
+            menuMaxHeight: 200, // Membatasi scroller agar tidak mentok bawah
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() => selectedSumberdana = value);
+            },
+            items: sumberdanaList.map((sumberdana) {
+              return DropdownMenuItem(
+                value: sumberdana,
+                child: Text(
+                  sumberdana.toUpperCase(),
+                  style: putihReguler15.copyWith(fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
   }
 
-  // Card Bulan
+  // Dropdown Jenis Sumber Dana 
+  Widget cardJenis() {
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        key: ValueKey(allJenis.length),
+        value: selectedJenis,
+        dropdownColor: hijauMedium,
+        icon: Icon(Icons.arrow_drop_down, color: hitam),
+        isExpanded: false,
+        isDense: true,
+        onChanged: (value) {
+          if (value == null) return;
+          setState(() => selectedJenis = value);
+        },
+        items: allJenis.map((jenis) {
+          return DropdownMenuItem(
+            value: jenis,
+            child: Text(
+              jenis == "semua" ? "SEMUA JENIS" : jenis.toUpperCase(),
+              style: selectedJenis == jenis ? hitamBold12 : hitamBold12,
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // Dropdown Kategori (Dengan menuMaxHeight)
+  Widget cardKategori() {
+    return Container(
+      width: double.infinity,
+      height: 50,
+      decoration: BoxDecoration(
+        color: hijauSimpan,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            key: ValueKey('kt_${allKategori.length}'),
+            value: selectedKategori,
+            dropdownColor: hijauSimpan,
+            icon: Icon(Icons.arrow_drop_down, color: putih),
+            isExpanded: true,
+            menuMaxHeight: 200, // Membatasi scroller agar tidak mentok bawah
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() => selectedKategori = value);
+            },
+            items: allKategori.map((kategori) {
+              return DropdownMenuItem(
+                value: kategori,
+                child: Text(
+                  kategori.toUpperCase(),
+                  style: putihReguler15.copyWith(fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget cardBulan(int total) {
     return Container(
       width: double.infinity,
@@ -300,7 +531,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                 });
               },
             ),
-            Spacer(),
+            const Spacer(),
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -312,7 +543,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                 Text("$total Transaksi", style: abuReguler15),
               ],
             ),
-            Spacer(),
+            const Spacer(),
             IconButton(
               icon: Icon(Icons.chevron_right, color: putih),
               onPressed: () {
@@ -330,23 +561,10 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // List Transaksi
   Widget listTransaksi(
     List<DateTime> days,
     Map<DateTime, List<TransaksiModel>> grouped,
   ) {
-    if (days.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text(
-          selectedBank == "semua"
-              ? "Belum ada transaksi"
-              : "Belum ada transaksi di Bank '${selectedBank.toUpperCase()}'",
-          style: abuReguler15,
-        ),
-      );
-    }
-
     return Column(
       children: days.map((day) {
         final list = grouped[day]!;
@@ -386,7 +604,11 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                           Text(
                             currency.format(
                               list
-                                  .where((e) => e.tipe == "pemasukan")
+                                  .where(
+                                    (e) =>
+                                        e.tipe.trim().toLowerCase() ==
+                                        "pemasukan",
+                                  )
                                   .fold(0.0, (s, e) => s + e.nominal),
                             ),
                             style: hijauBold12,
@@ -397,7 +619,11 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                             child: Text(
                               currency.format(
                                 list
-                                    .where((e) => e.tipe == "pengeluaran")
+                                    .where(
+                                      (e) =>
+                                          e.tipe.trim().toLowerCase() ==
+                                          "pengeluaran",
+                                    )
                                     .fold(0.0, (s, e) => s + e.nominal),
                               ),
                               style: merahBold12,
@@ -409,11 +635,13 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 5),
                     Divider(color: cardstroke, thickness: 1),
                     Column(
                       children: list.map((tx) {
+                        final bool isPemasukan =
+                            tx.tipe.trim().toLowerCase() == "pemasukan";
+
                         return InkWell(
                           onTap: () {
                             Navigator.push(
@@ -431,14 +659,14 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                                   width: 30,
                                   height: 30,
                                   decoration: BoxDecoration(
-                                    color: tx.tipe == "pemasukan"
+                                    color: isPemasukan
                                         ? hijauPemasukan
                                         : merahPengeluaran,
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(
                                     child: Icon(
-                                      tx.tipe == "pemasukan"
+                                      isPemasukan
                                           ? Icons.call_made
                                           : Icons.call_received,
                                       color: putih,
@@ -467,7 +695,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                                       ),
                                       const SizedBox(height: 5),
                                       Text(
-                                        tx.bank.toUpperCase(),
+                                        tx.sumberdana.toUpperCase(),
                                         style: hitamReguler12,
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
@@ -478,7 +706,7 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
                                 const SizedBox(width: 10),
                                 Text(
                                   currency.format(tx.nominal),
-                                  style: tx.tipe == "pemasukan"
+                                  style: isPemasukan
                                       ? hijauBold12
                                       : merahBold12,
                                 ),
@@ -498,14 +726,13 @@ class _TransaksiScreensState extends State<TransaksiScreens> {
     );
   }
 
-  // Floating Action Button
-  FloatingActionButton _buildFloatingActionButton() {
+  Widget _buildFloatingActionButton() {
     return FloatingActionButton(
       backgroundColor: hijauSimpan,
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => TambahTransaksi()),
+          MaterialPageRoute(builder: (_) => const TambahTransaksi()),
         );
       },
       child: Icon(Icons.add, color: putih),

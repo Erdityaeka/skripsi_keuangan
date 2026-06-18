@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Sumber%20Dana/SumberDana_Screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Edit%20Profile/edit_profile_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Komentar/komentar_screens.dart';
@@ -321,9 +321,9 @@ class _ProfileScreensState extends State<ProfileScreens> {
         InkWell(
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const BankScreens()),
+            MaterialPageRoute(builder: (context) => const SumberDanaScreens()),
           ),
-          child: _buildButton(Icons.account_balance, 'Tambah Bank'),
+          child: _buildButton(Icons.account_balance, 'Tambah Sumber Dana'),
         ),
         const SizedBox(height: 30),
         InkWell(

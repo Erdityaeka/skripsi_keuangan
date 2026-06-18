@@ -484,14 +484,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
                             color: putih,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(
-                            "Masuk",
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: hijauSimpan,
-                            ),
-                          ),
+                          child: Text("Masuk", style: hijauBold10),
                         ),
                         badgePositionPercentageOffset: 1.5,
                       ),
@@ -511,14 +504,7 @@ class _GrafikScreensState extends State<GrafikScreens> {
                             color: putih,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(
-                            "Keluar",
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: merahPengeluaran,
-                            ),
-                          ),
+                          child: Text("Keluar", style: merahBold10),
                         ),
                         badgePositionPercentageOffset: 1.5,
                       ),
@@ -741,7 +727,9 @@ class _GrafikScreensState extends State<GrafikScreens> {
                               ),
                               const SizedBox(height: 5),
                               Text(
-                                tx.bank.isEmpty ? "-" : tx.bank.toUpperCase(),
+                                tx.sumberdana.isEmpty
+                                    ? "-"
+                                    : tx.sumberdana.toUpperCase(),
                                 style: hitamReguler12,
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,

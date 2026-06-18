@@ -1,10 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:skripsi_keuangan/Piecker/image_piceker.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Sumber%20Dana/sumberdana_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/formats/currency_input_formatter.dart';
-import 'package:skripsi_keuangan/models/bank_model.dart';
+import 'package:skripsi_keuangan/models/sumberdana_model.dart';
 import 'package:skripsi_keuangan/models/kategori_model.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
@@ -29,10 +32,96 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
 
   String _selectedTipe = 'pengeluaran';
   String? _selectedKategori;
-  String? _selectedBank;
+  String? _selectedSumberdana;
+  late DateTime _selectedDate;
 
   bool _isProcessing = false;
   bool _isLoading = false;
+
+  final currencyFormatter = NumberFormat.simpleCurrency(
+    locale: 'id',
+    name: 'Rp ',
+    decimalDigits: 0,
+  );
+
+  List<TransaksiModel> _allTransactions = [];
+  List<SumberdanaModel> _cachedSumberdana = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = DateTime.now();
+    _listenToTransactions();
+    _listenToSumberdana();
+  }
+
+  @override
+  void dispose() {
+    _tokoController.dispose();
+    _nominalController.dispose();
+    _ocrService.dispose();
+    super.dispose();
+  }
+
+  void _listenToTransactions() {
+    _db.gettransaksi().listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _allTransactions = snapshot;
+        });
+      }
+    });
+  }
+
+  void _listenToSumberdana() {
+    _db.getSumberdanaModels().listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _cachedSumberdana = snapshot;
+        });
+      }
+    });
+  }
+
+  String _normalize(String? val) {
+    return (val ?? '').toLowerCase().trim();
+  }
+
+  void _showMinusAlert(String pesan) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: rednotif, size: 28),
+              const SizedBox(width: 10),
+              Text("Akses Ditolak", style: hitamBold20),
+            ],
+          ),
+          content: Text(pesan, style: teksdialogBold15),
+          actions: [
+            Container(
+              width: 100,
+              height: 40,
+              decoration: BoxDecoration(
+                color: merahHapus,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text("OK", style: putihBold15),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   String formatRupiah(String number) {
     final value = int.tryParse(number) ?? 0;
@@ -49,14 +138,6 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     }
 
     return buffer.toString();
-  }
-
-  @override
-  void dispose() {
-    _tokoController.dispose();
-    _nominalController.dispose();
-    _ocrService.dispose();
-    super.dispose();
   }
 
   void _showSnack(String msg, {bool success = false}) {
@@ -130,9 +211,57 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
 
   Future<void> _simpanData() async {
     if (_tokoController.text.trim().isEmpty ||
-        _nominalController.text.trim().isEmpty) {
-      _showSnack("Nama toko dan nominal wajib diisi!");
+        _nominalController.text.trim().isEmpty ||
+        _selectedKategori == null ||
+        _selectedSumberdana == null) {
+      _showSnack(
+        "Lengkapi semua data transaksi termasuk Kategori & Sumber Dana!",
+      );
       return;
+    }
+
+    final amount =
+        double.tryParse(_nominalController.text.replaceAll('.', '')) ?? 0;
+
+    if (_selectedTipe == "pengeluaran") {
+      final targetSumberdanaNormalized = _normalize(_selectedSumberdana);
+
+      final totalPemasukanSumberdana = _allTransactions
+          .where(
+            (tx) =>
+                _normalize(tx.sumberdana) == targetSumberdanaNormalized &&
+                tx.tipe.trim().toLowerCase() == "pemasukan",
+          )
+          .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+      final totalPengeluaranSumberdana = _allTransactions
+          .where(
+            (tx) =>
+                _normalize(tx.sumberdana) == targetSumberdanaNormalized &&
+                tx.tipe.trim().toLowerCase() == "pengeluaran",
+          )
+          .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+      final saldoSaatIni =
+          totalPemasukanSumberdana - totalPengeluaranSumberdana;
+      double sisaSimulasi = saldoSaatIni - amount;
+
+      if (sisaSimulasi < 0) {
+        final match = _cachedSumberdana.firstWhere(
+          (e) => _normalize(e.nama) == targetSumberdanaNormalized,
+          orElse: () => SumberdanaModel(id: '', nama: '', jenis: 'sumber dana'),
+        );
+
+        final stringFormatRupiah = currencyFormatter
+            .format(sisaSimulasi.abs())
+            .replaceAll('Rp ', '');
+        final formatTeksMinus = "Rp. -$stringFormatRupiah";
+
+        _showMinusAlert(
+          "Saldo anda akan minus di ${match.jenis.toLowerCase()} '${_selectedSumberdana!.toUpperCase()}',$formatTeksMinus mohon input pemasukan terlebih dahulu.",
+        );
+        return;
+      }
     }
 
     setState(() => _isLoading = true);
@@ -142,12 +271,11 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
         TransaksiModel(
           id: '',
           judul: _tokoController.text.trim(),
-          nominal:
-              double.tryParse(_nominalController.text.replaceAll('.', '')) ?? 0,
-          kategori: _selectedKategori ?? 'Lainnya',
-          bank: _selectedBank ?? 'Cash',
+          nominal: amount,
+          kategori: _selectedKategori!,
+          sumberdana: _selectedSumberdana!,
           tipe: _selectedTipe,
-          tanggal: DateTime.now(),
+          tanggal: _selectedDate,
         ),
       );
 
@@ -181,11 +309,13 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
               const SizedBox(height: 15),
               buttonInput(),
               const SizedBox(height: 15),
+              buttonTanggal(),
+              const SizedBox(height: 15),
               buttoTipe(),
               const SizedBox(height: 15),
               buttonKategori(),
               const SizedBox(height: 15),
-              buttonBank(),
+              buttonSumberdana(),
               const SizedBox(height: 30),
               SafeArea(top: false, child: buttonSimpan()),
               const SizedBox(height: 15),
@@ -235,7 +365,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 panEnabled: true,
                 minScale: 1.0,
                 maxScale: 4.0,
-                child: Container(
+                child: SizedBox(
                   width: double.infinity,
                   height: double.infinity,
                   child: Image.file(_imageFile!, fit: BoxFit.contain),
@@ -289,7 +419,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Judul Tagihan', style: hitamReguler15),
+        Text('Nama Toko / Judul', style: hitamReguler15),
         const SizedBox(height: 15),
         Container(
           width: double.infinity,
@@ -303,7 +433,7 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
             child: TextField(
               controller: _tokoController,
               decoration: InputDecoration(
-                hintText: 'Contoh: Bayar Listrik',
+                hintText: 'Contoh: Indomaret',
                 hintStyle: abuReguler15,
                 border: InputBorder.none,
               ),
@@ -349,6 +479,75 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     );
   }
 
+  Widget buttonTanggal() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Tanggal Transaksi', style: hitamReguler15),
+        const SizedBox(height: 15),
+        GestureDetector(
+          onTap: () async {
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: _selectedDate,
+              firstDate: DateTime(2020),
+              lastDate: DateTime.now().add(const Duration(days: 365)),
+              builder: (BuildContext context, Widget? child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: ColorScheme.light(
+                      primary:
+                          hijauSimpan, 
+                      onPrimary:
+                          putih, 
+                      surface: putih,
+                      onSurface: hitam, 
+                    ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor:
+                            hijauSimpan, 
+                      ),
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+              // ------------------------------------------------
+            );
+            if (picked != null && picked != _selectedDate) {
+              setState(() {
+                _selectedDate = picked;
+              });
+            }
+          },
+          child: Container(
+            width: double.infinity,
+            height: 55,
+            decoration: BoxDecoration(
+              border: Border.all(color: hijauSimpan, width: 1.5),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${_selectedDate.day.toString().padLeft(2, '0')}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.year}',
+                    style: hitamReguler15,
+                  ),
+                  Icon(Icons.calendar_today, color: hijauSimpan),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget buttoTipe() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +568,13 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 value: _selectedTipe,
                 dropdownColor: putih,
                 icon: Icon(Icons.arrow_drop_down, color: hitam),
-                onChanged: (v) => setState(() => _selectedTipe = v!),
+                onChanged: (v) {
+                  if (v == null) return;
+                  setState(() {
+                    _selectedTipe = v;
+                    _selectedSumberdana = null;
+                  });
+                },
                 items: [
                   DropdownMenuItem(
                     value: 'pengeluaran',
@@ -399,8 +604,15 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
           builder: (context, snapshot) {
             final list = snapshot.data ?? <KategoriModel>[];
 
+            // DIPERBAIKI: Mengarahkan klik empty state untuk membuka halaman KategoriScreens
             if (list.isEmpty) {
-              return _emptyMessage("Kategori kosong", () {});
+              return _emptyMessage(
+                "Kategori kosong",
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const KategoriScreens()),
+                ),
+              );
             }
 
             if (_selectedKategori != null &&
@@ -422,6 +634,8 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                     dropdownColor: putih,
                     hint: Text('Pilih Kategori', style: hitamReguler15),
                     icon: Icon(Icons.arrow_drop_down, color: hitam),
+                    menuMaxHeight:
+                        200, // Membatasi tinggi scroll pop-up agar rapi
                     value: list.map((e) => e.nama).contains(_selectedKategori)
                         ? _selectedKategori
                         : null,
@@ -444,24 +658,31 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
     );
   }
 
-  Widget buttonBank() {
+  Widget buttonSumberdana() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: hitamReguler15),
+        Text('Sumber Dana', style: hitamReguler15),
         const SizedBox(height: 15),
-        StreamBuilder<List<BankModel>>(
-          stream: _db.getBankModels(),
+        StreamBuilder<List<SumberdanaModel>>(
+          stream: _db.getSumberdanaModels(),
           builder: (context, snapshot) {
-            final list = snapshot.data ?? <BankModel>[];
+            final list = snapshot.data ?? <SumberdanaModel>[];
 
+            // DIPERBAIKI: Mengarahkan klik empty state untuk membuka halaman SumberDanaScreens
             if (list.isEmpty) {
-              return _emptyMessage("Bank kosong", () {});
+              return _emptyMessage(
+                "Sumber Dana kosong",
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SumberDanaScreens()),
+                ),
+              );
             }
 
-            if (_selectedBank != null &&
-                !list.map((e) => e.nama).contains(_selectedBank)) {
-              _selectedBank = null;
+            if (_selectedSumberdana != null &&
+                !list.map((e) => e.nama).contains(_selectedSumberdana)) {
+              _selectedSumberdana = null;
             }
 
             return Container(
@@ -476,20 +697,78 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     dropdownColor: putih,
-                    hint: Text('Pilih Bank', style: hitamReguler15),
+                    hint: Text('Pilih Sumber Dana', style: hitamReguler15),
                     icon: Icon(Icons.arrow_drop_down, color: hitam),
-                    value: list.map((e) => e.nama).contains(_selectedBank)
-                        ? _selectedBank
-                        : null,
-                    items: list
-                        .map(
-                          (e) => DropdownMenuItem<String>(
-                            value: e.nama,
-                            child: Text(e.nama, style: hitamReguler15),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (v) => setState(() => _selectedBank = v),
+                    menuMaxHeight:
+                        200, // Membatasi tinggi scroll pop-up agar rapi
+                    value: _selectedSumberdana,
+                    onChanged: (v) {
+                      if (v == null) return;
+
+                      if (_selectedTipe == "pengeluaran") {
+                        final sumberdanaNameNormalized = _normalize(v);
+
+                        final double income = _allTransactions
+                            .where(
+                              (tx) =>
+                                  _normalize(tx.sumberdana) ==
+                                      sumberdanaNameNormalized &&
+                                  tx.tipe.trim().toLowerCase() == "pemasukan",
+                            )
+                            .fold(0.0, (sum, tx) => sum + tx.nominal);
+                        final double expense = _allTransactions
+                            .where(
+                              (tx) =>
+                                  _normalize(tx.sumberdana) ==
+                                      sumberdanaNameNormalized &&
+                                  tx.tipe.trim().toLowerCase() == "pengeluaran",
+                            )
+                            .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+                        final currentsumberdanaSaldo = income - expense;
+
+                        final inputNominalText = _nominalController.text
+                            .replaceAll('.', '');
+                        final double localAmount = inputNominalText.isEmpty
+                            ? 0.0
+                            : double.parse(inputNominalText);
+
+                        double sisaSimulasi =
+                            currentsumberdanaSaldo - localAmount;
+                        if (sisaSimulasi < 0) {
+                          final match = list.firstWhere(
+                            (e) =>
+                                _normalize(e.nama) == sumberdanaNameNormalized,
+                            orElse: () => SumberdanaModel(
+                              id: '',
+                              nama: '',
+                              jenis: 'sumber dana',
+                            ),
+                          );
+
+                          final stringFormatRupiah = currencyFormatter
+                              .format(sisaSimulasi.abs())
+                              .replaceAll('Rp ', '');
+                          final formatTeksMinus = "rp -$stringFormatRupiah";
+
+                          _showMinusAlert(
+                            "Saldo anda akan minus di ${match.jenis.toLowerCase()} '${v.toUpperCase()}', misal $formatTeksMinus mohon input pemasukan terlebih dahulu.",
+                          );
+                          return;
+                        }
+                      }
+
+                      setState(() => _selectedSumberdana = v);
+                    },
+                    items: list.map((e) {
+                      return DropdownMenuItem<String>(
+                        value: e.nama,
+                        child: Text(
+                          e.nama.toUpperCase(),
+                          style: hitamReguler15,
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
@@ -517,15 +796,16 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
                   ? CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(putih),
                     )
-                  : Text('Simpan Tagihan', style: putihBold15),
+                  : Text('Simpan Transaksi', style: putihBold15),
             ),
           ),
         ),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
       ],
     );
   }
 
+  // WIDGET EMPTY STATE ASLI (Mengikat parameter VoidCallback onTap bawaan Anda agar UI tidak berubah)
   Widget _emptyMessage(String text, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -533,14 +813,11 @@ class _ScanStrukScreenState extends State<ScanStrukScreen> {
         width: double.infinity,
         height: 55,
         decoration: BoxDecoration(
-          border: Border.all(color: hijauSimpan, width: 1.5),
+          border: Border.all(color: merahPengeluaran, width: 1.5),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Center(
-          child: Text(
-            text,
-            style: TextStyle(color: hijauSimpan, fontWeight: FontWeight.bold),
-          ),
+          child: Text("$text (Tambah dulu data)", style: merahBold15),
         ),
       ),
     );

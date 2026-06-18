@@ -4,7 +4,7 @@ class TransaksiModel {
   String id;
   String judul;
   String kategori;
-  String bank;
+  String sumberdana;
   double nominal;
   DateTime tanggal;
   String tipe;
@@ -13,7 +13,7 @@ class TransaksiModel {
     required this.id,
     required this.judul,
     required this.kategori,
-    required this.bank,
+    required this.sumberdana,
     required this.nominal,
     required this.tanggal,
     required this.tipe,
@@ -23,7 +23,7 @@ class TransaksiModel {
     return {
       'judul': judul,
       'kategori': kategori,
-      'bank': bank,
+      'sumberdana': sumberdana,
       'nominal': nominal,
       'tanggal': Timestamp.fromDate(tanggal),
       'tipe': tipe,
@@ -57,7 +57,7 @@ class TransaksiModel {
       id: id,
       judul: map['judul']?.toString() ?? '',
       kategori: map['kategori']?.toString() ?? 'Umum',
-      bank: map['bank']?.toString() ?? 'Tidak Diketahui',
+      sumberdana: map['sumberdana']?.toString() ?? 'Tidak Diketahui',
       nominal: nominal,
       tanggal: tanggal,
       tipe: map['tipe']?.toString().trim() ?? 'pemasukan',

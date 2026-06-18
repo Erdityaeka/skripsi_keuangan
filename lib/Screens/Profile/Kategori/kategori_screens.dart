@@ -54,8 +54,8 @@ class _KategoriScreensState extends State<KategoriScreens> {
       appBar: _buildAppbar(context),
       body: Column(
         children: [
-          buttonAddBank(),
-          Expanded(child: listBank()),
+          buttonAddKategori(),
+          Expanded(child: listKategori()),
         ],
       ),
     );
@@ -214,7 +214,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
     );
   }
 
-  Widget buttonAddBank() {
+  Widget buttonAddKategori() {
     return Container(
       width: double.infinity,
       height: 150,
@@ -287,7 +287,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
     );
   }
 
-  Widget listBank() {
+  Widget listKategori() {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: StreamBuilder<List<KategoriModel>>(
@@ -320,7 +320,7 @@ class _KategoriScreensState extends State<KategoriScreens> {
                   ),
                   child: ListTile(
                     leading: Icon(Icons.table_chart, color: hitam),
-                    title: Text(capitalize(kategori.nama), style: hijauBold15),
+                    title: Text(capitalize(kategori.nama), style: hitamBold15),
                     trailing: GestureDetector(
                       onTap: () => _delete(kategori),
                       child: Icon(Icons.delete, color: merahHapus),

@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
-import 'package:skripsi_keuangan/models/bank_model.dart';
+import 'package:skripsi_keuangan/models/sumberdana_model.dart';
 
-class BankScreens extends StatefulWidget {
-  const BankScreens({super.key});
+class SumberDanaScreens extends StatefulWidget {
+  const SumberDanaScreens({super.key});
 
   @override
-  State<BankScreens> createState() => _BankScreensState();
+  State<SumberDanaScreens> createState() => _SumberDanaScreensState();
 }
 
-class _BankScreensState extends State<BankScreens> {
+class _SumberDanaScreensState extends State<SumberDanaScreens> {
   final FirestoreService _firestoreService = FirestoreService();
-  final TextEditingController _bankController = TextEditingController();
+  final TextEditingController _sumberdanaController = TextEditingController();
+  String _selectedType = 'bank';
 
-  // TAMBAH BANK
-  Future<void> _addBank() async {
-    final text = _bankController.text.trim();
+  // TAMBAH SUMBER DANA
+  Future<void> _addSumberdana() async {
+    // DIPERBAIKI: Mengubah nama fungsi
+    final text = _sumberdanaController.text.trim();
 
     if (text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -24,7 +26,7 @@ class _BankScreensState extends State<BankScreens> {
           backgroundColor: rednotif,
           content: Center(
             child: Text(
-              "Bank harus diisi",
+              "Nama sumber dana harus diisi",
               style: putihBold15,
               textAlign: TextAlign.center,
             ),
@@ -34,32 +36,39 @@ class _BankScreensState extends State<BankScreens> {
       return;
     }
 
-    await _firestoreService.addBank(BankModel(id: '', nama: text));
-
-    _bankController.clear();
+    // DIPERBAIKI: Menggunakan addSumberdana dan objek model SumberdanaModel
+    await _firestoreService.addSumberdana(
+      SumberdanaModel(id: '', nama: text, jenis: _selectedType),
+    );
 
     if (!mounted) return;
+
+    setState(() {
+      _sumberdanaController.clear();
+      _selectedType = 'bank';
+    });
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: greennotif,
         content: Center(
-          child: Text("Bank berhasil ditambahkan", style: putihBold15),
+          child: Text("Sumber dana berhasil ditambahkan", style: putihBold15),
         ),
       ),
     );
   }
 
-  // HAPUS BANK
-  void _confirmDelete(BankModel bank) {
+  // HAPUS SUMBER DANA
+  void _confirmDelete(SumberdanaModel sumberdana) {
+    // DIPERBAIKI: Mengubah parameter data objek
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: putih,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: Text("Hapus Bank?", style: hitamBold20),
+        title: Text("Hapus Sumber Dana?", style: hitamBold20),
         content: Text(
-          "Yakin ingin menghapus data bank '${bank.nama}'?",
+          "Yakin ingin menghapus data sumber dana '${sumberdana.nama}'?",
           style: teksdialogBold15,
         ),
         actions: [
@@ -76,7 +85,8 @@ class _BankScreensState extends State<BankScreens> {
             ),
             child: TextButton(
               onPressed: () async {
-                await _firestoreService.deleteBank(bank.id);
+                // DIPERBAIKI: Menggunakan fungsi deleteSumberdana yang baru
+                await _firestoreService.deleteSumberdana(sumberdana.id);
 
                 if (!mounted) return;
 
@@ -86,7 +96,10 @@ class _BankScreensState extends State<BankScreens> {
                   SnackBar(
                     backgroundColor: greennotif,
                     content: Center(
-                      child: Text("Bank berhasil dihapus", style: putihBold15),
+                      child: Text(
+                        "Sumber dana berhasil dihapus",
+                        style: putihBold15,
+                      ),
                     ),
                   ),
                 );
@@ -101,7 +114,7 @@ class _BankScreensState extends State<BankScreens> {
 
   @override
   void dispose() {
-    _bankController.dispose();
+    _sumberdanaController.dispose(); // DIPERBAIKI
     super.dispose();
   }
 
@@ -112,8 +125,8 @@ class _BankScreensState extends State<BankScreens> {
       appBar: _buildAppbar(context),
       body: Column(
         children: [
-          buttonAddBank(),
-          Expanded(child: listBank()),
+          buttonAddSumberdana(), // DIPERBAIKI
+          Expanded(child: listSumberdana()), // DIPERBAIKI
         ],
       ),
     );
@@ -129,16 +142,17 @@ class _BankScreensState extends State<BankScreens> {
         onPressed: () => Navigator.pop(context),
         icon: Icon(Icons.arrow_back, color: hitam),
       ),
-      title: Text('Bank', style: hitamBold20),
+      title: Text('Sumber Dana', style: hitamBold20),
       flexibleSpace: Container(decoration: BoxDecoration(color: putih)),
     );
   }
 
-  // BUTTON BANK
-  Widget buttonAddBank() {
+  // COMPONENT INPUT AREA
+  Widget buttonAddSumberdana() {
+    // DIPERBAIKI
     return Container(
       width: double.infinity,
-      height: 160,
+      height: 260,
       decoration: BoxDecoration(
         color: putih,
         boxShadow: [
@@ -159,9 +173,13 @@ class _BankScreensState extends State<BankScreens> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Judul Bank', style: hitamReguler15),
+                  Text('Judul Sumber Dana', style: hitamReguler15),
                   const SizedBox(height: 12),
                   _inputField(),
+                  const SizedBox(height: 16),
+                  Text('Jenis Sumber Dana', style: hitamReguler15),
+                  const SizedBox(height: 10),
+                  _typeDropdown(),
                 ],
               ),
             ),
@@ -187,9 +205,9 @@ class _BankScreensState extends State<BankScreens> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14),
         child: TextField(
-          controller: _bankController,
+          controller: _sumberdanaController, // DIPERBAIKI
           decoration: InputDecoration(
-            hintText: 'Masukan nama bank',
+            hintText: 'Masukan nama sumber dana',
             hintStyle: abuReguler15,
             border: InputBorder.none,
           ),
@@ -198,10 +216,36 @@ class _BankScreensState extends State<BankScreens> {
     );
   }
 
+  Widget _typeDropdown() {
+    return Container(
+      height: 55,
+      decoration: BoxDecoration(
+        border: Border.all(color: hijauSimpan, width: 1.5),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: DropdownButton<String>(
+        value: _selectedType,
+        isExpanded: true,
+        underline: const SizedBox.shrink(),
+        onChanged: (value) {
+          if (value != null) {
+            setState(() => _selectedType = value);
+          }
+        },
+        items: const [
+          DropdownMenuItem(value: 'bank', child: Text('Bank')),
+          DropdownMenuItem(value: 'e-wallet', child: Text('E-Wallet')),
+          DropdownMenuItem(value: 'cash', child: Text('Cash')),
+        ],
+      ),
+    );
+  }
+
   // BUTTON TAMBAH
   Widget _buttonAdd() {
     return GestureDetector(
-      onTap: _addBank,
+      onTap: _addSumberdana, // DIPERBAIKI
       child: Container(
         width: 90,
         height: 55,
@@ -214,29 +258,32 @@ class _BankScreensState extends State<BankScreens> {
     );
   }
 
-  // BANK LIST
-  Widget listBank() {
+  // LIST VIEW SUMBER DANA
+  Widget listSumberdana() {
+    // DIPERBAIKI
     return Padding(
       padding: const EdgeInsets.all(20),
-      child: StreamBuilder<List<BankModel>>(
-        stream: _firestoreService.getBankModels(),
+      child: StreamBuilder<List<SumberdanaModel>>(
+        // DIPERBAIKI: Memanggil Master model baru
+        stream: _firestoreService
+            .getSumberdanaModels(), // DIPERBAIKI: Memanggil stream terupdate
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final banks = snapshot.data ?? [];
+          final sumberdanaList = snapshot.data ?? []; // DIPERBAIKI
 
-          if (banks.isEmpty) {
+          if (sumberdanaList.isEmpty) {
             return Center(
-              child: Text("Belum ada data bank", style: abuReguler15),
+              child: Text("Belum ada data sumber dana", style: abuReguler15),
             );
           }
 
           return ListView.builder(
-            itemCount: banks.length,
+            itemCount: sumberdanaList.length,
             itemBuilder: (context, index) {
-              final bank = banks[index];
+              final sumberdana = sumberdanaList[index]; // DIPERBAIKI
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -247,9 +294,16 @@ class _BankScreensState extends State<BankScreens> {
                 ),
                 child: ListTile(
                   leading: Icon(Icons.account_balance, color: hitam),
-                  title: Text(bank.nama.toUpperCase(), style: hitamBold15),
+                  title: Text(
+                    sumberdana.nama.toUpperCase(),
+                    style: hitamBold15,
+                  ), // DIPERBAIKI
+                  subtitle: Text(
+                    sumberdana.jenis.toUpperCase(), // DIPERBAIKI
+                    style: hitamReguler12,
+                  ),
                   trailing: GestureDetector(
-                    onTap: () => _confirmDelete(bank),
+                    onTap: () => _confirmDelete(sumberdana), // DIPERBAIKI
                     child: Icon(Icons.delete, color: merahHapus),
                   ),
                 ),

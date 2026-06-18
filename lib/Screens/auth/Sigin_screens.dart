@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:skripsi_keuangan/Screens/auth/login_screens.dart';
+import 'package:skripsi_keuangan/Screens/panduan/panduan_screen.dart';
 
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/services/auth_services.dart';
@@ -27,6 +28,9 @@ class _SiginScreensState extends State<SiginScreens> {
   bool _isLoading = false;
   XFile? _pickedImage;
   double _yAlignment = 0.0;
+
+  // VARIABEL BARU: Menyimpan status apakah user sudah membaca panduan
+  bool _isPanduanChecked = false;
 
   @override
   void dispose() {
@@ -72,6 +76,12 @@ class _SiginScreensState extends State<SiginScreens> {
   }
 
   void _handleRegister() async {
+    // Validasi Keamanan: Jika belum centang, blokir proses submit registrasi
+    if (!_isPanduanChecked) {
+      _showSnack("Anda wajib membaca panduan aplikasi terlebih dahulu!");
+      return;
+    }
+
     if (_namaController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
@@ -152,7 +162,12 @@ class _SiginScreensState extends State<SiginScreens> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
+            padding: const EdgeInsets.only(
+              top: 30,
+              left: 20,
+              right: 20,
+              bottom: 20,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -351,18 +366,46 @@ class _SiginScreensState extends State<SiginScreens> {
 
   Widget button() {
     return GestureDetector(
-      onTap: _isLoading ? null : _handleRegister,
+      onTap: () async {
+        // JIKA BELUM BACA PANDUAN: Tombol mendeteksi aksi tap untuk memberi notif & melempar ke PanduanPage
+        if (!_isPanduanChecked) {
+          _showSnack("Silakan baca panduan aplikasi terlebih dahulu!");
+
+          await Future.delayed(const Duration(milliseconds: 800));
+          if (!mounted) return;
+
+          // Pergi ke PanduanPage dan tunggu hasilnya (result)
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PanduanPage()),
+          );
+
+          // Jika halaman panduan mengirim nilai true (artinya sukses centang)
+          if (result == true) {
+            setState(() {
+              _isPanduanChecked = true;
+            });
+          }
+        } else {
+          // JIKA SUDAH BACA & CENTANG: Eksekusi fungsi register aslimu
+          if (!_isLoading) _handleRegister();
+        }
+      },
       child: Container(
         width: double.infinity,
         height: 50,
         decoration: BoxDecoration(
-          color: hijauSimpan,
+          // Tombol berwarna abu-abu jika belum centang panduan, berwarna hijau jika aktif
+          color: _isPanduanChecked ? hijauSimpan : abu,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Center(
           child: _isLoading
               ? CircularProgressIndicator(color: putih)
-              : Text('Daftar', style: putihBold15),
+              : Text(
+                  _isPanduanChecked ? 'Daftar' : 'Daftar (Baca Panduan)',
+                  style: putihBold15,
+                ),
         ),
       ),
     );

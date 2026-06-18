@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Sumber%20Dana/SumberDana_Screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/formats/currency_input_formatter.dart';
-import 'package:skripsi_keuangan/models/bank_model.dart';
+import 'package:skripsi_keuangan/models/sumberdana_model.dart';
 import 'package:skripsi_keuangan/models/kategori_model.dart';
 import 'package:skripsi_keuangan/models/tagihan_models.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
@@ -26,8 +26,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
   TimeOfDay selectedTime = TimeOfDay.now();
 
   String? selectedKategori;
-  String? selectedBank;
-
+  String? selectedSumberdana;
   bool _isLoading = false;
 
   final FirestoreService _firestoreService = FirestoreService();
@@ -35,7 +34,6 @@ class _TambahTagihanState extends State<TambahTagihan> {
   // PILIH TANGGAL
   Future<void> pickDate() async {
     final now = DateTime.now();
-
     final today = DateTime(now.year, now.month, now.day);
 
     final currentSelected = DateTime(
@@ -53,14 +51,13 @@ class _TambahTagihanState extends State<TambahTagihan> {
       initialDate: safeInitialDate,
       firstDate: today,
       lastDate: DateTime(2100),
-
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: hijauSimpan, // Header & tombol utama
-              onPrimary: putih, // Text header
-              onSurface: hitam, // Text tanggal
+              primary: hijauSimpan,
+              onPrimary: putih,
+              onSurface: hitam,
             ),
           ),
           child: child!,
@@ -80,14 +77,13 @@ class _TambahTagihanState extends State<TambahTagihan> {
     final picked = await showTimePicker(
       context: context,
       initialTime: selectedTime,
-
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: hijauSimpan, // Header & tombol utama
-              onPrimary: putih, // Text header
-              onSurface: hitam, // Text jam
+              primary: hijauSimpan,
+              onPrimary: putih,
+              onSurface: hitam,
             ),
           ),
           child: child!,
@@ -107,7 +103,8 @@ class _TambahTagihanState extends State<TambahTagihan> {
     if (judul.text.isEmpty ||
         nominal.text.isEmpty ||
         selectedKategori == null ||
-        selectedBank == null) {
+        selectedSumberdana == null) {
+      // DIPERBAIKI
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: rednotif,
@@ -200,7 +197,8 @@ class _TambahTagihanState extends State<TambahTagihan> {
       id: '',
       judul: judul.text.trim(),
       kategori: selectedKategori!,
-      bank: selectedBank!,
+      sumberdana:
+          selectedSumberdana!, // DIPERBAIKI: Mengisi field dengan selectedSumberdana
       nominal: nominalValue,
       tanggalJatuhTempo: scheduledDate,
     );
@@ -209,7 +207,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
       // Simpan Firestore
       await _firestoreService.addTagihan(tagihan);
 
-      // Jadwalkan notifikasi
+      // Jadwalkan notifikasi lokal
       await NotificationService.scheduleTagihanNotification(
         id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         title: "Tagihan Jatuh Tempo",
@@ -288,11 +286,11 @@ class _TambahTagihanState extends State<TambahTagihan> {
         width: double.infinity,
         height: 55,
         decoration: BoxDecoration(
-          border: Border.all(color: hijauSimpan, width: 1.5),
+          border: Border.all(color: merahPengeluaran, width: 1.5),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Center(
-          child: Text("$title (Tambah dulu data)", style: abuReguler15),
+          child: Text("$title (Tambah dulu data)", style: merahBold15),
         ),
       ),
     );
@@ -305,7 +303,6 @@ class _TambahTagihanState extends State<TambahTagihan> {
       children: [
         Text('Judul Tagihan', style: hitamReguler15),
         const SizedBox(height: 15),
-
         Container(
           width: double.infinity,
           height: 55,
@@ -325,12 +322,9 @@ class _TambahTagihanState extends State<TambahTagihan> {
             ),
           ),
         ),
-
         const SizedBox(height: 20),
-
         Text('Nominal', style: hitamReguler15),
         const SizedBox(height: 15),
-
         Container(
           width: double.infinity,
           height: 55,
@@ -374,7 +368,6 @@ class _TambahTagihanState extends State<TambahTagihan> {
       children: [
         Text('Kategori', style: hitamReguler15),
         const SizedBox(height: 15),
-
         StreamBuilder<List<KategoriModel>>(
           stream: _firestoreService.getCategoryModels(),
           builder: (context, snapshot) {
@@ -415,7 +408,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
                         .map(
                           (e) => DropdownMenuItem<String>(
                             value: e.nama,
-                            child: Text(e.nama),
+                            child: Text(e.nama, style: hitamReguler15),
                           ),
                         )
                         .toList(),
@@ -429,32 +422,33 @@ class _TambahTagihanState extends State<TambahTagihan> {
     );
   }
 
-  // BANK
-  Widget buttonBank() {
+  // SUMBER DANA
+  Widget buttonSumberdana() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: hitamReguler15),
+        Text('Sumber Dana', style: hitamReguler15),
         const SizedBox(height: 15),
-
-        StreamBuilder<List<BankModel>>(
-          stream: _firestoreService.getBankModels(),
+        StreamBuilder<List<SumberdanaModel>>(
+          stream: _firestoreService.getSumberdanaModels(),
           builder: (context, snapshot) {
-            final bank = snapshot.data ?? <BankModel>[];
+            final sumberdanaList = snapshot.data ?? <SumberdanaModel>[];
 
-            if (bank.isEmpty) {
+            if (sumberdanaList.isEmpty) {
               return _emptyMessage(
-                "Bank kosong",
+                "Sumber Dana kosong",
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const BankScreens()),
+                  MaterialPageRoute(builder: (_) => const SumberDanaScreens()),
                 ),
               );
             }
 
-            if (selectedBank != null &&
-                !bank.map((e) => e.nama).contains(selectedBank)) {
-              selectedBank = null;
+            if (selectedSumberdana != null &&
+                !sumberdanaList
+                    .map((e) => e.nama)
+                    .contains(selectedSumberdana)) {
+              selectedSumberdana = null;
             }
 
             return Container(
@@ -468,16 +462,22 @@ class _TambahTagihanState extends State<TambahTagihan> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: selectedBank,
+                    value: selectedSumberdana, // DIPERBAIKI
                     dropdownColor: putih,
-                    hint: Text('Pilih Bank', style: hitamReguler15),
+                    hint: Text(
+                      'Pilih Sumber Dana',
+                      style: hitamReguler15,
+                    ), // DIPERBAIKI: Hint text berubah
                     icon: Icon(Icons.arrow_drop_down, color: hitam),
-                    onChanged: (v) => setState(() => selectedBank = v),
-                    items: bank
+                    onChanged: (v) => setState(() => selectedSumberdana = v),
+                    items: sumberdanaList
                         .map(
                           (e) => DropdownMenuItem<String>(
                             value: e.nama,
-                            child: Text(e.nama),
+                            child: Text(
+                              e.nama.toUpperCase(),
+                              style: hitamReguler15,
+                            ),
                           ),
                         )
                         .toList(),
@@ -498,7 +498,6 @@ class _TambahTagihanState extends State<TambahTagihan> {
       children: [
         Text('Tanggal', style: hitamReguler15),
         const SizedBox(height: 15),
-
         Row(
           children: [
             Expanded(
@@ -507,7 +506,6 @@ class _TambahTagihanState extends State<TambahTagihan> {
                 style: hitamReguler15,
               ),
             ),
-
             GestureDetector(
               onTap: pickDate,
               child: Container(
@@ -535,13 +533,11 @@ class _TambahTagihanState extends State<TambahTagihan> {
       children: [
         Text('Jam', style: hitamReguler15),
         const SizedBox(height: 15),
-
         Row(
           children: [
             Expanded(
               child: Text(selectedTime.format(context), style: hitamReguler15),
             ),
-
             GestureDetector(
               onTap: pickTime,
               child: Container(
@@ -562,7 +558,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
     );
   }
 
-  // SIMPAN
+  // SIMPAN BUTTON COMPONENT
   Widget buttonSimpan() {
     return Column(
       children: [
@@ -589,7 +585,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
     );
   }
 
-  // UI
+  // RENDERING UTAMA WIDGET TREE
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -609,7 +605,7 @@ class _TambahTagihanState extends State<TambahTagihan> {
               const SizedBox(height: 15),
               buttonKategori(),
               const SizedBox(height: 15),
-              buttonBank(),
+              buttonSumberdana(), // DIPERBAIKI: Memanggil fungsi komponen baru
               const SizedBox(height: 15),
               buttonTanggal(),
               const SizedBox(height: 15),

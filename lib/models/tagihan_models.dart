@@ -4,7 +4,7 @@ class TagihanModels {
   String id;
   String judul;
   String kategori;
-  String bank;
+  String sumberdana;
   double nominal;
   DateTime tanggalJatuhTempo;
 
@@ -12,7 +12,7 @@ class TagihanModels {
     required this.id,
     required this.judul,
     required this.kategori,
-    required this.bank,
+    required this.sumberdana,
     required this.nominal,
     required this.tanggalJatuhTempo,
   });
@@ -21,7 +21,7 @@ class TagihanModels {
     return {
       'judul': judul,
       'kategori': kategori,
-      'bank': bank,
+      'sumberdana': sumberdana,
       'nominal': nominal,
       'tanggalJatuhTempo': Timestamp.fromDate(tanggalJatuhTempo),
     };
@@ -54,7 +54,7 @@ class TagihanModels {
       id: id,
       judul: map['judul']?.toString() ?? '',
       kategori: map['kategori']?.toString() ?? 'Tagihan',
-      bank: map['bank']?.toString() ?? '',
+      sumberdana: map['sumberdana']?.toString() ?? '',
       nominal: nominal,
       tanggalJatuhTempo: tanggalJatuhTempo,
     );

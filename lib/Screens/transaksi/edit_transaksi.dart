@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:skripsi_keuangan/Screens/Profile/Bank/bank_screens.dart';
+import 'package:skripsi_keuangan/Screens/Profile/Sumber%20Dana/sumberdana_screens.dart';
 import 'package:skripsi_keuangan/Screens/Profile/Kategori/kategori_screens.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:skripsi_keuangan/formats/currency_input_formatter.dart';
-import 'package:skripsi_keuangan/models/bank_model.dart';
+import 'package:skripsi_keuangan/models/sumberdana_model.dart';
 import 'package:skripsi_keuangan/models/kategori_model.dart';
 import 'package:skripsi_keuangan/models/transaction_model.dart';
 import 'package:skripsi_keuangan/services/firestore_service.dart';
@@ -28,7 +28,17 @@ class _EditTransaksiState extends State<EditTransaksi> {
 
   String selectedType = "pemasukan";
   String? selectedKategory;
-  String? selectedBank;
+  String? selectedSumberdana;
+  late DateTime selectedDate;
+
+  final currencyFormatter = NumberFormat.simpleCurrency(
+    locale: 'id',
+    name: 'Rp ',
+    decimalDigits: 0,
+  );
+
+  List<TransaksiModel> _allTransactions = [];
+  List<SumberdanaModel> _cachedSumberdana = [];
 
   @override
   void initState() {
@@ -36,8 +46,11 @@ class _EditTransaksiState extends State<EditTransaksi> {
     judul.text = widget.tx.judul;
     nominal.text = NumberFormat.decimalPattern('id').format(widget.tx.nominal);
     selectedKategory = widget.tx.kategori;
-    selectedBank = widget.tx.bank;
+    selectedSumberdana = widget.tx.sumberdana;
     selectedType = widget.tx.tipe;
+    selectedDate = widget.tx.tanggal;
+    _listenToTransactions();
+    _listenToSumberdana();
   }
 
   @override
@@ -47,12 +60,135 @@ class _EditTransaksiState extends State<EditTransaksi> {
     super.dispose();
   }
 
-  // Simpan Update Data
+  void _listenToTransactions() {
+    _firestoreService.gettransaksi().listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _allTransactions = snapshot;
+        });
+      }
+    });
+  }
+
+  void _listenToSumberdana() {
+    _firestoreService.getSumberdanaModels().listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _cachedSumberdana = snapshot;
+        });
+      }
+    });
+  }
+
+  String _normalize(String? val) {
+    return (val ?? '').toLowerCase().trim();
+  }
+
+  void _showMinusAlert(String pesan) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: rednotif, size: 28),
+              const SizedBox(width: 10),
+              Text("Saldo Tidak Cukup", style: hitamBold20),
+            ],
+          ),
+          content: Text(pesan, style: teksdialogBold15),
+          actions: [
+            Container(
+              width: 100,
+              height: 40,
+              decoration: BoxDecoration(
+                color: merahHapus,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text("OK", style: putihBold15),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Fungsi Terpusat untuk Validasi Simulasi Saldo Minus
+  bool _checkSimulasiSaldoMinus(String targetSumberdana, double inputAmount) {
+    if (selectedType != "pengeluaran") return false;
+
+    final targetSumberdanaNormalized = _normalize(targetSumberdana);
+
+    // 1. Hitung total pemasukan dari history transaksi
+    final totalPemasukanSumberdana = _allTransactions
+        .where(
+          (tx) =>
+              _normalize(tx.sumberdana) == targetSumberdanaNormalized &&
+              tx.tipe.trim().toLowerCase() == "pemasukan",
+        )
+        .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+    // 2. Hitung total pengeluaran dari history transaksi
+    final totalPengeluaranSumberdana = _allTransactions
+        .where(
+          (tx) =>
+              _normalize(tx.sumberdana) == targetSumberdanaNormalized &&
+              tx.tipe.trim().toLowerCase() == "pengeluaran",
+        )
+        .fold(0.0, (sum, tx) => sum + tx.nominal);
+
+    double saldoBersihSumberdana =
+        totalPemasukanSumberdana - totalPengeluaranSumberdana;
+
+    // 3. Revert kondisi awal jika transaksi yang sedang diedit berada di sumber dana ini
+    if (_normalize(widget.tx.sumberdana) == targetSumberdanaNormalized) {
+      if (widget.tx.tipe.trim().toLowerCase() == "pemasukan") {
+        saldoBersihSumberdana -= widget.tx.nominal;
+      } else {
+        saldoBersihSumberdana += widget.tx.nominal;
+      }
+    }
+
+    // 4. Hitung hasil akhir simulasi dengan nominal baru
+    double hasilSimulasiSaldo = saldoBersihSumberdana - inputAmount;
+
+    if (hasilSimulasiSaldo < 0) {
+      final match = _cachedSumberdana.firstWhere(
+        (e) => _normalize(e.nama) == targetSumberdanaNormalized,
+        orElse: () => SumberdanaModel(
+          id: '',
+          nama: targetSumberdana,
+          jenis: 'sumber dana',
+        ),
+      );
+
+      final nominalAngkaMutlak = hasilSimulasiSaldo.abs();
+      final stringFormatRupiah = currencyFormatter
+          .format(nominalAngkaMutlak)
+          .replaceAll('Rp ', '');
+      final formatTeksMinus = "rp -$stringFormatRupiah";
+
+      _showMinusAlert(
+        "Saldo anda akan minus di ${match.jenis.toLowerCase()} '${targetSumberdana.toUpperCase()}', misal $formatTeksMinus mohon input pemasukan terlebih dahulu.",
+      );
+      return true; // Terdeteksi Saldo Minus
+    }
+
+    return false; // Saldo Aman
+  }
+
   void _saveTransaction() async {
     if (judul.text.isEmpty ||
         nominal.text.isEmpty ||
         selectedKategory == null ||
-        selectedBank == null) {
+        selectedSumberdana == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Center(
@@ -68,19 +204,24 @@ class _EditTransaksiState extends State<EditTransaksi> {
       return;
     }
 
+    final amount = double.parse(nominal.text.replaceAll('.', ''));
+
+    // Validasi Saldo lewat fungsi terpusat sebelum menyimpan ke Firestore
+    if (_checkSimulasiSaldoMinus(selectedSumberdana!, amount)) {
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
-      final amount = double.parse(nominal.text.replaceAll('.', ''));
-
-      //  Ambil Update Di Firestore
       await _firestoreService.updateTransaction(
         widget.tx.id,
         judul.text,
         amount,
         selectedKategory!,
-        selectedBank!,
+        selectedSumberdana!,
         selectedType,
+        selectedDate,
       );
 
       if (!mounted) return;
@@ -119,7 +260,6 @@ class _EditTransaksiState extends State<EditTransaksi> {
     }
   }
 
-  // Fungsi Hapus Transaksi
   void _deleteTransaksi() {
     showDialog(
       context: context,
@@ -130,13 +270,11 @@ class _EditTransaksiState extends State<EditTransaksi> {
           "Yakin ingin menghapus data transaksi ini?",
           style: teksdialogBold15,
         ),
-
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text("Batal", style: dialogBatalBold15),
           ),
-
           Container(
             width: 100,
             height: 40,
@@ -146,7 +284,6 @@ class _EditTransaksiState extends State<EditTransaksi> {
             ),
             child: TextButton(
               child: Text("Hapus", style: putihBold15),
-
               onPressed: () async {
                 try {
                   await _firestoreService.deleteTransaction(widget.tx.id);
@@ -197,18 +334,25 @@ class _EditTransaksiState extends State<EditTransaksi> {
       appBar: _buildAppbar(context),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.only(left: 20, right: 20, top: 30, bottom: 30),
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 30,
+            bottom: 30,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               buttonInput(),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
+              buttonTanggal(),
+              const SizedBox(height: 15),
               buttoTipe(),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               buttonKategori(),
-              SizedBox(height: 15),
-              buttonBank(),
-              SizedBox(height: 100),
+              const SizedBox(height: 15),
+              buttonSumberdana(),
+              const SizedBox(height: 100),
               buttonSimpan(),
             ],
           ),
@@ -217,7 +361,6 @@ class _EditTransaksiState extends State<EditTransaksi> {
     );
   }
 
-  // APPBAR
   PreferredSizeWidget _buildAppbar(BuildContext context) {
     return AppBar(
       backgroundColor: putih,
@@ -232,11 +375,9 @@ class _EditTransaksiState extends State<EditTransaksi> {
       centerTitle: true,
       actions: [
         Padding(
-          padding: EdgeInsets.only(right: 10),
+          padding: const EdgeInsets.only(right: 10),
           child: IconButton(
-            onPressed: () {
-              _deleteTransaksi();
-            },
+            onPressed: _deleteTransaksi,
             icon: Icon(Icons.delete, color: merahHapus),
           ),
         ),
@@ -245,15 +386,15 @@ class _EditTransaksiState extends State<EditTransaksi> {
     );
   }
 
-  // Button Input(Judul Dan Nominal)
   Widget buttonInput() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Judul Transaksi', style: hitamReguler15),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         Container(
           height: 55,
+          width: double.infinity,
           decoration: BoxDecoration(
             border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
@@ -270,11 +411,12 @@ class _EditTransaksiState extends State<EditTransaksi> {
             ),
           ),
         ),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         Text('Nominal', style: hitamReguler15),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         Container(
           height: 55,
+          width: double.infinity,
           decoration: BoxDecoration(
             border: Border.all(color: hijauSimpan, width: 1.5),
             borderRadius: BorderRadius.circular(15),
@@ -282,7 +424,7 @@ class _EditTransaksiState extends State<EditTransaksi> {
           child: Row(
             children: [
               Padding(
-                padding: EdgeInsets.only(left: 14),
+                padding: const EdgeInsets.only(left: 14),
                 child: Text('Rp.', style: hitamReguler15),
               ),
               Expanded(
@@ -307,14 +449,84 @@ class _EditTransaksiState extends State<EditTransaksi> {
     );
   }
 
-  // Button Tipe Transaksi
+  Widget buttonTanggal() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Tanggal Transaksi', style: hitamReguler15),
+        const SizedBox(height: 15),
+        GestureDetector(
+          onTap: () async {
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: selectedDate,
+              firstDate: DateTime(2020),
+              lastDate: DateTime.now().add(const Duration(days: 365)),
+              // --- KUNCI UNTUK MENGUBAH WARNA KALENDER DI SINI ---
+              builder: (BuildContext context, Widget? child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: ColorScheme.light(
+                      primary:
+                          hijauSimpan, // Warna header kalender & lingkaran tanggal terpilih
+                      onPrimary:
+                          putih, // Warna teks di dalam header dan tanggal terpilih
+                      surface: putih, // Warna latar belakang dialog kalender
+                      onSurface:
+                          hitam, // Warna teks tanggal biasa dan nama bulan
+                    ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor:
+                            hijauSimpan, // Warna tombol 'BATAL' dan 'OKE'
+                      ),
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+              // ----------------------------------------------------
+            );
+            if (picked != null && picked != selectedDate) {
+              setState(() {
+                selectedDate = picked;
+              });
+            }
+          },
+          child: Container(
+            width: double.infinity,
+            height: 55,
+            decoration: BoxDecoration(
+              border: Border.all(color: hijauSimpan, width: 1.5),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${selectedDate.day.toString().padLeft(2, '0')}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.year}',
+                    style: hitamReguler15,
+                  ),
+                  Icon(Icons.calendar_today, color: hijauSimpan, size: 20),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget buttoTipe() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Tipe Transaksi', style: hitamReguler15),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         Container(
           width: double.infinity,
           height: 55,
@@ -326,11 +538,19 @@ class _EditTransaksiState extends State<EditTransaksi> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
+                key: ValueKey('tipe_$selectedType'),
                 value: selectedType,
                 dropdownColor: putih,
                 hint: Text('Pemasukan', style: hitamReguler15),
                 icon: Icon(Icons.arrow_drop_down, color: hitam),
-                onChanged: (v) => setState(() => selectedType = v!),
+                onChanged: (v) {
+                  if (v == null) return;
+                  setState(() {
+                    selectedType = v;
+                    selectedSumberdana =
+                        null; // Reset agar user memilih ulang sumber dana yang cocok
+                  });
+                },
                 items: [
                   DropdownMenuItem(
                     value: "pemasukan",
@@ -349,14 +569,13 @@ class _EditTransaksiState extends State<EditTransaksi> {
     );
   }
 
-  // BUTTON KATEGORI
   Widget buttonKategori() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Kategori', style: hitamReguler15),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         StreamBuilder<List<KategoriModel>>(
           stream: _firestoreService.getCategoryModels(),
           builder: (context, snapshot) {
@@ -388,10 +607,12 @@ class _EditTransaksiState extends State<EditTransaksi> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
+                    key: ValueKey('kat_${kategori.length}'),
                     value: selectedKategory,
                     dropdownColor: putih,
                     hint: Text('Pilih Kategori', style: hitamReguler15),
                     icon: Icon(Icons.arrow_drop_down, color: hitam),
+                    menuMaxHeight: 200,
                     onChanged: (v) => setState(() => selectedKategory = v),
                     items: kategori
                         .map(
@@ -411,32 +632,33 @@ class _EditTransaksiState extends State<EditTransaksi> {
     );
   }
 
-  // BUTTON BANK
-  Widget buttonBank() {
+  Widget buttonSumberdana() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bank', style: hitamReguler15),
-        SizedBox(height: 15),
-        StreamBuilder<List<BankModel>>(
-          stream: _firestoreService.getBankModels(),
+        Text('Sumber Dana', style: hitamReguler15),
+        const SizedBox(height: 15),
+        StreamBuilder<List<SumberdanaModel>>(
+          stream: _firestoreService.getSumberdanaModels(),
           builder: (context, snapshot) {
-            final bank = snapshot.data ?? <BankModel>[];
+            final sumberdanaList = snapshot.data ?? <SumberdanaModel>[];
 
-            if (bank.isEmpty) {
+            if (sumberdanaList.isEmpty) {
               return _emptyMessage(
-                "Bank kosong",
+                "Sumber Dana kosong",
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const BankScreens()),
+                  MaterialPageRoute(builder: (_) => const SumberDanaScreens()),
                 ),
               );
             }
 
-            if (selectedBank != null &&
-                !bank.map((e) => e.nama).contains(selectedBank)) {
-              selectedBank = null;
+            if (selectedSumberdana != null &&
+                !sumberdanaList
+                    .map((e) => e.nama)
+                    .contains(selectedSumberdana)) {
+              selectedSumberdana = null;
             }
 
             return Container(
@@ -450,19 +672,37 @@ class _EditTransaksiState extends State<EditTransaksi> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: selectedBank,
+                    key: ValueKey('sd_${sumberdanaList.length}_$selectedType'),
+                    value: selectedSumberdana,
                     dropdownColor: putih,
-                    hint: Text('SEMUA', style: hitamReguler15),
+                    hint: Text('Pilih Sumber Dana', style: hitamReguler15),
                     icon: Icon(Icons.arrow_drop_down, color: hitam),
-                    onChanged: (v) => setState(() => selectedBank = v),
-                    items: bank
-                        .map(
-                          (e) => DropdownMenuItem<String>(
-                            value: e.nama,
-                            child: Text(e.nama, style: hitamReguler15),
-                          ),
-                        )
-                        .toList(),
+                    menuMaxHeight: 200,
+                    onChanged: (v) {
+                      if (v == null) return;
+
+                      // Parsing nominal masukan saat ini untuk simulasi
+                      final inputNominalText = nominal.text.replaceAll('.', '');
+                      final double localAmount = inputNominalText.isEmpty
+                          ? 0.0
+                          : double.parse(inputNominalText);
+
+                      // Cek apakah pilihan baru ini menyebabkan saldo minus
+                      if (_checkSimulasiSaldoMinus(v, localAmount)) {
+                        return; // Batalkan perubahan dropdown jika minus
+                      }
+
+                      setState(() => selectedSumberdana = v);
+                    },
+                    items: sumberdanaList.map((e) {
+                      return DropdownMenuItem<String>(
+                        value: e.nama,
+                        child: Text(
+                          e.nama.toUpperCase(),
+                          style: hitamReguler15,
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
@@ -473,12 +713,12 @@ class _EditTransaksiState extends State<EditTransaksi> {
     );
   }
 
-  // Button Simpan
   Widget buttonSimpan() {
     return GestureDetector(
       onTap: _saveTransaction,
       child: Container(
         height: 55,
+        width: double.infinity,
         decoration: BoxDecoration(
           color: hijauSimpan,
           borderRadius: BorderRadius.circular(15),
@@ -493,15 +733,19 @@ class _EditTransaksiState extends State<EditTransaksi> {
   }
 
   Widget _emptyMessage(String text, VoidCallback action) {
-    return Column(
-      children: [
-        Text(text, style: biruReguler12),
-        TextButton.icon(
-          icon: const Icon(Icons.add),
-          label: const Text("Tambah Data"),
-          onPressed: action,
+    return GestureDetector(
+      onTap: action,
+      child: Container(
+        width: double.infinity,
+        height: 55,
+        decoration: BoxDecoration(
+          border: Border.all(color: merahPengeluaran, width: 1.5),
+          borderRadius: BorderRadius.circular(15),
         ),
-      ],
+        child: Center(
+          child: Text("$text (Tambah dulu data)", style: merahBold15),
+        ),
+      ),
     );
   }
 }

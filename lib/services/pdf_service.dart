@@ -26,7 +26,7 @@ class PdfService {
 
     // Hitung total pemasukan & pengeluaran
     for (var tx in transactions) {
-      if (tx.tipe == "pemasukan") {
+      if (tx.tipe.trim().toLowerCase() == "pemasukan") {
         pemasukan += tx.nominal;
       } else {
         pengeluaran += tx.nominal;
@@ -45,10 +45,7 @@ class PdfService {
           pw.Center(
             child: pw.Text(
               judulLaporan,
-              style: pw.TextStyle(
-                fontSize: 18,
-                fontWeight: pw.FontWeight.bold,
-              ),
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
             ),
           ),
 
@@ -70,9 +67,7 @@ class PdfService {
 
           pw.Text(
             "Saldo : ${currency.format(saldo)}",
-            style: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
           ),
 
           pw.SizedBox(height: 20),
@@ -86,7 +81,7 @@ class PdfService {
               "Keterangan",
               "Pemasukan",
               "Pengeluaran",
-              "Bank",
+              "Sumber Dana",
               "Kategori",
             ],
 
@@ -97,23 +92,19 @@ class PdfService {
                 (index + 1).toString(),
 
                 // Tanggal transaksi
-                DateFormat('dd/MMM/yyyy').format(tx.tanggal),
+                DateFormat('dd/MM/yyyy').format(tx.tanggal),
 
                 // Judul transaksi
                 tx.judul,
 
                 // Nominal pemasukan
-                tx.tipe == "pemasukan"
-                    ? currency.format(tx.nominal)
-                    : "",
+                tx.tipe.trim().toLowerCase() == "pemasukan" ? currency.format(tx.nominal) : "",
 
                 // Nominal pengeluaran
-                tx.tipe == "pengeluaran"
-                    ? currency.format(tx.nominal)
-                    : "",
+                tx.tipe.trim().toLowerCase() == "pengeluaran" ? currency.format(tx.nominal) : "",
 
-                // Nama bank
-                tx.bank,
+                // Nama sumber dana
+                tx.sumberdana, // DIPERBAIKI: Menggunakan tx.sumberdana (bukan tx.bank)
 
                 // Kategori transaksi
                 tx.kategori,
@@ -124,14 +115,10 @@ class PdfService {
             border: pw.TableBorder.all(),
 
             // Style header
-            headerStyle: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-            ),
+            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
 
             // Warna header
-            headerDecoration: const pw.BoxDecoration(
-              color: PdfColors.grey300,
-            ),
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
           ),
 
           pw.SizedBox(height: 20),
@@ -140,32 +127,24 @@ class PdfService {
           // Waktu cetak laporan
           pw.Text(
             "Dicetak pada ${DateFormat('dd MMM yyyy HH:mm').format(DateTime.now())}",
-            style: const pw.TextStyle(
-              fontSize: 10,
-            ),
+            style: const pw.TextStyle(fontSize: 10),
           ),
         ],
       ),
     );
 
-    
     // BUAT NAMA FILE
     final safeTitle =
         "${judulLaporan.trim()} "
         "${DateFormat('dd MMMM yyyy', 'id').format(startDate)} - "
         "${DateFormat('dd MMMM yyyy', 'id').format(endDate)}";
 
-    
     // FOLDER PENYIMPANAN
-    final keuanganDir = Directory(
-      "/storage/emulated/0/Download/keuangan",
-    );
+    final keuanganDir = Directory("/storage/emulated/0/Download/keuangan");
 
     // Buat folder jika belum ada
     if (!await keuanganDir.exists()) {
-      await keuanganDir.create(
-        recursive: true,
-      );
+      await keuanganDir.create(recursive: true);
     }
 
     // CEK NAMA FILE DUPLIKAT
@@ -173,22 +152,15 @@ class PdfService {
 
     int counter = 1;
 
-    // Jika nama file sudah ada,
-    // tambahkan nomor otomatis
+    // Jika nama file sudah ada, tambahkan nomor otomatis
     while (await File(filePath).exists()) {
-      filePath =
-          "${keuanganDir.path}/$safeTitle ($counter).pdf";
+      filePath = "${keuanganDir.path}/$safeTitle ($counter).pdf";
       counter++;
     }
 
-    
     // SIMPAN FILE PDF
-
     final file = File(filePath);
-
-    await file.writeAsBytes(
-      await pdf.save(),
-    );
+    await file.writeAsBytes(await pdf.save());
 
     // Kembalikan lokasi file
     return filePath;

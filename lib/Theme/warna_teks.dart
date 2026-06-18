@@ -112,6 +112,11 @@ TextStyle hijauBold12 = GoogleFonts.poppins(
   fontSize: 12,
   fontWeight: FontWeight.bold,
 );
+TextStyle hijauBold10 = GoogleFonts.poppins(
+  color: hijauPemasukan,
+  fontSize: 10,
+  fontWeight: FontWeight.bold,
+);
 TextStyle hijauReguler12 = GoogleFonts.poppins(
   color: hijauPemasukan,
   fontSize: 12,
@@ -127,6 +132,11 @@ TextStyle merahBold15 = GoogleFonts.poppins(
 TextStyle merahBold12 = GoogleFonts.poppins(
   color: merahPengeluaran,
   fontSize: 12,
+  fontWeight: FontWeight.bold,
+);
+TextStyle merahBold10 = GoogleFonts.poppins(
+  color: merahPengeluaran,
+  fontSize: 10,
   fontWeight: FontWeight.bold,
 );
 TextStyle merahReguler12 = GoogleFonts.poppins(

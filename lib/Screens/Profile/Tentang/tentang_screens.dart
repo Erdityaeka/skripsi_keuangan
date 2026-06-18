@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skripsi_keuangan/Screens/panduan/panduan_screen.dart';
 import 'package:skripsi_keuangan/Theme/warna_teks.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -16,7 +17,6 @@ class TentangScreens extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: _buildAppbar(context),
       body: SingleChildScrollView(
         child: Padding(
@@ -33,7 +33,38 @@ class TentangScreens extends StatelessWidget {
               _buildImage(),
               const SizedBox(height: 15),
               _buildText(),
-              const SizedBox(height: 80),
+              const SizedBox(height: 30),
+
+              // TOMBOL UNTUK MEMANGGIL PANDUAN PAGE BAWAAN DENGAN PARAMETER KHUSUS
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      // Memanggil file panduan lama milikmu dengan mengaktifkan mode khusus tentang
+                      builder: (_) => const PanduanPage(isFromTentang: true),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 55,
+                  decoration: BoxDecoration(
+                    color: hijauSimpan,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.menu_book_rounded, color: putih, size: 22),
+                      const SizedBox(width: 10),
+                      Text('Tata Cara Penggunaan Aplikasi', style: putihBold15),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 60),
               _buildfolow(),
             ],
           ),
@@ -98,7 +129,6 @@ class TentangScreens extends StatelessWidget {
   }
 
   // Widget Follow Sosial Media
-  // Widget Follow Sosial Media yang sudah diperbaiki agar tidak overflow
   Widget _buildfolow() {
     return Center(
       child: Column(
